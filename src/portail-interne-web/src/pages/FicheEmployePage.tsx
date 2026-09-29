@@ -16,13 +16,11 @@ export function FicheEmployePage() {
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
 
+	const employeeId = Number(id)
+	const idInvalide = !Number.isInteger(employeeId) || employeeId <= 0
+
 	useEffect(() => {
-		const employeeId = Number(id)
-		if (!Number.isInteger(employeeId)) {
-			setError("Employé introuvable")
-			setLoading(false)
-			return
-		}
+		if (idInvalide) return
 
 		getEmployee(employeeId)
 			.then(setEmployee)
@@ -31,13 +29,17 @@ export function FicheEmployePage() {
 	}, [id])
 
 	return (
-		<div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-white">
+		<div className="min-h-screen bg-linear-to-b from-slate-50 via-slate-50 to-white">
 			<div className="mx-auto max-w-2xl px-6 py-10">
 				<Link to="/employees" className="text-sm font-medium text-sky-700 hover:underline">
 					Retour à l'annuaire
 				</Link>
 
-				{loading ? (
+				{idInvalide ? (
+					<div className="mt-6">
+						<ErrorBanner message="Employé introuvable" />
+					</div>
+				) : loading ? (
 					<p className="mt-8 text-sm text-slate-500">Chargement...</p>	
 				) : error ? (
 					<div className="mt-6">

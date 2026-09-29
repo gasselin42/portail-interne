@@ -119,7 +119,7 @@ export function CreateEmployeePage() {
 	}
 
 	return (
-		<div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-white">
+		<div className="min-h-screen bg-linear-to-b from-slate-50 via-slate-50 to-white">
 			<div className="mx-auto max-w-2xl px-6 py-10">
 				<header className="mb-8 flex flex-wrap items-end justify-between gap-4">
 					<div>

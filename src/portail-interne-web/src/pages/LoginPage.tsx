@@ -5,17 +5,6 @@ import { login, getToken, getMustChangePassword } from '../api/auth';
 import { ErrorBanner } from '../components/ErrorBanner';
 
 export function LoginPage() {
-	const token = getToken()
-
-	if (token) {
-		return (
-			<Navigate
-				to={getMustChangePassword() ? '/change-password' : '/'}
-				replace
-			/>
-		)
-	}
-
 	const [email, setEmail] = useState<string>("")
 	const [password, setPassword] = useState<string>("")
 
@@ -24,6 +13,8 @@ export function LoginPage() {
 	const [erreur, setErreur] = useState<string | null>(null)
 
 	const navigate = useNavigate()
+
+	const token = getToken()
 
 	async function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
 		e.preventDefault()
@@ -37,6 +28,15 @@ export function LoginPage() {
 		} finally {
 			setEnCours(false)
 		}
+	}
+
+	if (token) {
+		return (
+			<Navigate
+				to={getMustChangePassword() ? '/change-password' : '/'}
+				replace
+			/>
+		)
 	}
 
 	return (

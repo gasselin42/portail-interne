@@ -23,7 +23,6 @@ export function AnnuairePage() {
 	const [error, setError]= useState<PageError | null>(null)
 
 	useEffect(() => {
-		setLoading(true)
 		listEmployees(query || undefined)
 			.then(setEmployees)
 			.catch((e) =>
@@ -38,11 +37,12 @@ export function AnnuairePage() {
 	function handleSearch(e: SubmitEvent<HTMLFormElement>) {
 		e.preventDefault()
 		setError(null)
+		setLoading(true)
 		setQuery(search.trim())
 	}
 
 	return (
-		<div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-white">
+		<div className="min-h-screen bg-linear-to-b from-slate-50 via-slate-50 to-white">
 			<div className="mx-auto max-w-6xl px-6 py-10">
 				<header className="mb-8">
 					<p className="text-sm font-medium text-sky-700">Portail</p>
@@ -89,7 +89,7 @@ export function AnnuairePage() {
 						</p>
 					) : (
 						<div className="overflow-x-auto">
-							<table className="w-full min-w-[720px] border-collapse text-left">
+							<table className="w-full min-w-180 border-collapse text-left">
 								<thead>
 									<tr className="border-b border-slate-200 bg-slate-50/80">
 										<th className="px-5 py-3.5 text-sm font-semibold uppercase tracking-wide text-slate-500">Nom</th>
