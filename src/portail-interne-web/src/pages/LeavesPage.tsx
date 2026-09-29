@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { Link } from "react-router-dom"
-import { LeaveType, listLeaves, type LeaveRequestResponse } from "../api/leaves"
+import { DeleteForever } from "@mui/icons-material"
+
+import { LeaveType, LeaveStatus, listLeaves, cancelLeave, type LeaveRequestResponse } from "../api/leaves"
 import { ErrorBanner } from "../components/ErrorBanner"
 
 type PageError = {
@@ -13,15 +15,18 @@ function leaveTypeLabel(id: number): string {
 	return entry?.[0] ?? "—"
 }
 
+const STATUS_STYLES: Record<number, { label: string; className: string }> = {
+	[LeaveStatus.EnAttente]: { label: "En attente", className: "bg-amber-50 text-amber-700 ring-amber-600/20" },
+	[LeaveStatus.Approuve]: { label: "Approuvé", className: "bg-emerald-50 text-emerald-700 ring-emerald-600/20" },
+	[LeaveStatus.Refuse]: { label: "Refusé", className: "bg-red-50 text-red-700 ring-red-600/20" },
+	[LeaveStatus.Annule]: { label: "Annulé", className: "bg-slate-100 text-slate-600 ring-slate-500/20" },
+}
+
 function StatusBadge({ status }: { status: number }) {
+	const style = STATUS_STYLES[status] ?? STATUS_STYLES[LeaveStatus.Annule]
 	return (
-		<span
-			className="font-medium"
-		>
-			{status === 0 ? ("En attente")
-			: status === 1 ? ("Approuvé")
-			: status === 2 ? ("Refusé")
-			: ("Annulé")}
+		<span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${style.className}`}>
+			{style.label}
 		</span>
 	)
 }
@@ -30,9 +35,10 @@ export function LeavesPage() {
 	const [leaves, setLeaves] = useState<LeaveRequestResponse[]>([])
 	const [error, setError] = useState<PageError | null>(null)
 	const [loading, setLoading] = useState(true)
+	const [cancellingId, setCancellingId] = useState<number | null>(null)
 
-	useEffect(() => {
-		listLeaves()
+	const loadLeaves = useCallback(() => {
+		return listLeaves()
 			.then(setLeaves)
 			.catch((e) =>
 				setError({
@@ -42,9 +48,30 @@ export function LeavesPage() {
 			)
 			.finally(() => setLoading(false))
 	}, [])
+
+	useEffect(() => {
+		loadLeaves()
+	}, [loadLeaves])
+
+	async function handleCancel(id: number) {
+		if (!window.confirm("Annuler cette demande de congé ?")) return
+		setError(null)
+		setCancellingId(id)
+		try {
+			await cancelLeave(id)
+			await loadLeaves()
+		} catch (e) {
+			setError({
+				message: e instanceof Error ? e.message : "Erreur",
+				dismissible: true,
+			})
+		} finally {
+			setCancellingId(null)
+		}
+	}
 	
 	return (
-		<div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-white">
+		<div className="min-h-screen bg-linear-to-b from-slate-50 via-slate-50 to-white">
 			<div className="mx-auto max-w-6xl px-6 py-10">
 				<header className="mb-8 flex flex-wrap items-end justify-between gap-4">
 					<div>
@@ -80,28 +107,31 @@ export function LeavesPage() {
 					) : leaves.length === 0 ? (
 						!(error && !error.dismissible) && (
 							<p className="px-6 py-12 text-center text-sm text-slate-500">
-								Aucun demande pour le moment
+								Aucune demande pour le moment
 							</p>
 						)
 					) : (
 						<div className="overflow-x-auto">
-							<table className="w-full min-w-[720px] table-fixed border-collapse text-left">
+							<table className="w-full min-w-180 table-fixed border-collapse text-left">
 								<thead>
 									<tr className="border-b border-slate-200 bg-slate-50/80">
-										<th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+										<th className="w-[15%] px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
 											Début
 										</th>
-										<th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+										<th className="w-[15%] px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
 											Fin
 										</th>
-										<th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+										<th className="w-[15%] px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
 											Type
 										</th>
 										<th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
 											Motif
 										</th>
-										<th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+										<th className="w-[15%] px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
 											Statut
+										</th>
+										<th className="w-16 px-3 py-3.5">
+											<span className="sr-only">Actions</span>
 										</th>
 									</tr>
 								</thead>
@@ -120,11 +150,25 @@ export function LeavesPage() {
 											<td className="px-5 py-3.5 text-sm text-slate-600">
 												{leaveTypeLabel(leave.type)}
 											</td>
-											<td className="px-5 py-3.5 text-sm break-words whitespace-normal text-slate-700">
+											<td className="px-5 py-3.5 text-sm wrap-break-word whitespace-normal text-slate-700">
 												{leave.reason || "-"}
 											</td>
 											<td className="px-5 py-3.5 text-sm text-slate-600">
 												<StatusBadge status={leave.status} />
+											</td>
+											<td className="px-3 py-3.5 text-center">
+												{leave.status === LeaveStatus.EnAttente && (
+													<button
+														type="button"
+														onClick={() => handleCancel(leave.id)}
+														disabled={cancellingId === leave.id}
+														aria-label="Annuler la demande"
+														title="Annuler la demande"
+														className="inline-flex items-center justify-center rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+													>
+														<DeleteForever fontSize="small" />
+													</button>
+												)}
 											</td>
 										</tr>
 									))}

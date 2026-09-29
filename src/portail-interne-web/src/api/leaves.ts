@@ -34,7 +34,7 @@ export async function listLeaves(): Promise<LeaveRequestResponse[]> {
 }
 
 export async function cancelLeave(id: number) {
-	const res = await apiFetch(`/api/leaves/${id}/cancel`)
+	const res = await apiFetch(`/api/leaves/${id}/cancel`, { method: 'POST' })
 	if (!res.ok) {
 		throw new Error(await readApiError(res, 'Impossible d\'annuler le congé'))
 	}
