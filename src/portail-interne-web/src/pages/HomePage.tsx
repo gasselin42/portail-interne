@@ -1,10 +1,10 @@
 import { useNavigate, Link } from "react-router-dom";
-import { logout, isAdmin } from "../api/auth";
+import { logout, isAdmin, canApprove } from "../api/auth";
 
 export function HomePage() {
 	const navigate = useNavigate()
 	return (
-		<div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-white">
+		<div className="min-h-screen bg-linear-to-b from-slate-50 via-slate-50 to-white">
 			<div className="mx-auto max-w-5xl px-6 py-10">
 				<header className="mb-8">
 					<p className="text-sm font-medium text-sky-700">Portail</p>
@@ -31,13 +31,6 @@ export function HomePage() {
 						<p className="mt-1 text-sm text-slate-500">Tes absences, jour par jour</p>
 					</Link>
 					<Link
-						to="/leaves/pending"
-						className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-sky-200 hover:bg-slate-50"
-					>
-						<h2 className="text-base font-semibold text-slate-900">À approuver</h2>
-						<p className="mt-1 text-sm text-slate-500">Demandes en attente de ton équipe</p>
-					</Link>
-					<Link
 						to="/employees"
 						className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-sky-200 hover:bg-slate-50"
 					>
@@ -51,6 +44,15 @@ export function HomePage() {
 						>
 							<h2 className="text-base font-semibold text-slate-900">Comptes</h2>
 							<p className="mt-1 text-sm text-slate-500">Gérer les employés et les accès</p>
+						</Link>
+					)}
+					{canApprove() && (
+						<Link
+							to="/leaves/pending"
+							className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-sky-200 hover:bg-slate-50"
+						>
+							<h2 className="text-base font-semibold text-slate-900">Congés en attente</h2>
+							<p className="mt-1 text-sm text-slate-500">Gérer les demandes de congés</p>
 						</Link>
 					)}
 				</div>

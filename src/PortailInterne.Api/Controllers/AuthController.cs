@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using PortailInterne.Api.Data;
 using PortailInterne.Api.Services;
 using PortailInterne.Api.Dtos;
+using PortailInterne.Api.Models;
 
 namespace PortailInterne.Api.Controllers;
 
@@ -64,6 +65,8 @@ public class AuthController : ControllerBase
 
         var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
+        var isManager = await _db.Employees.AnyAsync(e => e.ManagerId == account.EmployeeId);
+
         return Ok(new LoginResponse
         {
             Token = tokenString,
@@ -71,6 +74,7 @@ public class AuthController : ControllerBase
             UserAccountId = account.Id,
             EmployeeId = account.EmployeeId,
             Role = account.Role,
+            IsManager = isManager,
             MustChangePassword = account.MustChangePassword
         });
     }
@@ -91,6 +95,8 @@ public class AuthController : ControllerBase
         if (account is null || !account.IsActive || account.Employee is null || !account.Employee.IsActive || account.Role is null)
             return Unauthorized();
 
+        var isManager = await _db.Employees.AnyAsync(e => e.ManagerId == account.EmployeeId);
+
         return Ok(new MeResponse
         {
             EmployeeId = account.EmployeeId,
@@ -101,6 +107,7 @@ public class AuthController : ControllerBase
             PhoneNumber = account.Employee.PhoneNumber,
             Departement = account.Employee.Departement,
             Role = account.Role.Value,
+            IsManager = isManager,
             MustChangePassword = account.MustChangePassword,
             IsActive = account.IsActive && account.Employee.IsActive
         });

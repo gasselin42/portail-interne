@@ -41,10 +41,20 @@ export type CreateLeaveRequest = {
 	reason?: string
 }
 
+export type ReviewStatus = typeof LeaveStatus.Approuve | typeof LeaveStatus.Refuse
+
 export async function listLeaves(): Promise<LeaveRequestResponse[]> {
 	const res = await apiFetch("/api/leaves")
 	if (!res.ok) {
-		throw new Error(await readApiError(res, 'Impossible de charger tes congés'))
+		throw new Error(await readApiError(res, 'Impossible de charger les congés'))
+	}
+	return (await res.json()) as LeaveRequestResponse[]
+}
+
+export async function listLeavesPending(): Promise<LeaveRequestResponse[]> {
+	const res = await apiFetch("/api/leaves/pending")
+	if (!res.ok) {
+		throw new Error(await readApiError(res, 'Impossible de charger les congés'))
 	}
 	return (await res.json()) as LeaveRequestResponse[]
 }
@@ -65,4 +75,14 @@ export async function createLeave(request: CreateLeaveRequest): Promise<LeaveReq
 		throw new Error(await readApiError(res, 'Impossible de créer le congé'))
 	}
 	return (await res.json()) as LeaveRequestResponse
+}
+
+export async function reviewLeave(id: number, status: ReviewStatus): Promise<void> {
+	const res = await apiFetch(`/api/leaves/${id}/review`, {
+		method: "POST",
+		body: JSON.stringify({ status }),
+	})
+	if (!res.ok) {
+		throw new Error(await readApiError(res, 'Impossible de traiter la demande'))
+	}
 }

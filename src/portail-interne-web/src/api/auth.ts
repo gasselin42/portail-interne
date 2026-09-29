@@ -1,5 +1,5 @@
 import { apiFetch } from "./client";
-import { clearSession, TOKEN_KEY, MUST_CHANGE_KEY, ROLE_KEY } from "./session";
+import { clearSession, TOKEN_KEY, MUST_CHANGE_KEY, ROLE_KEY, IS_MANAGER_KEY } from "./session";
 
 export type LoginResponse = {
 	token: string
@@ -7,6 +7,7 @@ export type LoginResponse = {
 	userAccountId: number
 	employeeId: number
 	role: number | string
+	isManager: boolean
 	mustChangePassword: boolean
 }
 
@@ -44,6 +45,14 @@ export function isAdmin(): boolean {
 	return getRole() === 'Admin'
 }
 
+export function isManager(): boolean {
+	return localStorage.getItem(IS_MANAGER_KEY) === 'true'
+}
+
+export function canApprove(): boolean {
+	return (isAdmin() || isManager())
+}
+
 export function logout(): void {
 	clearSession()
 }
@@ -53,6 +62,7 @@ function saveSession(data: LoginResponse): void {
 	localStorage.setItem(MUST_CHANGE_KEY, String(data.mustChangePassword))
 	const roleLabel = data.role === 0 || data.role === 'Admin' ? 'Admin' : 'Employee'
 	localStorage.setItem(ROLE_KEY, roleLabel)
+	localStorage.setItem(IS_MANAGER_KEY, String(data.isManager))
 }
 
 export async function login(email: string, password: string): Promise<LoginResponse> {

@@ -20,6 +20,7 @@ public class LoginResponse
     public int UserAccountId { get; set; }
     public int EmployeeId { get; set; }
     public Role? Role { get; set; }
+    public bool IsManager { get; set; }
     public bool MustChangePassword { get; set; }
 }
 
@@ -33,6 +34,7 @@ public class MeResponse
     public string? PhoneNumber { get; set; } = string.Empty;
     public Departement? Departement { get; set; }
     public Role Role { get; set; }
+    public bool IsManager { get; set; }
     public bool MustChangePassword { get; set; }
     public bool IsActive { get; set; }
 }

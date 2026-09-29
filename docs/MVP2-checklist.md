@@ -33,7 +33,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [x] 12. Navigation globale / **menu Accueil** : liens Congés, Calendrier (+ Admin si rôle) — remplacer le bouton temporaire du MVP 1
 - [x] 13. Écran **Mes demandes** (liste + statuts)
 - [x] 14. Écran **Nouvelle demande** (+ validation dates)
-- [ ] 15. Écran **File d’approbation** (Manager/Admin uniquement)
+- [x] 15. Écran **File d’approbation** (Manager/Admin uniquement)
 - [ ] 16. Calendrier personnel (vue jour / semaine simple)
 - [ ] 17. Distinction visuelle : EnAttente vs Approuve vs Refuse (R5)
 - [ ] 18. Accueil : premiers composants utiles (ex. prochaines absences / résumé calendrier de la semaine)

@@ -141,6 +141,7 @@ public class LeavesController : ControllerBase
             .AsNoTracking()
             .Where(l => l.Status == LeaveStatus.EnAttente)
             .Where(l => isAdmin || l.Employee.ManagerId == employeeId)
+            .Where(l => l.EmployeeId != employeeId)
             .OrderBy(l => l.StartDate)
             .Select(l => new LeaveRequestResponse
             {
