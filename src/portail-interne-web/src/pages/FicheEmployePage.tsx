@@ -26,7 +26,7 @@ export function FicheEmployePage() {
 			.then(setEmployee)
 			.catch((e) => setError(e instanceof Error ? e.message : "Erreur"))
 			.finally(() => setLoading(false))
-	}, [id])
+	}, [employeeId, idInvalide])
 
 	return (
 		<div className="min-h-screen bg-linear-to-b from-slate-50 via-slate-50 to-white">
