@@ -52,6 +52,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 
 - [ ] Soldes simples (jours restants)
 - [ ] Tests API (création, approbation, isolation des données)
+- [ ] Admin ou manager crée le congé maladie d'un autre employé
 
 ## Notes / blocages
 

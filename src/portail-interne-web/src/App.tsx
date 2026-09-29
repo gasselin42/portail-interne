@@ -10,6 +10,7 @@ import { CreateEmployeePage } from "./pages/CreateEmployeePage";
 import { AnnuairePage } from "./pages/AnnuairePage";
 import { FicheEmployePage } from "./pages/FicheEmployePage";
 import { LeavesPage } from "./pages/LeavesPage";
+import { NewLeavePage } from "./pages/NewLeavePage";
 
 export default function App() {
 	return (
@@ -29,6 +30,7 @@ export default function App() {
 					<Route path="/employees" element={<AnnuairePage />} />
 					<Route path="/employees/:id" element={<FicheEmployePage />} />
 					<Route path="/leaves" element={<LeavesPage />} />
+					<Route path="/leaves/new" element={<NewLeavePage />} />
 					<Route path="/leaves/pending" element={<h1>À approuver</h1>} />
 					<Route path="/calendar" element={<h1>Calendrier</h1>} />
 

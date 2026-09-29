@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react"
 import { Link } from "react-router-dom"
 import { DeleteForever } from "@mui/icons-material"
 
-import { LeaveType, LeaveStatus, listLeaves, cancelLeave, type LeaveRequestResponse } from "../api/leaves"
+import { LeaveStatus, listLeaves, cancelLeave, type LeaveRequestResponse, LEAVE_TYPE_LABELS, type LeaveStatusId } from "../api/leaves"
 import { ErrorBanner } from "../components/ErrorBanner"
 
 type PageError = {
@@ -10,20 +10,15 @@ type PageError = {
 	dismissible: boolean
 }
 
-function leaveTypeLabel(id: number): string {
-	const entry = Object.entries(LeaveType).find(([, value]) => value === id)
-	return entry?.[0] ?? "—"
-}
-
-const STATUS_STYLES: Record<number, { label: string; className: string }> = {
+const STATUS_STYLES: Record<LeaveStatusId, { label: string; className: string }> = {
 	[LeaveStatus.EnAttente]: { label: "En attente", className: "bg-amber-50 text-amber-700 ring-amber-600/20" },
 	[LeaveStatus.Approuve]: { label: "Approuvé", className: "bg-emerald-50 text-emerald-700 ring-emerald-600/20" },
 	[LeaveStatus.Refuse]: { label: "Refusé", className: "bg-red-50 text-red-700 ring-red-600/20" },
 	[LeaveStatus.Annule]: { label: "Annulé", className: "bg-slate-100 text-slate-600 ring-slate-500/20" },
 }
 
-function StatusBadge({ status }: { status: number }) {
-	const style = STATUS_STYLES[status] ?? STATUS_STYLES[LeaveStatus.Annule]
+function StatusBadge({ status }: { status: LeaveStatusId }) {
+	const style = STATUS_STYLES[status]
 	return (
 		<span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${style.className}`}>
 			{style.label}
@@ -112,7 +107,7 @@ export function LeavesPage() {
 						)
 					) : (
 						<div className="overflow-x-auto">
-							<table className="w-full min-w-180 table-fixed border-collapse text-left">
+							<table className="w-full min-w-200 table-fixed border-collapse text-left">
 								<thead>
 									<tr className="border-b border-slate-200 bg-slate-50/80">
 										<th className="w-[15%] px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -148,7 +143,7 @@ export function LeavesPage() {
 												{leave.endDate.slice(0, 10)}
 											</td>
 											<td className="px-5 py-3.5 text-sm text-slate-600">
-												{leaveTypeLabel(leave.type)}
+												{LEAVE_TYPE_LABELS[leave.type]}
 											</td>
 											<td className="px-5 py-3.5 text-sm wrap-break-word whitespace-normal text-slate-700">
 												{leave.reason || "-"}

@@ -420,6 +420,8 @@ portail-interne/
 | 2026-09-11 | Stack = **ASP.NET Core Web API + React** (dès le MVP 1) |
 | 2026-09-11 | BDD dev = **SQLite** |
 | 2026-09-11 | Auth MVP 1 = **JWT** (pas cookies) |
+| 2026-09-28 | Congé : date de début ≥ aujourd'hui. Maladie : rétroactif permis jusqu'à 14 jours. Toujours EnAttente à la création
+| 2026-09-28 | Création d'un congé pour autrui (Admin/Manager) : reportée, ajoutée dans les bonus du MVP2, nécessite CreatedById
 
 ---
 

@@ -16,6 +16,8 @@ public class LeavesController : ControllerBase
 {
     private readonly AppDbContext _db;
 
+    private const int MaxSickLeaveBackdateDays = 14;
+
     public LeavesController(AppDbContext db)
     {
         _db = db;
@@ -30,7 +32,17 @@ public class LeavesController : ControllerBase
             return Unauthorized();
 
         if (request.EndDate.Date < request.StartDate.Date)
-            return BadRequest(new { message = "La date de fin doit être après la date de début." });
+            return BadRequest(new { message = "La date de fin ne peut pas être avant la date de début." });
+
+		var minStartDate = (request.Type == LeaveType.Maladie) ? DateTime.Today.AddDays(-MaxSickLeaveBackdateDays) : DateTime.Today;
+
+		if (request.StartDate.Date < minStartDate)
+		{
+			if (request.Type == LeaveType.Maladie)
+            	return BadRequest(new { message = $"Un congé maladie peut être rétroactif de {MaxSickLeaveBackdateDays} jours au maximum." });
+			else
+            	return BadRequest(new { message = "Un congé ne peut pas commencer dans le passé." });
+		}
 
         var leave = new LeaveRequest
         {
