@@ -54,6 +54,40 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [ ] Tests API (création, approbation, isolation des données)
 - [ ] Admin ou manager crée le congé maladie d'un autre employé
 
+## Correctifs qualité (produit fini)
+
+Objectif : aucun cas limite connu laissé de côté. Ordre recommandé ci-dessous.
+
+- [x] Q1. **Session via `/api/auth/me`** (`fix/session-me`)
+  - [x] Seul le token reste dans le `localStorage` ; rôle, `isManager`, `mustChangePassword` viennent de `/me`
+  - [x] `SessionProvider` + `useSession()` (Context React)
+  - [x] Gardes de route : écran de chargement pendant `/me` (pas de redirection par erreur au F5)
+  - [x] Serveur injoignable ≠ déconnexion : écran d’erreur avec « Réessayer »
+  - [x] Rafraîchir au démarrage, au retour sur l’onglet, après login, après changement de mot de passe, au logout
+  - [x] Supprimer `ROLE_KEY`, `MUST_CHANGE_KEY`, `IS_MANAGER_KEY`, `isAdmin()`, `getMustChangePassword()`, `IsManager` du login
+- [ ] Q2. **Navigation globale** (`feat/navigation-sidebar`)
+  - [ ] Route de layout `AppLayout` + `<Outlet />` pour toutes les pages connectées
+  - [ ] Sidebar rétractable (icônes seules une fois réduite), tiroir ☰ sur mobile
+  - [ ] Liens selon le rôle (À approuver, Comptes), lien actif mis en évidence (`NavLink`)
+  - [ ] Nom de l’utilisateur, Changer le mot de passe, Déconnexion
+  - [ ] État réduit/ouvert mémorisé, `aria-expanded`, navigable au clavier
+  - [ ] Accueil libéré des cartes de liens (prêt pour les widgets)
+- [ ] Q3. **Fuseau horaire de l’API** : « aujourd’hui » calculé en `America/Toronto`, pas selon la machine
+- [ ] Q4. **Dates lisibles** : `formatDate` (`Intl.DateTimeFormat("fr-CA")`) dans tous les affichages
+- [ ] Q5. **`ConfirmDialog`** réutilisable pour remplacer les 3 `window.confirm` (Échap, focus piégé, variante destructive)
+- [ ] Q6. **Choix du manager par son nom** (combobox, Headless UI)
+  - [ ] Recherche via `GET /api/employees?search=` avec debounce + annulation des requêtes périmées
+  - [ ] États : recherche en cours, aucun résultat, erreur API
+  - [ ] Bouton pour retirer le manager ; texte tapé sans sélection = envoi bloqué
+  - [ ] En modification : nom du manager actuel affiché, l’employé exclu des résultats
+  - [ ] Résultats avec nom + poste (homonymes)
+  - [ ] API : manager existant et actif, pas soi-même, pas de boucle ; nom du manager dans le détail admin
+- [ ] Q7. **Page de connexion** au même style que le reste de l’application
+- [ ] Q8. **Nettoyages**
+  - [ ] Type `PageError` partagé (au lieu d’être copié dans chaque page)
+  - [x] Commiter `.vscode/settings.json`
+- [ ] Q9. **Page 404**
+
 ## Notes / blocages
 
 _(À remplir au fil de l’eau)_

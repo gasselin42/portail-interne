@@ -77,8 +77,8 @@ export function CreateEmployeePage() {
 				firstName,
 				lastName,
 				email,
-				departement: departement as number,
-				role: role as number,
+				departement: departement,
+				role: role,
 				jobTitle,
 				phoneNumber,
 				managerId

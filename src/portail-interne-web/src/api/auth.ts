@@ -1,14 +1,26 @@
-import { apiFetch } from "./client";
-import { clearSession, TOKEN_KEY, MUST_CHANGE_KEY, ROLE_KEY, IS_MANAGER_KEY } from "./session";
+import type { DepartementId, RoleId } from "./admin";
+import { apiFetch, readApiError } from "./client";
+import { clearSession, TOKEN_KEY } from "./session";
 
 export type LoginResponse = {
 	token: string
 	email: string
 	userAccountId: number
 	employeeId: number
-	role: number | string
+}
+
+export type Me = {
+	employeeId: number
+	firstName: string
+	lastName: string
+	email: string
+	jobTitle: string
+	phoneNumber: string | null
+	departement: DepartementId | null
+	role: RoleId
 	isManager: boolean
 	mustChangePassword: boolean
+	isActive: boolean
 }
 
 function tokenIsExpired(token: string): boolean {
@@ -33,36 +45,8 @@ export function getToken(): string | null {
 	return token
 }
 
-export function getMustChangePassword(): boolean {
-	return localStorage.getItem(MUST_CHANGE_KEY) === 'true'
-}
-
-export function getRole(): string | null {
-	return localStorage.getItem(ROLE_KEY)
-}
-
-export function isAdmin(): boolean {
-	return getRole() === 'Admin'
-}
-
-export function isManager(): boolean {
-	return localStorage.getItem(IS_MANAGER_KEY) === 'true'
-}
-
-export function canApprove(): boolean {
-	return (isAdmin() || isManager())
-}
-
-export function logout(): void {
-	clearSession()
-}
-
 function saveSession(data: LoginResponse): void {
 	localStorage.setItem(TOKEN_KEY, data.token)
-	localStorage.setItem(MUST_CHANGE_KEY, String(data.mustChangePassword))
-	const roleLabel = data.role === 0 || data.role === 'Admin' ? 'Admin' : 'Employee'
-	localStorage.setItem(ROLE_KEY, roleLabel)
-	localStorage.setItem(IS_MANAGER_KEY, String(data.isManager))
 }
 
 export async function login(email: string, password: string): Promise<LoginResponse> {
@@ -78,4 +62,19 @@ export async function login(email: string, password: string): Promise<LoginRespo
 	const data = (await res.json()) as LoginResponse
 	saveSession(data)
 	return data
+}
+
+export async function getMe(): Promise<Me | null> {
+	if (!getToken()) return null
+
+	const res = await apiFetch('/api/auth/me')
+
+	if (res.status === 401)
+		return null
+
+	if (!res.ok) {
+		throw new Error(await readApiError(res, "Impossible de charger ta session"))
+	}
+
+	return (await res.json()) as Me
 }

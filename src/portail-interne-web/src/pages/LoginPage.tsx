@@ -1,10 +1,14 @@
 import { useState, type SubmitEvent } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { login, getToken, getMustChangePassword } from '../api/auth';
+import { login } from '../api/auth';
 import { ErrorBanner } from '../components/ErrorBanner';
+import { useSession } from '../session/useSession';
+import { FullPageStatus } from '../components/FullPageStatus';
 
 export function LoginPage() {
+	const { me, loading, refresh } = useSession()
+
 	const [email, setEmail] = useState<string>("")
 	const [password, setPassword] = useState<string>("")
 
@@ -14,15 +18,14 @@ export function LoginPage() {
 
 	const navigate = useNavigate()
 
-	const token = getToken()
-
 	async function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
 		e.preventDefault()
 		setErreur(null)
 		setEnCours(true)
 		try {
-			const data = await login(email, password)
-			navigate(data.mustChangePassword ? '/change-password' : '/')
+			await login(email, password)
+			await refresh()
+			navigate('/')
 		} catch {
 			setErreur('Email ou mot de passe invalide')
 		} finally {
@@ -30,10 +33,14 @@ export function LoginPage() {
 		}
 	}
 
-	if (token) {
+	if (loading) {
+		return <FullPageStatus loading title="Chargement..." />
+	}
+
+	if (me) {
 		return (
 			<Navigate
-				to={getMustChangePassword() ? '/change-password' : '/'}
+				to='/'
 				replace
 			/>
 		)

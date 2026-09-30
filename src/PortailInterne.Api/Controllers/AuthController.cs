@@ -65,8 +65,6 @@ public class AuthController : ControllerBase
 
         var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-        var isManager = await _db.Employees.AnyAsync(e => e.ManagerId == account.EmployeeId);
-
         return Ok(new LoginResponse
         {
             Token = tokenString,
@@ -74,7 +72,6 @@ public class AuthController : ControllerBase
             UserAccountId = account.Id,
             EmployeeId = account.EmployeeId,
             Role = account.Role,
-            IsManager = isManager,
             MustChangePassword = account.MustChangePassword
         });
     }

@@ -5,8 +5,8 @@ export type CreateEmployeeRequest = {
 	firstName: string
 	lastName: string
 	email: string
-	departement: number
-	role: number
+	departement: DepartementId
+	role: RoleId
 	jobTitle?: string
 	phoneNumber?: string
 	managerId?: number
@@ -15,8 +15,8 @@ export type CreateEmployeeRequest = {
 export type UpdateEmployeeRequest = {
 	firstName: string
 	lastName: string
-	departement: number
-	role: number
+	departement: DepartementId
+	role: RoleId
 	jobTitle?: string
 	phoneNumber?: string
 	managerId?: number
@@ -28,7 +28,7 @@ export type CreateEmployeeResponse = {
     email: string
     firstName: string
     lastName: string
-    role: number
+    role: RoleId
     mustChangePassword: boolean
     temporaryPassword: string
 }

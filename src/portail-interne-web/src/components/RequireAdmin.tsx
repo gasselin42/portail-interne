@@ -1,21 +1,12 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { getToken, getMustChangePassword, isAdmin } from "../api/auth";
+import { useSession } from "../session/useSession";
+import { Role } from "../api/admin";
 
 export function RequireAdmin() {
-	const token = getToken()
-
-	// Pas connecté → login
-	if (!token) {
-		return <Navigate to="/login" replace />
-	}
-
-	// Doit changer son mdp
-	if (getMustChangePassword()) {
-		return <Navigate to="/change-password" replace />
-	}
+	const { me } = useSession()
 
 	// Si le user n'est pas un admin
-	if (!isAdmin()) {
+	if (!me || me.role !== Role.Admin) {
 		return <Navigate to="/" replace />
 	}
 

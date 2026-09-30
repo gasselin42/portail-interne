@@ -3,9 +3,11 @@ import { useNavigate, Link } from "react-router-dom"
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { changePassword } from "../api/password";
 import { ErrorBanner } from "../components/ErrorBanner";
-import { getMustChangePassword } from "../api/auth";
+import { useSession } from "../session/useSession";
 
 export function ChangePassword() {
+	const { me, refresh } = useSession()
+
 	const [actualPassword, setActualPassword] = useState<string>("")
 	const [newPassword, setNewPassword] = useState<string>("")
 	const [confirmNewPassword, setConfirmNewPassword] = useState<string>("")
@@ -17,7 +19,7 @@ export function ChangePassword() {
 	const [enCours, setEnCours] = useState<boolean>(false)
 	const [erreur, setErreur] = useState<string | null>(null)
 
-	const doitChanger = getMustChangePassword()
+	const doitChanger = me?.mustChangePassword
 
 	const navigate = useNavigate()
 
@@ -37,6 +39,7 @@ export function ChangePassword() {
 				return
 			}
 			await changePassword(actualPassword, newPassword, confirmNewPassword)
+			await refresh()
 			navigate('/')
 		} catch (err) {
 			if (err instanceof Error) {

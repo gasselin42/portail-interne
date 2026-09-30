@@ -1,21 +1,12 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { getToken, getMustChangePassword, canApprove } from "../api/auth";
+import { useSession } from "../session/useSession";
+import { canApprove } from "../session/permission";
 
 export function RequireApprover() {
-	const token = getToken()
-
-	// Pas connecté → login
-	if (!token) {
-		return <Navigate to="/login" replace />
-	}
-
-	// Doit changer son mdp
-	if (getMustChangePassword()) {
-		return <Navigate to="/change-password" replace />
-	}
+	const { me } = useSession()
 
 	// Si le user n'est ni un admin, ni un manager
-	if (!canApprove()) {
+	if (!canApprove(me)) {
 		return <Navigate to="/" replace />
 	}
 

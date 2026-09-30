@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { RequireAuth } from "./components/RequireAuth";
 import { RequireAdmin } from "./components/RequireAdmin";
 import { RequireApprover } from "./components/RequireApprover";
+import { SessionProvider } from "./session/SessionProvider";
 
 import { LoginPage } from "./pages/LoginPage";
 import { ChangePassword } from "./pages/ChangePassword";
@@ -17,36 +18,38 @@ import { PendingLeavesPage } from "./pages/PendingLeavesPage";
 export default function App() {
 	return (
 		<BrowserRouter>
-			<Routes>
-				{/* Public */}
-				<Route path="/login" element={<LoginPage />} />
-				
-				{/* Connecté + autorisé à changer le mdp */}
-				<Route element={<RequireAuth allowPasswordChange />}>
-					<Route path="/change-password" element={<ChangePassword />}/>
-				</Route>
-
-				{/* Connecté + mdp déjà OK */}
-				<Route element={<RequireAuth />}>
-					<Route path="/" element={<HomePage />} />
-					<Route path="/employees" element={<AnnuairePage />} />
-					<Route path="/employees/:id" element={<FicheEmployePage />} />
-					<Route path="/leaves" element={<LeavesPage />} />
-					<Route path="/leaves/new" element={<NewLeavePage />} />
-					<Route path="/calendar" element={<h1>Calendrier</h1>} />
+			<SessionProvider>
+				<Routes>
+					{/* Public */}
+					<Route path="/login" element={<LoginPage />} />
 					
-					<Route element={<RequireApprover />}>	
-						<Route path="/leaves/pending" element={<PendingLeavesPage />} />
+					{/* Connecté + autorisé à changer le mdp */}
+					<Route element={<RequireAuth allowPasswordChange />}>
+						<Route path="/change-password" element={<ChangePassword />}/>
 					</Route>
 
-					<Route element={<RequireAdmin />}>
-						<Route path="/admin/accounts" element={<AdminAccountsPage />} />
-						<Route path="/admin/employees/new" element={<CreateEmployeePage />} />
-						<Route path="/admin/employees/:id/edit" element={<CreateEmployeePage />} />
+					{/* Connecté + mdp déjà OK */}
+					<Route element={<RequireAuth />}>
+						<Route path="/" element={<HomePage />} />
+						<Route path="/employees" element={<AnnuairePage />} />
+						<Route path="/employees/:id" element={<FicheEmployePage />} />
+						<Route path="/leaves" element={<LeavesPage />} />
+						<Route path="/leaves/new" element={<NewLeavePage />} />
+						<Route path="/calendar" element={<h1>Calendrier</h1>} />
+						
+						<Route element={<RequireApprover />}>	
+							<Route path="/leaves/pending" element={<PendingLeavesPage />} />
+						</Route>
+
+						<Route element={<RequireAdmin />}>
+							<Route path="/admin/accounts" element={<AdminAccountsPage />} />
+							<Route path="/admin/employees/new" element={<CreateEmployeePage />} />
+							<Route path="/admin/employees/:id/edit" element={<CreateEmployeePage />} />
+						</Route>
+						{/* plus tard: /employees, /admin/... */}
 					</Route>
-					{/* plus tard: /employees, /admin/... */}
-				</Route>
-			</Routes>
+				</Routes>
+			</SessionProvider>
 		</BrowserRouter>
 	)
 }

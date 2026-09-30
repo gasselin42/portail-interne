@@ -1,7 +1,10 @@
 import { useNavigate, Link } from "react-router-dom";
-import { logout, isAdmin, canApprove } from "../api/auth";
+import { useSession } from "../session/useSession";
+import { Role } from "../api/admin";
+import { canApprove } from "../session/permission";
 
 export function HomePage() {
+	const { me, logout } = useSession()
 	const navigate = useNavigate()
 	return (
 		<div className="min-h-screen bg-linear-to-b from-slate-50 via-slate-50 to-white">
@@ -37,7 +40,7 @@ export function HomePage() {
 						<h2 className="text-base font-semibold text-slate-900">Annuaire</h2>
 						<p className="mt-1 text-sm text-slate-500">Retrouver un collègue</p>
 					</Link>
-					{isAdmin() && (
+					{(me && me.role === Role.Admin) && (
 						<Link
 							to="/admin/accounts"
 							className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-sky-200 hover:bg-slate-50"
@@ -46,7 +49,7 @@ export function HomePage() {
 							<p className="mt-1 text-sm text-slate-500">Gérer les employés et les accès</p>
 						</Link>
 					)}
-					{canApprove() && (
+					{canApprove(me) && (
 						<Link
 							to="/leaves/pending"
 							className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-sky-200 hover:bg-slate-50"

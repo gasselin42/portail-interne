@@ -20,7 +20,6 @@ public class LoginResponse
     public int UserAccountId { get; set; }
     public int EmployeeId { get; set; }
     public Role? Role { get; set; }
-    public bool IsManager { get; set; }
     public bool MustChangePassword { get; set; }
 }
 
