@@ -50,6 +50,11 @@ export const Role = {
 
 export type RoleId = (typeof Role)[keyof typeof Role]
 
+export const ROLE_LABELS: Record<RoleId, string> = {
+	[Role.Admin]: "Administrateur",
+	[Role.Employé]: "Employé",
+}
+
 export async function createEmployee(
 	body: CreateEmployeeRequest,
 	photo?: File | null,

@@ -38,7 +38,7 @@ export default function App() {
 						<Route path="/calendar" element={<h1>Calendrier</h1>} />
 						
 						<Route element={<RequireApprover />}>	
-							<Route path="/leaves/pending" element={<PendingLeavesPage />} />
+							<Route path="/approvals" element={<PendingLeavesPage />} />
 						</Route>
 
 						<Route element={<RequireAdmin />}>

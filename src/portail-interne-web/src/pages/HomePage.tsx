@@ -2,12 +2,15 @@ import { useNavigate, Link } from "react-router-dom";
 import { useSession } from "../session/useSession";
 import { Role } from "../api/admin";
 import { canApprove } from "../session/permission";
+import { SidebarContent } from "../layout/SidebarContent";
 
 export function HomePage() {
 	const { me, logout } = useSession()
 	const navigate = useNavigate()
 	return (
 		<div className="min-h-screen bg-linear-to-b from-slate-50 via-slate-50 to-white">
+			<div className="h-96 w-64 border bg-white"><SidebarContent collapsed={true} /></div>
+
 			<div className="mx-auto max-w-5xl px-6 py-10">
 				<header className="mb-8">
 					<p className="text-sm font-medium text-sky-700">Portail</p>
@@ -51,7 +54,7 @@ export function HomePage() {
 					)}
 					{canApprove(me) && (
 						<Link
-							to="/leaves/pending"
+							to="/approvals"
 							className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-sky-200 hover:bg-slate-50"
 						>
 							<h2 className="text-base font-semibold text-slate-900">Congés en attente</h2>

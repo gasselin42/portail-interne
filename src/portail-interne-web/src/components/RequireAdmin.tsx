@@ -1,12 +1,12 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useSession } from "../session/useSession";
-import { Role } from "../api/admin";
+import { isAdmin } from "../session/permission";
 
 export function RequireAdmin() {
 	const { me } = useSession()
 
 	// Si le user n'est pas un admin
-	if (!me || me.role !== Role.Admin) {
+	if (!isAdmin(me)) {
 		return <Navigate to="/" replace />
 	}
 
