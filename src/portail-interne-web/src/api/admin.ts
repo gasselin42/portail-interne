@@ -1,5 +1,5 @@
-import { apiFetch, readApiError } from "./client";
-import type { EmployeeEdition } from "./employees";
+import { apiFetch, readApiError } from "./client"
+import type { EmployeeEdition } from "./employees"
 
 export type CreateEmployeeRequest = {
 	firstName: string
@@ -23,14 +23,14 @@ export type UpdateEmployeeRequest = {
 }
 
 export type CreateEmployeeResponse = {
-    employeeId: number
-    userAccountId: number
-    email: string
-    firstName: string
-    lastName: string
-    role: RoleId
-    mustChangePassword: boolean
-    temporaryPassword: string
+	employeeId: number
+	userAccountId: number
+	email: string
+	firstName: string
+	lastName: string
+	role: RoleId
+	mustChangePassword: boolean
+	temporaryPassword: string
 }
 
 export const Departement = {
@@ -45,7 +45,7 @@ export type DepartementId = (typeof Departement)[keyof typeof Departement]
 
 export const Role = {
 	Admin: 0,
-	Employé: 1
+	Employé: 1,
 } as const
 
 export type RoleId = (typeof Role)[keyof typeof Role]
@@ -60,23 +60,23 @@ export async function createEmployee(
 	photo?: File | null,
 ): Promise<CreateEmployeeResponse> {
 	const form = new FormData()
-	form.append('firstName', body.firstName)
-	form.append('lastName', body.lastName)
-	form.append('email', body.email)
-	form.append('departement', String(body.departement))
-	form.append('role', String(body.role))
-	if (body.jobTitle) form.append('jobTitle', body.jobTitle)
-	if (body.phoneNumber) form.append('phoneNumber', body.phoneNumber)
-	if (body.managerId) form.append('managerId', String(body.managerId))
-	if (photo) form.append('photo', photo)
+	form.append("firstName", body.firstName)
+	form.append("lastName", body.lastName)
+	form.append("email", body.email)
+	form.append("departement", String(body.departement))
+	form.append("role", String(body.role))
+	if (body.jobTitle) form.append("jobTitle", body.jobTitle)
+	if (body.phoneNumber) form.append("phoneNumber", body.phoneNumber)
+	if (body.managerId) form.append("managerId", String(body.managerId))
+	if (photo) form.append("photo", photo)
 
-	const res = await apiFetch('/api/admin/employees', {
-		method: 'POST',
-		body: form
+	const res = await apiFetch("/api/admin/employees", {
+		method: "POST",
+		body: form,
 	})
 
 	if (!res.ok) {
-		throw new Error(await readApiError(res, 'Création impossible'))
+		throw new Error(await readApiError(res, "Création impossible"))
 	}
 
 	return (await res.json()) as CreateEmployeeResponse
@@ -88,17 +88,17 @@ export async function updateEmployee(
 	photo?: File | null,
 ): Promise<void> {
 	const form = new FormData()
-	form.append('firstName', body.firstName)
-	form.append('lastName', body.lastName)
-	form.append('departement', String(body.departement))
-	form.append('role', String(body.role))
-	if (body.jobTitle) form.append('jobTitle', body.jobTitle)
-	if (body.phoneNumber) form.append('phoneNumber', body.phoneNumber)
-	if (body.managerId) form.append('managerId', String(body.managerId))
-	if (photo) form.append('photo', photo)
+	form.append("firstName", body.firstName)
+	form.append("lastName", body.lastName)
+	form.append("departement", String(body.departement))
+	form.append("role", String(body.role))
+	if (body.jobTitle) form.append("jobTitle", body.jobTitle)
+	if (body.phoneNumber) form.append("phoneNumber", body.phoneNumber)
+	if (body.managerId) form.append("managerId", String(body.managerId))
+	if (photo) form.append("photo", photo)
 
 	const res = await apiFetch(`/api/admin/employees/${id}`, {
-		method: 'PATCH',
+		method: "PATCH",
 		body: form,
 	})
 
@@ -122,29 +122,29 @@ export type AccountListItem = {
 }
 
 export async function listAccounts(): Promise<AccountListItem[]> {
-	const res = await apiFetch('/api/admin/accounts')
+	const res = await apiFetch("/api/admin/accounts")
 	if (!res.ok) {
-		throw new Error(await readApiError(res, 'Impossible de charger les comptes'))
+		throw new Error(await readApiError(res, "Impossible de charger les comptes"))
 	}
 	return (await res.json()) as AccountListItem[]
 }
 
 export async function setAccountActive(id: number, isActive: boolean) {
 	const res = await apiFetch(`/api/admin/accounts/${id}`, {
-		method: 'PATCH',
+		method: "PATCH",
 		body: JSON.stringify({ isActive }),
 	})
 	if (!res.ok) {
-		throw new Error(await readApiError(res, 'Impossible de changer les paramètres du compte'))
+		throw new Error(await readApiError(res, "Impossible de changer les paramètres du compte"))
 	}
 }
 
 export async function resetAccountPassword(id: number): Promise<{ temporaryPassword: string }> {
 	const res = await apiFetch(`/api/admin/accounts/${id}/reset-password`, {
-		method: 'POST'
+		method: "POST",
 	})
 	if (!res.ok) {
-		throw new Error(await readApiError(res, 'Impossible de réinitialiser le mot de passe'))
+		throw new Error(await readApiError(res, "Impossible de réinitialiser le mot de passe"))
 	}
 	return (await res.json()) as { temporaryPassword: string }
 }

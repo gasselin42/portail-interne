@@ -1,5 +1,5 @@
 import type { Me } from "../api/auth"
-import { Role } from "../api/admin";
+import { Role } from "../api/admin"
 
 export function canApprove(me: Me | null): boolean {
 	return me !== null && (isAdmin(me) || me.isManager)

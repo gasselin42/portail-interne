@@ -1,6 +1,14 @@
 import { useEffect, useState, type SubmitEvent } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
-import { createEmployee, Role, type RoleId, Departement, type DepartementId, getAdminEmployee, updateEmployee } from "../api/admin"
+import {
+	createEmployee,
+	Role,
+	type RoleId,
+	Departement,
+	type DepartementId,
+	getAdminEmployee,
+	updateEmployee,
+} from "../api/admin"
 import { AccountCircleOutlined } from "@mui/icons-material"
 import { ErrorBanner } from "../components/ErrorBanner"
 
@@ -52,41 +60,47 @@ export function CreateEmployeePage() {
 		try {
 			if (departement === null) {
 				setErreur("Veuillez choisir un département")
-				return;
-			}
-			else if (role === null) {
+				return
+			} else if (role === null) {
 				setErreur("Veuillez choisir un rôle")
-				return;
+				return
 			}
 
 			if (enEdition && employeId !== null) {
-				await updateEmployee(employeId, {
-					firstName,
-					lastName,
-					departement,
-					role,
-					jobTitle,
-					phoneNumber,
-					managerId
-				}, photo)
+				await updateEmployee(
+					employeId,
+					{
+						firstName,
+						lastName,
+						departement,
+						role,
+						jobTitle,
+						phoneNumber,
+						managerId,
+					},
+					photo,
+				)
 				navigate("/admin/accounts")
 				return
 			}
-			
-			const data = await createEmployee({
-				firstName,
-				lastName,
-				email,
-				departement: departement,
-				role: role,
-				jobTitle,
-				phoneNumber,
-				managerId
-			}, photo)
+
+			const data = await createEmployee(
+				{
+					firstName,
+					lastName,
+					email,
+					departement: departement,
+					role: role,
+					jobTitle,
+					phoneNumber,
+					managerId,
+				},
+				photo,
+			)
 
 			setTemporaryPassword(data.temporaryPassword)
 		} catch (e) {
-			setErreur(e instanceof Error ? e.message : 'Erreur à la création du compte')
+			setErreur(e instanceof Error ? e.message : "Erreur à la création du compte")
 		} finally {
 			setEnCours(false)
 		}
@@ -105,16 +119,16 @@ export function CreateEmployeePage() {
 
 	function slugify(value: string): string {
 		return value
-			.normalize('NFD')
-			.replace(/\p{M}/gu, '')
+			.normalize("NFD")
+			.replace(/\p{M}/gu, "")
 			.toLowerCase()
-			.replace(/[^a-z0-9]+/g, '')
+			.replace(/[^a-z0-9]+/g, "")
 	}
 
 	function buildEmail(firstName: string, lastName: string): string {
 		const prenom = slugify(firstName)
 		const nom = slugify(lastName)
-		if (!prenom || !nom) return ''
+		if (!prenom || !nom) return ""
 		return `${prenom}.${nom}@portail.local`
 	}
 
@@ -139,13 +153,7 @@ export function CreateEmployeePage() {
 					</Link>
 				</header>
 
-				{erreur && (
-					<ErrorBanner
-						message={erreur}
-						dismissible
-						onDismiss={() => setErreur(null)}
-					/>
-				)}
+				{erreur && <ErrorBanner message={erreur} dismissible onDismiss={() => setErreur(null)} />}
 
 				{temporaryPassword && (
 					<div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
@@ -171,13 +179,16 @@ export function CreateEmployeePage() {
 									type="file"
 									accept="image/jpeg,image/png,image/webp"
 									onChange={(e) => handlePhoto(e.target.files?.[0])}
-									className="text-sm texte-slate-600"
+									className="texte-slate-600 text-sm"
 								/>
 							</div>
 						</div>
 						<div className="grid gap-5 sm:grid-cols-2">
 							<div>
-								<label htmlFor="firstName" className="mb-1.5 block text-sm font-medium text-slate-700">
+								<label
+									htmlFor="firstName"
+									className="mb-1.5 block text-sm font-medium text-slate-700"
+								>
 									Prénom
 								</label>
 								<input
@@ -190,11 +201,14 @@ export function CreateEmployeePage() {
 										setFirstName(next)
 										if (!enEdition) setEmail(buildEmail(next, lastName))
 									}}
-									className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+									className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
 								/>
 							</div>
 							<div>
-								<label htmlFor="lastName" className="mb-1.5 block text-sm font-medium text-slate-700">
+								<label
+									htmlFor="lastName"
+									className="mb-1.5 block text-sm font-medium text-slate-700"
+								>
 									Nom
 								</label>
 								<input
@@ -207,7 +221,7 @@ export function CreateEmployeePage() {
 										setLastName(next)
 										if (!enEdition) setEmail(buildEmail(firstName, next))
 									}}
-									className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+									className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
 								/>
 							</div>
 						</div>
@@ -223,13 +237,16 @@ export function CreateEmployeePage() {
 								value={email}
 								readOnly={enEdition}
 								onChange={(e) => setEmail(e.target.value)}
-								className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100 read-only:cursor-default read-only:border-slate-200 read-only:bg-slate-100 read-only:text-slate-500 read-only:shadow-none read-only:focus:ring-0"
+								className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none read-only:cursor-default read-only:border-slate-200 read-only:bg-slate-100 read-only:text-slate-500 read-only:shadow-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 read-only:focus:ring-0"
 							/>
 						</div>
 
 						<div className="grid gap-5 sm:grid-cols-2">
 							<div>
-								<label htmlFor="departement" className="mb-1.5 block text-sm font-medium text-slate-700">
+								<label
+									htmlFor="departement"
+									className="mb-1.5 block text-sm font-medium text-slate-700"
+								>
 									Département
 								</label>
 								<select
@@ -240,11 +257,13 @@ export function CreateEmployeePage() {
 											e.target.value === "" ? null : (Number(e.target.value) as DepartementId),
 										)
 									}
-									className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+									className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
 								>
 									<option value="">Choisir...</option>
-									{Object.entries(Departement).map(([label, id]) =>(
-										<option key={id} value={id}>{label}</option>
+									{Object.entries(Departement).map(([label, id]) => (
+										<option key={id} value={id}>
+											{label}
+										</option>
 									))}
 								</select>
 							</div>
@@ -256,15 +275,15 @@ export function CreateEmployeePage() {
 									id="role"
 									value={role ?? ""}
 									onChange={(e) =>
-										setRole(
-											e.target.value === "" ? null : (Number(e.target.value) as RoleId),
-										)
+										setRole(e.target.value === "" ? null : (Number(e.target.value) as RoleId))
 									}
-									className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+									className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
 								>
 									<option value="">Choisir...</option>
-									{Object.entries(Role).map(([label, id]) =>(
-										<option key={id} value={id}>{label}</option>
+									{Object.entries(Role).map(([label, id]) => (
+										<option key={id} value={id}>
+											{label}
+										</option>
 									))}
 								</select>
 							</div>
@@ -279,13 +298,16 @@ export function CreateEmployeePage() {
 								type="text"
 								value={jobTitle}
 								onChange={(e) => setJobTitle(e.target.value)}
-								className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+								className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
 							/>
 						</div>
 
 						<div className="grid gap-5 sm:grid-cols-2">
 							<div>
-								<label htmlFor="phoneNumber" className="mb-1.5 block text-sm font-medium text-slate-700">
+								<label
+									htmlFor="phoneNumber"
+									className="mb-1.5 block text-sm font-medium text-slate-700"
+								>
 									Téléphone
 								</label>
 								<input
@@ -293,27 +315,30 @@ export function CreateEmployeePage() {
 									type="tel"
 									value={phoneNumber}
 									onChange={(e) => setPhoneNumber(e.target.value)}
-									className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+									className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
 								/>
 							</div>
 							<div>
-								<label htmlFor="managerId" className="mb-1.5 block text-sm font-medium text-slate-700">
+								<label
+									htmlFor="managerId"
+									className="mb-1.5 block text-sm font-medium text-slate-700"
+								>
 									ID manager (optionnel)
 								</label>
 								<input
 									id="managerId"
 									type="text"
 									value={managerId ?? ""}
-									onChange={(e) => 
+									onChange={(e) =>
 										setManagerId(e.target.value === "" ? undefined : Number(e.target.value))
 									}
-									className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+									className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
 								/>
 							</div>
 						</div>
 
 						<button
-							type='submit'
+							type="submit"
 							disabled={enCours}
 							className="w-full rounded-lg bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
 						>

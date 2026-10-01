@@ -1,6 +1,6 @@
-import { Navigate, Outlet } from "react-router-dom";
-import { useSession } from "../session/useSession";
-import { isAdmin } from "../session/permission";
+import { Navigate, Outlet } from "react-router-dom"
+import { useSession } from "../session/useSession"
+import { isAdmin } from "../session/permission"
 
 export function RequireAdmin() {
 	const { me } = useSession()

@@ -2,7 +2,14 @@ import { useEffect, useState, useCallback } from "react"
 import { Link } from "react-router-dom"
 import { DeleteForever } from "@mui/icons-material"
 
-import { LeaveStatus, listLeaves, cancelLeave, type LeaveRequestResponse, LEAVE_TYPE_LABELS, type LeaveStatusId } from "../api/leaves"
+import {
+	LeaveStatus,
+	listLeaves,
+	cancelLeave,
+	type LeaveRequestResponse,
+	LEAVE_TYPE_LABELS,
+	type LeaveStatusId,
+} from "../api/leaves"
 import { ErrorBanner } from "../components/ErrorBanner"
 
 type PageError = {
@@ -11,16 +18,27 @@ type PageError = {
 }
 
 const STATUS_STYLES: Record<LeaveStatusId, { label: string; className: string }> = {
-	[LeaveStatus.EnAttente]: { label: "En attente", className: "bg-amber-50 text-amber-700 ring-amber-600/20" },
-	[LeaveStatus.Approuve]: { label: "Approuvé", className: "bg-emerald-50 text-emerald-700 ring-emerald-600/20" },
+	[LeaveStatus.EnAttente]: {
+		label: "En attente",
+		className: "bg-amber-50 text-amber-700 ring-amber-600/20",
+	},
+	[LeaveStatus.Approuve]: {
+		label: "Approuvé",
+		className: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
+	},
 	[LeaveStatus.Refuse]: { label: "Refusé", className: "bg-red-50 text-red-700 ring-red-600/20" },
-	[LeaveStatus.Annule]: { label: "Annulé", className: "bg-slate-100 text-slate-600 ring-slate-500/20" },
+	[LeaveStatus.Annule]: {
+		label: "Annulé",
+		className: "bg-slate-100 text-slate-600 ring-slate-500/20",
+	},
 }
 
 function StatusBadge({ status }: { status: LeaveStatusId }) {
 	const style = STATUS_STYLES[status]
 	return (
-		<span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${style.className}`}>
+		<span
+			className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${style.className}`}
+		>
 			{style.label}
 		</span>
 	)
@@ -64,7 +82,7 @@ export function LeavesPage() {
 			setCancellingId(null)
 		}
 	}
-	
+
 	return (
 		<div className="min-h-screen bg-linear-to-b from-slate-50 via-slate-50 to-white">
 			<div className="mx-auto max-w-6xl px-6 py-10">
@@ -74,9 +92,7 @@ export function LeavesPage() {
 						<h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900">
 							Mes congés
 						</h1>
-						<p className="mt-1 text-sm text-slate-500">
-							Voir et créer tes demandes de congés
-						</p>
+						<p className="mt-1 text-sm text-slate-500">Voir et créer tes demandes de congés</p>
 					</div>
 					<Link
 						to="/leaves/new"
@@ -110,19 +126,19 @@ export function LeavesPage() {
 							<table className="w-full min-w-200 table-fixed border-collapse text-left">
 								<thead>
 									<tr className="border-b border-slate-200 bg-slate-50/80">
-										<th className="w-[15%] px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+										<th className="w-[15%] px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
 											Début
 										</th>
-										<th className="w-[15%] px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+										<th className="w-[15%] px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
 											Fin
 										</th>
-										<th className="w-[15%] px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+										<th className="w-[15%] px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
 											Type
 										</th>
-										<th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+										<th className="px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
 											Motif
 										</th>
-										<th className="w-[15%] px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+										<th className="w-[15%] px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
 											Statut
 										</th>
 										<th className="w-16 px-3 py-3.5">
@@ -134,7 +150,7 @@ export function LeavesPage() {
 									{leaves.map((leave) => (
 										<tr
 											key={leave.id}
-											className="border-b border-slate-100 transition hover:bg-slate-50/70 last:border-b-0"
+											className="border-b border-slate-100 transition last:border-b-0 hover:bg-slate-50/70"
 										>
 											<td className="px-5 py-3.5 text-sm font-medium text-slate-900">
 												{leave.startDate.slice(0, 10)}

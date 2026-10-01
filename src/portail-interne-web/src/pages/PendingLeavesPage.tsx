@@ -1,7 +1,13 @@
-import { useState, useEffect, useCallback } from "react";
-import { ErrorBanner } from "../components/ErrorBanner";
-import { listLeavesPending, type LeaveRequestResponse, LEAVE_TYPE_LABELS, reviewLeave, LeaveStatus } from "../api/leaves";
-import { CheckCircleOutlineOutlined, HighlightOff } from "@mui/icons-material";
+import { useState, useEffect, useCallback } from "react"
+import { ErrorBanner } from "../components/ErrorBanner"
+import {
+	listLeavesPending,
+	type LeaveRequestResponse,
+	LEAVE_TYPE_LABELS,
+	reviewLeave,
+	LeaveStatus,
+} from "../api/leaves"
+import { CheckCircleOutlineOutlined, HighlightOff } from "@mui/icons-material"
 
 type PageError = {
 	message: string
@@ -13,7 +19,6 @@ export function PendingLeavesPage() {
 	const [error, setError] = useState<PageError | null>(null)
 	const [loading, setLoading] = useState(true)
 	const [reviewingId, setReviewingId] = useState<number | null>(null)
-
 
 	const loadLeaves = useCallback(() => {
 		return listLeavesPending()
@@ -49,7 +54,12 @@ export function PendingLeavesPage() {
 	}
 
 	async function handleDecline(leave: LeaveRequestResponse) {
-		if (!window.confirm(`Refuser cette demande de congé de ${leave.employeeFirstName} ${leave.employeeLastName} ?`)) return
+		if (
+			!window.confirm(
+				`Refuser cette demande de congé de ${leave.employeeFirstName} ${leave.employeeLastName} ?`,
+			)
+		)
+			return
 		setError(null)
 		setReviewingId(leave.id)
 		try {
@@ -105,19 +115,19 @@ export function PendingLeavesPage() {
 							<table className="w-full min-w-200 table-fixed border-collapse text-left">
 								<thead>
 									<tr className="border-b border-slate-200 bg-slate-50/80">
-										<th className="w-[15%] px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+										<th className="w-[15%] px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
 											Employé
 										</th>
-										<th className="w-[15%] px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+										<th className="w-[15%] px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
 											Début
 										</th>
-										<th className="w-[15%] px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+										<th className="w-[15%] px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
 											Fin
 										</th>
-										<th className="w-[15%] px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+										<th className="w-[15%] px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
 											Type
 										</th>
-										<th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+										<th className="px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
 											Motif
 										</th>
 										<th className="w-24 px-3 py-3.5">
@@ -129,7 +139,7 @@ export function PendingLeavesPage() {
 									{leaves.map((leave) => (
 										<tr
 											key={leave.id}
-											className="border-b border-slate-100 transition hover:bg-slate-50/70 last:border-b-0"
+											className="border-b border-slate-100 transition last:border-b-0 hover:bg-slate-50/70"
 										>
 											<td className="px-5 py-3.5 text-sm font-medium text-slate-900">
 												{leave.employeeFirstName} {leave.employeeLastName}

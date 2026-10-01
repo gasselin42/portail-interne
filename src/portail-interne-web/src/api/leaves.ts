@@ -7,7 +7,7 @@ export const LeaveType = {
 
 export type LeaveTypeId = (typeof LeaveType)[keyof typeof LeaveType]
 
-export const LEAVE_TYPE_LABELS: Record<LeaveTypeId,  string> = {
+export const LEAVE_TYPE_LABELS: Record<LeaveTypeId, string> = {
 	[LeaveType.Conge]: "Congé",
 	[LeaveType.Maladie]: "Maladie",
 }
@@ -22,16 +22,16 @@ export const LeaveStatus = {
 export type LeaveStatusId = (typeof LeaveStatus)[keyof typeof LeaveStatus]
 
 export type LeaveRequestResponse = {
-    id: number
-    employeeId: number
+	id: number
+	employeeId: number
 	employeeFirstName: string
 	employeeLastName: string
-    startDate: string
-    endDate: string
-    type: LeaveTypeId
-    status : LeaveStatusId
-    reason: string
-    createdAt: string
+	startDate: string
+	endDate: string
+	type: LeaveTypeId
+	status: LeaveStatusId
+	reason: string
+	createdAt: string
 }
 
 export type CreateLeaveRequest = {
@@ -46,7 +46,7 @@ export type ReviewStatus = typeof LeaveStatus.Approuve | typeof LeaveStatus.Refu
 export async function listLeaves(): Promise<LeaveRequestResponse[]> {
 	const res = await apiFetch("/api/leaves")
 	if (!res.ok) {
-		throw new Error(await readApiError(res, 'Impossible de charger les congés'))
+		throw new Error(await readApiError(res, "Impossible de charger les congés"))
 	}
 	return (await res.json()) as LeaveRequestResponse[]
 }
@@ -54,15 +54,15 @@ export async function listLeaves(): Promise<LeaveRequestResponse[]> {
 export async function listLeavesPending(): Promise<LeaveRequestResponse[]> {
 	const res = await apiFetch("/api/leaves/pending")
 	if (!res.ok) {
-		throw new Error(await readApiError(res, 'Impossible de charger les congés'))
+		throw new Error(await readApiError(res, "Impossible de charger les congés"))
 	}
 	return (await res.json()) as LeaveRequestResponse[]
 }
 
 export async function cancelLeave(id: number) {
-	const res = await apiFetch(`/api/leaves/${id}/cancel`, { method: 'POST' })
+	const res = await apiFetch(`/api/leaves/${id}/cancel`, { method: "POST" })
 	if (!res.ok) {
-		throw new Error(await readApiError(res, 'Impossible d\'annuler le congé'))
+		throw new Error(await readApiError(res, "Impossible d'annuler le congé"))
 	}
 }
 
@@ -72,7 +72,7 @@ export async function createLeave(request: CreateLeaveRequest): Promise<LeaveReq
 		body: JSON.stringify(request),
 	})
 	if (!res.ok) {
-		throw new Error(await readApiError(res, 'Impossible de créer le congé'))
+		throw new Error(await readApiError(res, "Impossible de créer le congé"))
 	}
 	return (await res.json()) as LeaveRequestResponse
 }
@@ -83,6 +83,6 @@ export async function reviewLeave(id: number, status: ReviewStatus): Promise<voi
 		body: JSON.stringify({ status }),
 	})
 	if (!res.ok) {
-		throw new Error(await readApiError(res, 'Impossible de traiter la demande'))
+		throw new Error(await readApiError(res, "Impossible de traiter la demande"))
 	}
 }

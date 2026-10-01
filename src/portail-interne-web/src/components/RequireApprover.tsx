@@ -1,6 +1,6 @@
-import { Navigate, Outlet } from "react-router-dom";
-import { useSession } from "../session/useSession";
-import { canApprove } from "../session/permission";
+import { Navigate, Outlet } from "react-router-dom"
+import { useSession } from "../session/useSession"
+import { canApprove } from "../session/permission"
 
 export function RequireApprover() {
 	const { me } = useSession()

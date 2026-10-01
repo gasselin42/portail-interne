@@ -22,14 +22,12 @@ export type EmployeeEdition = EmployeeDetail & {
 }
 
 export async function listEmployees(search?: string): Promise<EmployeeListItem[]> {
-	const query = search?.trim()
-		? `?search=${encodeURIComponent(search.trim())}`
-		: ''
+	const query = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : ""
 
 	const res = await apiFetch(`/api/employees${query}`)
 
 	if (!res.ok) {
-		throw new Error(await readApiError(res, 'Impossible de charger l\'annuaire'))
+		throw new Error(await readApiError(res, "Impossible de charger l'annuaire"))
 	}
 
 	return (await res.json()) as EmployeeListItem[]
@@ -39,7 +37,7 @@ export async function getEmployee(id: number): Promise<EmployeeDetail> {
 	const res = await apiFetch(`/api/employees/${id}`)
 
 	if (!res.ok) {
-		throw new Error(await readApiError(res, 'Impossible de charger l\'employé'))
+		throw new Error(await readApiError(res, "Impossible de charger l'employé"))
 	}
 
 	return (await res.json()) as EmployeeDetail

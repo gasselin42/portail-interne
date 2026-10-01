@@ -38,7 +38,7 @@ export function SidebarContent({ collapsed, onNavigate }: Props) {
 		<div className="flex h-full flex-col">
 			{/* 1. En-tête */}
 			<div className={`flex items-center gap-3 px-4 py-5 ${collapsed ? "justify-center" : ""}`}>
-				<span 
+				<span
 					aria-hidden="true"
 					className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-600 text-sm font-semibold text-white"
 				>
@@ -108,5 +108,4 @@ export function SidebarContent({ collapsed, onNavigate }: Props) {
 			</div>
 		</div>
 	)
-
 }

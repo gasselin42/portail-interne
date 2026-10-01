@@ -2,7 +2,13 @@ import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import WarningAmber from "@mui/icons-material/WarningAmber"
 import { LockReset, Edit } from "@mui/icons-material"
-import { listAccounts, setAccountActive, resetAccountPassword, Departement, type AccountListItem } from "../api/admin"
+import {
+	listAccounts,
+	setAccountActive,
+	resetAccountPassword,
+	Departement,
+	type AccountListItem,
+} from "../api/admin"
 import { ErrorBanner } from "../components/ErrorBanner"
 
 type PageError = {
@@ -13,7 +19,7 @@ type PageError = {
 function AccountActiveToggle({
 	checked,
 	disabled,
-	onChange
+	onChange,
 }: {
 	checked: boolean
 	disabled?: boolean
@@ -28,17 +34,7 @@ function AccountActiveToggle({
 				disabled={disabled}
 				onChange={(e) => onChange(e.target.checked)}
 			/>
-			<span 
-				className="
-					absolute inset-0 cursor-pointer rounded-full bg-zinc-300 transition
-					before:absolute before:bottom-1 before:left-1
-					before:h-[26px] before:w-[26px] before:rounded-full
-					before:bg-white before:content-[''] before:transition before:shadow-sm
-					peer-checked:bg-sky-500 peer-checked:before:translate-x-[26px]
-					peer-focus-visible::ring-2 peer-focus-visible::ring-sky-300
-					peer-disabled:cursor-not-allowed
-				"
-			/>
+			<span className="peer-focus-visible::ring-2 peer-focus-visible::ring-sky-300 absolute inset-0 cursor-pointer rounded-full bg-zinc-300 transition peer-checked:bg-sky-500 peer-disabled:cursor-not-allowed before:absolute before:bottom-1 before:left-1 before:h-[26px] before:w-[26px] before:rounded-full before:bg-white before:shadow-sm before:transition before:content-[''] peer-checked:before:translate-x-[26px]" />
 		</label>
 	)
 }
@@ -125,9 +121,7 @@ export function AdminAccountsPage() {
 			setPasswordCopied(false)
 			setAccounts((prev) =>
 				prev.map((a) =>
-					a.userAccountId === account.userAccountId
-						? { ...a, mustChangePassword: true }
-						: a,
+					a.userAccountId === account.userAccountId ? { ...a, mustChangePassword: true } : a,
 				),
 			)
 		} catch (e) {
@@ -146,9 +140,7 @@ export function AdminAccountsPage() {
 				<header className="mb-8 flex flex-wrap items-end justify-between gap-4">
 					<div>
 						<p className="text-sm font-medium text-sky-700">Administration</p>
-						<h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900">
-							Comptes
-						</h1>
+						<h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900">Comptes</h1>
 						<p className="mt-1 text-sm text-slate-500">
 							Gérer les accès et l'activation des employés
 						</p>
@@ -219,25 +211,25 @@ export function AdminAccountsPage() {
 							<table className="w-full min-w-[720px] border-collapse text-left">
 								<thead>
 									<tr className="border-b border-slate-200 bg-slate-50/80">
-										<th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+										<th className="px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
 											Nom
 										</th>
-										<th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+										<th className="px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
 											Prénom
 										</th>
-										<th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+										<th className="px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
 											Email
 										</th>
-										<th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+										<th className="px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
 											Rôle
 										</th>
-										<th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+										<th className="px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
 											Département
 										</th>
-										<th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+										<th className="px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
 											Actif
 										</th>
-										<th className="w-0 whitespace-nowrap px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+										<th className="w-0 px-5 py-3.5 text-xs font-semibold tracking-wide whitespace-nowrap text-slate-500 uppercase">
 											Actions
 										</th>
 									</tr>
@@ -246,17 +238,13 @@ export function AdminAccountsPage() {
 									{accounts.map((account) => (
 										<tr
 											key={account.userAccountId}
-											className="border-b border-slate-100 transition hover:bg-slate-50/70 last:border-b-0"
+											className="border-b border-slate-100 transition last:border-b-0 hover:bg-slate-50/70"
 										>
 											<td className="px-5 py-3.5 text-sm font-medium text-slate-900">
 												{account.lastName}
 											</td>
-											<td className="px-5 py-3.5 text-sm text-slate-700">
-												{account.firstName}
-											</td>
-											<td className="px-5 py-3.5 text-sm text-slate-600">
-												{account.email}
-											</td>
+											<td className="px-5 py-3.5 text-sm text-slate-700">{account.firstName}</td>
+											<td className="px-5 py-3.5 text-sm text-slate-600">{account.email}</td>
 											<td className="px-5 py-3.5">
 												<RoleBadge role={account.role} />
 											</td>
@@ -270,7 +258,7 @@ export function AdminAccountsPage() {
 													onChange={(next) => handleToggle(account, next)}
 												/>
 											</td>
-											<td className="w-0 whitespace-nowrap px-5 py-3.5">
+											<td className="w-0 px-5 py-3.5 whitespace-nowrap">
 												<div className="flex items-center gap-2">
 													<Link to={`/admin/employees/${account.employeeId}/edit`} title="Modifier">
 														<Edit fontSize="small" />

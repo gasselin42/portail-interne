@@ -1,5 +1,12 @@
 import type { SvgIconComponent } from "@mui/icons-material"
-import { HomeOutlined, EventAvailableOutlined, CalendarMonthOutlined, PeopleOutlined, FactCheckOutlined, ManageAccountsOutlined } from "@mui/icons-material"
+import {
+	HomeOutlined,
+	EventAvailableOutlined,
+	CalendarMonthOutlined,
+	PeopleOutlined,
+	FactCheckOutlined,
+	ManageAccountsOutlined,
+} from "@mui/icons-material"
 import type { Me } from "../api/auth"
 import { canApprove, isAdmin } from "../session/permission"
 
@@ -19,12 +26,18 @@ export const NAV_ITEMS: NavItem[] = [
 	{ to: "/calendar", label: "Calendrier", icon: CalendarMonthOutlined },
 	{ to: "/employees", label: "Annuaire", icon: PeopleOutlined },
 	{ to: "/approvals", label: "À approuver", icon: FactCheckOutlined, visible: canApprove },
-	{ to: "/admin/accounts", label: "Comptes", icon: ManageAccountsOutlined, visible: isAdmin, alsoActiveOn: ["/admin/employees"] },
+	{
+		to: "/admin/accounts",
+		label: "Comptes",
+		icon: ManageAccountsOutlined,
+		visible: isAdmin,
+		alsoActiveOn: ["/admin/employees"],
+	},
 ]
 
 export function isNavItemActive(item: NavItem, pathname: string): boolean {
 	if (item.to === "/") return pathname === "/"
-	
+
 	const paths = [item.to, ...(item.alsoActiveOn ?? [])]
 	return paths.some((p) => pathname === p || pathname.startsWith(`${p}/`))
 }

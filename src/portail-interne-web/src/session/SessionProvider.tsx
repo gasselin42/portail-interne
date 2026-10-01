@@ -38,8 +38,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 		refresh()
 
 		function handleVisibility() {
-			if (document.visibilityState === "visible")
-				refresh()
+			if (document.visibilityState === "visible") refresh()
 		}
 
 		document.addEventListener("visibilitychange", handleVisibility)

@@ -1,19 +1,19 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { RequireAuth } from "./components/RequireAuth";
-import { RequireAdmin } from "./components/RequireAdmin";
-import { RequireApprover } from "./components/RequireApprover";
-import { SessionProvider } from "./session/SessionProvider";
+import { BrowserRouter, Route, Routes } from "react-router-dom"
+import { RequireAuth } from "./components/RequireAuth"
+import { RequireAdmin } from "./components/RequireAdmin"
+import { RequireApprover } from "./components/RequireApprover"
+import { SessionProvider } from "./session/SessionProvider"
 
-import { LoginPage } from "./pages/LoginPage";
-import { ChangePassword } from "./pages/ChangePassword";
-import { HomePage } from "./pages/HomePage";
-import { AdminAccountsPage } from "./pages/AdminAccountsPage";
-import { CreateEmployeePage } from "./pages/CreateEmployeePage";
-import { AnnuairePage } from "./pages/AnnuairePage";
-import { FicheEmployePage } from "./pages/FicheEmployePage";
-import { LeavesPage } from "./pages/LeavesPage";
-import { NewLeavePage } from "./pages/NewLeavePage";
-import { PendingLeavesPage } from "./pages/PendingLeavesPage";
+import { LoginPage } from "./pages/LoginPage"
+import { ChangePassword } from "./pages/ChangePassword"
+import { HomePage } from "./pages/HomePage"
+import { AdminAccountsPage } from "./pages/AdminAccountsPage"
+import { CreateEmployeePage } from "./pages/CreateEmployeePage"
+import { AnnuairePage } from "./pages/AnnuairePage"
+import { FicheEmployePage } from "./pages/FicheEmployePage"
+import { LeavesPage } from "./pages/LeavesPage"
+import { NewLeavePage } from "./pages/NewLeavePage"
+import { PendingLeavesPage } from "./pages/PendingLeavesPage"
 
 export default function App() {
 	return (
@@ -22,10 +22,10 @@ export default function App() {
 				<Routes>
 					{/* Public */}
 					<Route path="/login" element={<LoginPage />} />
-					
+
 					{/* Connecté + autorisé à changer le mdp */}
 					<Route element={<RequireAuth allowPasswordChange />}>
-						<Route path="/change-password" element={<ChangePassword />}/>
+						<Route path="/change-password" element={<ChangePassword />} />
 					</Route>
 
 					{/* Connecté + mdp déjà OK */}
@@ -36,8 +36,8 @@ export default function App() {
 						<Route path="/leaves" element={<LeavesPage />} />
 						<Route path="/leaves/new" element={<NewLeavePage />} />
 						<Route path="/calendar" element={<h1>Calendrier</h1>} />
-						
-						<Route element={<RequireApprover />}>	
+
+						<Route element={<RequireApprover />}>
 							<Route path="/approvals" element={<PendingLeavesPage />} />
 						</Route>
 

@@ -4,14 +4,14 @@ type Props = {
 	title: string
 	message?: string
 	loading?: boolean
-	action?: { 
+	action?: {
 		label: string
 		busyLabel?: string
 		onClick: () => Promise<void>
 	}
 }
 
-export function FullPageStatus({ title, message, loading = false, action}: Props) {
+export function FullPageStatus({ title, message, loading = false, action }: Props) {
 	const [busy, setBusy] = useState(false)
 
 	async function handleAction() {
@@ -20,7 +20,7 @@ export function FullPageStatus({ title, message, loading = false, action}: Props
 		try {
 			await Promise.all([
 				action.onClick().catch(() => {}),
-				new Promise((resolve) => setTimeout(resolve, 600))
+				new Promise((resolve) => setTimeout(resolve, 600)),
 			])
 		} finally {
 			setBusy(false)
@@ -34,7 +34,7 @@ export function FullPageStatus({ title, message, loading = false, action}: Props
 				className="w-full max-w-sm rounded-2xl border border-slate-200/80 bg-white p-8 text-center shadow-sm shadow-slate-200/50"
 			>
 				{loading && (
-					<div 
+					<div
 						aria-hidden="true"
 						className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-sky-600"
 					/>
