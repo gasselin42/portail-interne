@@ -11,6 +11,7 @@ import {
 	type LeaveStatusId,
 } from "../api/leaves"
 import { ErrorBanner } from "../components/ErrorBanner"
+import { DateText } from "../components/DateText"
 
 type PageError = {
 	message: string
@@ -88,9 +89,7 @@ export function LeavesPage() {
 			<header className="mb-8 flex flex-wrap items-end justify-between gap-4">
 				<div>
 					<p className="text-sm font-medium text-sky-700">Congés</p>
-					<h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900">
-						Mes congés
-					</h1>
+					<h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900">Mes congés</h1>
 					<p className="mt-1 text-sm text-slate-500">Voir et créer tes demandes de congés</p>
 				</div>
 				<Link
@@ -111,9 +110,7 @@ export function LeavesPage() {
 
 			<section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/50">
 				{loading ? (
-					<p className="px-6 py-12 text-center text-sm text-slate-500">
-						Chargement des congés...
-					</p>
+					<p className="px-6 py-12 text-center text-sm text-slate-500">Chargement des congés...</p>
 				) : leaves.length === 0 ? (
 					!(error && !error.dismissible) && (
 						<p className="px-6 py-12 text-center text-sm text-slate-500">
@@ -151,11 +148,11 @@ export function LeavesPage() {
 										key={leave.id}
 										className="border-b border-slate-100 transition last:border-b-0 hover:bg-slate-50/70"
 									>
-										<td className="px-5 py-3.5 text-sm font-medium text-slate-900">
-											{leave.startDate.slice(0, 10)}
+										<td className="px-5 py-3.5 text-sm font-semibold text-slate-700">
+											<DateText value={leave.startDate} />
 										</td>
-										<td className="px-5 py-3.5 text-sm text-slate-700">
-											{leave.endDate.slice(0, 10)}
+										<td className="px-5 py-3.5 text-sm font-semibold text-slate-700">
+											<DateText value={leave.endDate} />
 										</td>
 										<td className="px-5 py-3.5 text-sm text-slate-600">
 											{LEAVE_TYPE_LABELS[leave.type]}

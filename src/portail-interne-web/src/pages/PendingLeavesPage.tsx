@@ -8,6 +8,7 @@ import {
 	LeaveStatus,
 } from "../api/leaves"
 import { CheckCircleOutlineOutlined, HighlightOff } from "@mui/icons-material"
+import { DateText } from "../components/DateText"
 
 type PageError = {
 	message: string
@@ -143,11 +144,11 @@ export function PendingLeavesPage() {
 										<td className="px-5 py-3.5 text-sm font-medium text-slate-900">
 											{leave.employeeFirstName} {leave.employeeLastName}
 										</td>
-										<td className="px-5 py-3.5 text-sm text-slate-700">
-											{leave.startDate.slice(0, 10)}
+										<td className="px-5 py-3.5 text-sm font-semibold text-slate-700">
+											<DateText value={leave.startDate} />
 										</td>
-										<td className="px-5 py-3.5 text-sm text-slate-700">
-											{leave.endDate.slice(0, 10)}
+										<td className="px-5 py-3.5 text-sm font-semibold text-slate-700">
+											<DateText value={leave.endDate} />
 										</td>
 										<td className="px-5 py-3.5 text-sm text-slate-600">
 											{LEAVE_TYPE_LABELS[leave.type]}

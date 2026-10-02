@@ -76,7 +76,7 @@ Objectif : aucun cas limite connu laissé de côté. Ordre recommandé ci-dessou
 - [x] Q3. **Fuseau horaire de l’API** : « aujourd’hui » calculé en `America/Toronto`, pas selon la machine
   - [x] Réglage `App:TimeZone` + service `IAppClock` (vérifié au démarrage)
   - [x] Frontend aligné sur le même fuseau (`APP_TIME_ZONE`, `daysFromToday`)
-- [ ] Q4. **Dates lisibles** : `formatDate` (`Intl.DateTimeFormat("fr-CA")`) dans tous les affichages
+- [x] Q4. **Dates lisibles** : `formatDate` (`Intl.DateTimeFormat("fr-CA")`) dans tous les affichages
 - [ ] Q5. **`ConfirmDialog`** réutilisable pour remplacer les 3 `window.confirm` (Échap, focus piégé, variante destructive)
 - [ ] Q6. **Choix du manager par son nom** (combobox, Headless UI)
   - [ ] Recherche via `GET /api/employees?search=` avec debounce + annulation des requêtes périmées
