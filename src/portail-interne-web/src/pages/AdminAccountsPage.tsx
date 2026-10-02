@@ -135,162 +135,160 @@ export function AdminAccountsPage() {
 	}
 
 	return (
-		<div className="min-h-screen bg-gradient-to-b from-slate-50 via-slate-50 to-white">
-			<div className="mx-auto max-w-6xl px-6 py-10">
-				<header className="mb-8 flex flex-wrap items-end justify-between gap-4">
-					<div>
-						<p className="text-sm font-medium text-sky-700">Administration</p>
-						<h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900">Comptes</h1>
-						<p className="mt-1 text-sm text-slate-500">
-							Gérer les accès et l'activation des employés
-						</p>
+		<div className="mx-auto max-w-6xl px-6 py-10">
+			<header className="mb-8 flex flex-wrap items-end justify-between gap-4">
+				<div>
+					<p className="text-sm font-medium text-sky-700">Administration</p>
+					<h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900">Comptes</h1>
+					<p className="mt-1 text-sm text-slate-500">
+						Gérer les accès et l'activation des employés
+					</p>
+				</div>
+				<Link
+					to="/admin/employees/new"
+					className="rounded-lg bg-sky-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-sky-700"
+				>
+					Créer un employé
+				</Link>
+			</header>
+
+			{error && (
+				<ErrorBanner
+					message={error.message}
+					dismissible={error.dismissible}
+					onDismiss={() => setError(null)}
+				/>
+			)}
+
+			{temporaryPassword && (
+				<div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+					<p className="font-medium">
+						Nouveau mot de passe temporaire
+						{resetForEmail ? ` pour ${resetForEmail}` : ""} (affiché une seule fois)
+					</p>
+					<div className="mt-2 flex flex-wrap items-center gap-3">
+						<p className="font-mono text-base tracking-wide">{temporaryPassword}</p>
+						<button
+							type="button"
+							disabled={passwordCopied}
+							className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-medium text-amber-900 transition hover:bg-amber-100 disabled:cursor-default disabled:opacity-70"
+							onClick={async () => {
+								await navigator.clipboard.writeText(temporaryPassword)
+								setPasswordCopied(true)
+							}}
+						>
+							{passwordCopied ? "Copié" : "Copier"}
+						</button>
+						<button
+							type="button"
+							className="rounded-lg px-3 py-1.5 text-xs font-medium text-amber-800 hover:underline"
+							onClick={() => {
+								setTemporaryPassword(null)
+								setResetForEmail(null)
+								setPasswordCopied(false)
+							}}
+						>
+							Fermer
+						</button>
 					</div>
-					<Link
-						to="/admin/employees/new"
-						className="rounded-lg bg-sky-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-sky-700"
-					>
-						Créer un employé
-					</Link>
-				</header>
+				</div>
+			)}
 
-				{error && (
-					<ErrorBanner
-						message={error.message}
-						dismissible={error.dismissible}
-						onDismiss={() => setError(null)}
-					/>
-				)}
-
-				{temporaryPassword && (
-					<div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-						<p className="font-medium">
-							Nouveau mot de passe temporaire
-							{resetForEmail ? ` pour ${resetForEmail}` : ""} (affiché une seule fois)
-						</p>
-						<div className="mt-2 flex flex-wrap items-center gap-3">
-							<p className="font-mono text-base tracking-wide">{temporaryPassword}</p>
-							<button
-								type="button"
-								disabled={passwordCopied}
-								className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-medium text-amber-900 transition hover:bg-amber-100 disabled:cursor-default disabled:opacity-70"
-								onClick={async () => {
-									await navigator.clipboard.writeText(temporaryPassword)
-									setPasswordCopied(true)
-								}}
-							>
-								{passwordCopied ? "Copié" : "Copier"}
-							</button>
-							<button
-								type="button"
-								className="rounded-lg px-3 py-1.5 text-xs font-medium text-amber-800 hover:underline"
-								onClick={() => {
-									setTemporaryPassword(null)
-									setResetForEmail(null)
-									setPasswordCopied(false)
-								}}
-							>
-								Fermer
-							</button>
-						</div>
-					</div>
-				)}
-
-				<section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/50">
-					{loading ? (
+			<section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/50">
+				{loading ? (
+					<p className="px-6 py-12 text-center text-sm text-slate-500">
+						Chargement des comptes...
+					</p>
+				) : accounts.length === 0 ? (
+					!(error && !error.dismissible) && (
 						<p className="px-6 py-12 text-center text-sm text-slate-500">
-							Chargement des comptes...
+							Aucun compte pour le moment
 						</p>
-					) : accounts.length === 0 ? (
-						!(error && !error.dismissible) && (
-							<p className="px-6 py-12 text-center text-sm text-slate-500">
-								Aucun compte pour le moment
-							</p>
-						)
-					) : (
-						<div className="overflow-x-auto">
-							<table className="w-full min-w-[720px] border-collapse text-left">
-								<thead>
-									<tr className="border-b border-slate-200 bg-slate-50/80">
-										<th className="px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
-											Nom
-										</th>
-										<th className="px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
-											Prénom
-										</th>
-										<th className="px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
-											Email
-										</th>
-										<th className="px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
-											Rôle
-										</th>
-										<th className="px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
-											Département
-										</th>
-										<th className="px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
-											Actif
-										</th>
-										<th className="w-0 px-5 py-3.5 text-xs font-semibold tracking-wide whitespace-nowrap text-slate-500 uppercase">
-											Actions
-										</th>
-									</tr>
-								</thead>
-								<tbody>
-									{accounts.map((account) => (
-										<tr
-											key={account.userAccountId}
-											className="border-b border-slate-100 transition last:border-b-0 hover:bg-slate-50/70"
-										>
-											<td className="px-5 py-3.5 text-sm font-medium text-slate-900">
-												{account.lastName}
-											</td>
-											<td className="px-5 py-3.5 text-sm text-slate-700">{account.firstName}</td>
-											<td className="px-5 py-3.5 text-sm text-slate-600">{account.email}</td>
-											<td className="px-5 py-3.5">
-												<RoleBadge role={account.role} />
-											</td>
-											<td className="px-5 py-3.5 text-sm text-slate-600">
-												{departementLabel(account.departement)}
-											</td>
-											<td className="px-5 py-3.5">
-												<AccountActiveToggle
-													checked={account.accountIsActive}
-													disabled={togglingId === account.userAccountId}
-													onChange={(next) => handleToggle(account, next)}
-												/>
-											</td>
-											<td className="w-0 px-5 py-3.5 whitespace-nowrap">
-												<div className="flex items-center gap-2">
-													<Link to={`/admin/employees/${account.employeeId}/edit`} title="Modifier">
-														<Edit fontSize="small" />
-													</Link>
-													<button
-														type="button"
-														disabled={resettingId === account.userAccountId}
-														onClick={() => handleResetPassword(account)}
-														title="Réinitialiser le mot de passe"
-														className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+					)
+				) : (
+					<div className="overflow-x-auto">
+						<table className="w-full min-w-[720px] border-collapse text-left">
+							<thead>
+								<tr className="border-b border-slate-200 bg-slate-50/80">
+									<th className="px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+										Nom
+									</th>
+									<th className="px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+										Prénom
+									</th>
+									<th className="px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+										Email
+									</th>
+									<th className="px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+										Rôle
+									</th>
+									<th className="px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+										Département
+									</th>
+									<th className="px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+										Actif
+									</th>
+									<th className="w-0 px-5 py-3.5 text-xs font-semibold tracking-wide whitespace-nowrap text-slate-500 uppercase">
+										Actions
+									</th>
+								</tr>
+							</thead>
+							<tbody>
+								{accounts.map((account) => (
+									<tr
+										key={account.userAccountId}
+										className="border-b border-slate-100 transition last:border-b-0 hover:bg-slate-50/70"
+									>
+										<td className="px-5 py-3.5 text-sm font-medium text-slate-900">
+											{account.lastName}
+										</td>
+										<td className="px-5 py-3.5 text-sm text-slate-700">{account.firstName}</td>
+										<td className="px-5 py-3.5 text-sm text-slate-600">{account.email}</td>
+										<td className="px-5 py-3.5">
+											<RoleBadge role={account.role} />
+										</td>
+										<td className="px-5 py-3.5 text-sm text-slate-600">
+											{departementLabel(account.departement)}
+										</td>
+										<td className="px-5 py-3.5">
+											<AccountActiveToggle
+												checked={account.accountIsActive}
+												disabled={togglingId === account.userAccountId}
+												onChange={(next) => handleToggle(account, next)}
+											/>
+										</td>
+										<td className="w-0 px-5 py-3.5 whitespace-nowrap">
+											<div className="flex items-center gap-2">
+												<Link to={`/admin/employees/${account.employeeId}/edit`} title="Modifier">
+													<Edit fontSize="small" />
+												</Link>
+												<button
+													type="button"
+													disabled={resettingId === account.userAccountId}
+													onClick={() => handleResetPassword(account)}
+													title="Réinitialiser le mot de passe"
+													className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+												>
+													<LockReset fontSize="small" />
+													{resettingId === account.userAccountId ? "…" : "Réinit. mdp"}
+												</button>
+												{account.mustChangePassword && (
+													<span
+														title="Mot de passe temporaire à changer"
+														className="inline-flex text-amber-500"
 													>
-														<LockReset fontSize="small" />
-														{resettingId === account.userAccountId ? "…" : "Réinit. mdp"}
-													</button>
-													{account.mustChangePassword && (
-														<span
-															title="Mot de passe temporaire à changer"
-															className="inline-flex text-amber-500"
-														>
-															<WarningAmber fontSize="small" />
-														</span>
-													)}
-												</div>
-											</td>
-										</tr>
-									))}
-								</tbody>
-							</table>
-						</div>
-					)}
-				</section>
-			</div>
+														<WarningAmber fontSize="small" />
+													</span>
+												)}
+											</div>
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
+				)}
+			</section>
 		</div>
 	)
 }

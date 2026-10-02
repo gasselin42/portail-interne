@@ -1,12 +1,12 @@
 import { useState, type SubmitEvent } from "react"
-import { useNavigate, Link } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { Visibility, VisibilityOff } from "@mui/icons-material"
 import { changePassword } from "../api/password"
 import { ErrorBanner } from "../components/ErrorBanner"
 import { useSession } from "../session/useSession"
 
 export function ChangePassword() {
-	const { me, refresh } = useSession()
+	const { refresh } = useSession()
 
 	const [actualPassword, setActualPassword] = useState<string>("")
 	const [newPassword, setNewPassword] = useState<string>("")
@@ -18,8 +18,6 @@ export function ChangePassword() {
 
 	const [enCours, setEnCours] = useState<boolean>(false)
 	const [erreur, setErreur] = useState<string | null>(null)
-
-	const doitChanger = me?.mustChangePassword
 
 	const navigate = useNavigate()
 
@@ -52,11 +50,6 @@ export function ChangePassword() {
 
 	return (
 		<form onSubmit={handleSubmit} className="mx-auto mt-16 max-w-sm space-y-4 rounded p-6">
-			{!doitChanger && (
-				<Link to="/" className="inline-block text-sm font-medium text-sky-700 hover:underline">
-					Retour à l'accueil
-				</Link>
-			)}
 			<div>
 				<label htmlFor="newPassword">Mot de passe actuel</label>
 				<div className="relative mb-3">

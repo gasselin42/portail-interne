@@ -15,10 +15,10 @@ export function SidebarContent({ collapsed, onNavigate }: Props) {
 	const { pathname } = useLocation()
 
 	const navItems = NAV_ITEMS.filter((i) => !i.visible || i.visible(me))
-	const labelClass = collapsed ? "sr-only" : ""
+	const labelClass = collapsed ? "sr-only" : "whitespace-nowrap"
 
 	function linkClasses(active: boolean): string {
-		const base = "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition"
+		const base = "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
 		const state = active
 			? "bg-sky-50 font-medium text-sky-700"
 			: "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
@@ -42,7 +42,7 @@ export function SidebarContent({ collapsed, onNavigate }: Props) {
 					aria-hidden="true"
 					className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-600 text-sm font-semibold text-white"
 				>
-					Portail
+					P
 				</span>
 				<span className={`text-lg font-semibold text-slate-900 ${labelClass}`}>Portail</span>
 			</div>
@@ -73,11 +73,16 @@ export function SidebarContent({ collapsed, onNavigate }: Props) {
 			{/* 3. Bloc utilisateur */}
 			<div className="border-t border-slate-200 px-3 py-4">
 				{me && (
-					<div className={`px-3 ${labelClass}`}>
-						<p className="truncate text-sm font-medium text-slate-900">
-							{me.firstName} {me.lastName}
-						</p>
-						<p className="text-xs text-slate-500">{ROLE_LABELS[me.role]}</p>
+					<div className={`flex items-center gap-3 px-3 ${collapsed ? "justify-center" : ""}`}>
+						<span className="h-9 w-9 shrink-0 rounded-full flex items-center justify-center bg-sky-100 text-sky-700 text-sm font-semibold" aria-hidden="true">
+							{me.firstName[0].toLocaleUpperCase()}{me.lastName[0].toLocaleUpperCase()}
+						</span>
+						<div className={`min-w-0 ${labelClass}`}>
+							<p className="truncate text-sm font-medium text-slate-900">
+								{me.firstName} {me.lastName}
+							</p>
+							<p className="text-xs text-slate-500 truncate">{ROLE_LABELS[me.role]}</p>
+						</div>
 					</div>
 				)}
 				<ul className="mt-3 space-y-1">

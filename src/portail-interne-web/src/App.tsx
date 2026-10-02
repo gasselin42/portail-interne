@@ -7,6 +7,7 @@ import { SessionProvider } from "./session/SessionProvider"
 import { LoginPage } from "./pages/LoginPage"
 import { ChangePassword } from "./pages/ChangePassword"
 import { HomePage } from "./pages/HomePage"
+import { AppLayout } from "./layout/AppLayout"
 import { AdminAccountsPage } from "./pages/AdminAccountsPage"
 import { CreateEmployeePage } from "./pages/CreateEmployeePage"
 import { AnnuairePage } from "./pages/AnnuairePage"
@@ -25,28 +26,31 @@ export default function App() {
 
 					{/* Connecté + autorisé à changer le mdp */}
 					<Route element={<RequireAuth allowPasswordChange />}>
-						<Route path="/change-password" element={<ChangePassword />} />
+						<Route element={<AppLayout />}>
+							<Route path="/change-password" element={<ChangePassword />} />
+						</Route>
 					</Route>
 
 					{/* Connecté + mdp déjà OK */}
 					<Route element={<RequireAuth />}>
-						<Route path="/" element={<HomePage />} />
-						<Route path="/employees" element={<AnnuairePage />} />
-						<Route path="/employees/:id" element={<FicheEmployePage />} />
-						<Route path="/leaves" element={<LeavesPage />} />
-						<Route path="/leaves/new" element={<NewLeavePage />} />
-						<Route path="/calendar" element={<h1>Calendrier</h1>} />
+						<Route element={<AppLayout />}>
+							<Route path="/" element={<HomePage />} />
+							<Route path="/employees" element={<AnnuairePage />} />
+							<Route path="/employees/:id" element={<FicheEmployePage />} />
+							<Route path="/leaves" element={<LeavesPage />} />
+							<Route path="/leaves/new" element={<NewLeavePage />} />
+							<Route path="/calendar" element={<h1>Calendrier</h1>} />
 
-						<Route element={<RequireApprover />}>
-							<Route path="/approvals" element={<PendingLeavesPage />} />
-						</Route>
+							<Route element={<RequireApprover />}>
+								<Route path="/approvals" element={<PendingLeavesPage />} />
+							</Route>
 
-						<Route element={<RequireAdmin />}>
-							<Route path="/admin/accounts" element={<AdminAccountsPage />} />
-							<Route path="/admin/employees/new" element={<CreateEmployeePage />} />
-							<Route path="/admin/employees/:id/edit" element={<CreateEmployeePage />} />
+							<Route element={<RequireAdmin />}>
+								<Route path="/admin/accounts" element={<AdminAccountsPage />} />
+								<Route path="/admin/employees/new" element={<CreateEmployeePage />} />
+								<Route path="/admin/employees/:id/edit" element={<CreateEmployeePage />} />
+							</Route>
 						</Route>
-						{/* plus tard: /employees, /admin/... */}
 					</Route>
 				</Routes>
 			</SessionProvider>
