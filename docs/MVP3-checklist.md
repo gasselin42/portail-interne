@@ -5,7 +5,7 @@ Référence produit : [PROJET.md](../PROJET.md) §5.3, §6, §7, §8, §9 (R6, R
 Stack figée : **ASP.NET Core Web API + React + SQLite**.  
 Coche au fur et à mesure. Le code n’est fourni que sur demande.
 
-**Prérequis :** MVP 2 (congés + calendrier perso) — les règles de conflit s’appuient sur les congés **approuvés**.
+**Prérequis :** MVP 2 (congés + calendrier perso) et MVP 2.5 (horaires) — les règles de conflit s’appuient sur l’**horaire effectif** (R16), qui inclut les congés **approuvés**.
 
 ## Préparation
 
@@ -22,6 +22,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [ ] 4. Créer meeting groupe (liste de participants)
 - [ ] 5. Règle R6 : refuser si un participant a un **congé approuvé** sur le créneau
 - [ ] 6. Détection de conflits d’horaire (chevauchement avec d’autres meetings)
+- [ ] 6b. Avertir si le meeting sort de l’horaire effectif d’un participant (non travaillé, férié, départ anticipé), conversion UTC → fuseau du site (R15)
 - [ ] 7. Priorité meeting d’équipe + création des notifications aux personnes en conflit (R7)
 - [ ] 8. Détail meeting + liste des participants
 - [ ] 9. Modifier / annuler (organisateur ou Admin — règles à figer)

@@ -137,6 +137,19 @@ Types prévus (non exhaustif) :
 
 Canal MVP : **notifications in-app** (table + cloche / liste). Email = bonus ultérieur.
 
+### 5.7 Horaires de travail
+
+- Un Manager ou un Admin définit l’**horaire type** hebdomadaire d’un employé (ex. lundi au jeudi, 8h–17h, 30 min de pause).
+- L’horaire se répète chaque semaine sans intervention ; un changement = un **nouvel horaire** avec une date d’entrée en vigueur (le passé n’est jamais réécrit).
+- Les jours absents de l’horaire sont **non travaillés**, ce ne sont pas des congés.
+- Chaque employé appartient à un **site** (fuseau horaire IANA + jours fériés propres).
+- Les **jours fériés** du site sont non travaillés par défaut ; un manager peut faire travailler quelqu’un ce jour-là.
+- Un **ajustement d’horaire** modifie une seule date (partir à 16h, venir un vendredi, travailler un férié) sans passer par Congés.
+  - Demandé par l’employé → approbation du manager (même file que les congés).
+  - Créé par le manager → approuvé directement.
+  - Aucune banque d’heures : le portail enregistre les heures prévues, la paie reste hors périmètre.
+- La disponibilité d’une personne se calcule par couches : horaire type → férié → ajustement → congé approuvé (→ meetings au MVP 3).
+
 ---
 
 ## 6. Roadmap par MVP
@@ -183,6 +196,28 @@ Canal MVP : **notifications in-app** (table + cloche / liste). Email = bonus ult
 - [ ] Approbation → affichage « congé » distinct
 - [ ] Refus → plus d’affichage bloquant / statut clair
 - [ ] Un utilisateur ne voit/modifie que ce qui lui est permis
+
+---
+
+### MVP 2.5 — Horaires de travail
+
+**Objectif :** savoir qui travaille quand, chaque semaine, sans saisie répétée.
+
+**Inclus :**
+- Sites avec fuseau horaire + jours fériés par site
+- Horaire type hebdomadaire versionné par date d’entrée en vigueur
+- Ajustements d’horaire ponctuels (demande employé + approbation, ou création directe par le manager)
+- Calendrier perso et vue équipe semaine avec l’horaire effectif
+- Congés : seuls les jours travaillés sont comptés
+
+**Exclu :** temps supplémentaire constaté, banque d’heures, paie, quarts de nuit (passant minuit)
+
+**Critères de done :**
+- [ ] Horaire lundi–jeudi → autres jours non travaillés, chaque semaine
+- [ ] Férié non travaillé automatiquement, sauf ajustement du manager
+- [ ] Départ anticipé demandé, approuvé, visible au calendrier
+- [ ] Congé sur une semaine complète → seuls les jours travaillés comptés
+- [ ] « Aujourd’hui » calculé dans le fuseau du site de l’employé
 
 ---
 
@@ -256,7 +291,8 @@ Canal MVP : **notifications in-app** (table + cloche / liste). Email = bonus ult
 - Mobile responsive poussé
 - Audit log admin
 - Import CSV d’employés
-- Fuseaux horaires / multi-sites
+- Temps supplémentaire constaté (déclaration + approbation), banque d’heures
+- Quarts de nuit (horaire passant minuit) et plusieurs blocs par jour
 
 ---
 
@@ -271,6 +307,13 @@ Canal MVP : **notifications in-app** (table + cloche / liste). Email = bonus ult
 
 ### MVP 2
 - **LeaveRequest** : Id, EmployeeId, StartDate, EndDate, Type, Status, Reason?, ReviewedById?, ReviewedAt?, CreatedAt
+
+### MVP 2.5
+- **Site** : Id, Name, TimeZoneId (IANA) — `Employee.SiteId` obligatoire
+- **WorkSchedule** : Id, EmployeeId, EffectiveFrom, CreatedById, CreatedAt
+- **WorkScheduleDay** : WorkScheduleId, DayOfWeek, StartTime, EndTime, BreakMinutes
+- **Holiday** : Id, SiteId, Date, Name
+- **ScheduleAdjustment** : Id, EmployeeId, Date, StartTime?, EndTime?, BreakMinutes, Reason?, Status, CreatedById, ReviewedById?, ReviewedAt?, CreatedAt
 
 ### MVP 3
 - **CalendarEvent / Meeting** : Id, Title, Description?, StartAt, EndAt, OrganizerId, IsTeamMeeting, CreatedAt
@@ -320,6 +363,12 @@ Les écrans sont côté **React**. L’API expose les routes `/api/...` correspo
 9. (Manager) File d’approbation
 10. Calendrier personnel (vue jour / semaine simple)
 
+### MVP 2.5
+10a. (Manager/Admin) Horaire d’un employé
+10b. Demander un ajustement + mes ajustements
+10c. (Manager) Vue équipe semaine
+10d. (Admin) Sites et jours fériés
+
 ### MVP 3
 11. Créer un meeting
 12. Détail meeting
@@ -351,6 +400,12 @@ Les écrans sont côté **React**. L’API expose les routes `/api/...` correspo
 | R8 | Si salle/équipement demandé : doit être libre sur **tout** le créneau, sinon refus |
 | R9 | Tickets IT : vue globale réservée aux rôles IT / Admin |
 | R10 | Assignation ticket → warning « prévoir un slot » pour l’assigné + notif demandeur |
+| R11 | Horaire type récurrent, versionné par `EffectiveFrom` ≥ aujourd’hui ; jours absents = non travaillés ; un bloc par jour, sans passer minuit |
+| R12 | Jour férié du site = non travaillé, sauf ajustement créé par un Manager/Admin |
+| R13 | Ajustement demandé par l’employé = EnAttente jusqu’à approbation ; créé par Manager/Admin = approuvé ; jamais de journée à 0 h demandée par l’employé ; aucune banque d’heures |
+| R14 | Un congé ne compte que les jours travaillés ; une demande sans aucun jour travaillé est refusée |
+| R15 | Horaires, fériés et ajustements en heure locale du site ; instants (meetings, horodatages) en UTC |
+| R16 | Disponibilité = horaire type → férié → ajustement approuvé → congé approuvé (la couche suivante l’emporte) |
 
 ---
 
@@ -363,6 +418,7 @@ portail-interne/
 ├── docs/
 │   ├── MVP1-checklist.md
 │   ├── MVP2-checklist.md
+│   ├── MVP2.5-checklist.md
 │   ├── MVP3-checklist.md
 │   ├── MVP4-checklist.md
 │   └── MVP5-checklist.md
@@ -422,6 +478,9 @@ portail-interne/
 | 2026-09-11 | Auth MVP 1 = **JWT** (pas cookies) |
 | 2026-09-28 | Congé : date de début ≥ aujourd'hui. Maladie : rétroactif permis jusqu'à 14 jours. Toujours EnAttente à la création
 | 2026-09-28 | Création d'un congé pour autrui (Admin/Manager) : reportée, ajoutée dans les bonus du MVP2, nécessite CreatedById
+| 2026-09-30 | Ajout du MVP 2.5 — Horaires de travail, avant les meetings (les conflits s'appuieront sur l'horaire effectif)
+| 2026-09-30 | Départ anticipé = ajustement d'horaire approuvé par le manager, pas un congé ; aucune banque d'heures, paie hors périmètre
+| 2026-09-30 | Fuseaux horaires dès le MVP 2.5 via `Site` (modèle de données) ; temps supplémentaire constaté reporté en Post-MVP
 
 ---
 
@@ -431,6 +490,7 @@ portail-interne/
 |-----|--------|
 | MVP 1 — Auth + annuaire | 🔜 À démarrer |
 | MVP 2 — Congés + calendrier | ⏳ |
+| MVP 2.5 — Horaires de travail | ⏳ |
 | MVP 3 — Meetings | ⏳ |
 | MVP 4 — Ressources | ⏳ |
 | MVP 5 — Helpdesk IT | ⏳ |
