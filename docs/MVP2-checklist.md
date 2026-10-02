@@ -73,7 +73,9 @@ Objectif : aucun cas limite connu laissé de côté. Ordre recommandé ci-dessou
   - [x] État réduit/ouvert mémorisé, `aria-expanded`, navigable au clavier (focus visible)
   - [x] Tiroir fermé automatiquement au passage en grand écran (`matchMedia`)
   - [x] Accueil libéré des cartes de liens (prêt pour les widgets)
-- [ ] Q3. **Fuseau horaire de l’API** : « aujourd’hui » calculé en `America/Toronto`, pas selon la machine
+- [x] Q3. **Fuseau horaire de l’API** : « aujourd’hui » calculé en `America/Toronto`, pas selon la machine
+  - [x] Réglage `App:TimeZone` + service `IAppClock` (vérifié au démarrage)
+  - [x] Frontend aligné sur le même fuseau (`APP_TIME_ZONE`, `daysFromToday`)
 - [ ] Q4. **Dates lisibles** : `formatDate` (`Intl.DateTimeFormat("fr-CA")`) dans tous les affichages
 - [ ] Q5. **`ConfirmDialog`** réutilisable pour remplacer les 3 `window.confirm` (Échap, focus piégé, variante destructive)
 - [ ] Q6. **Choix du manager par son nom** (combobox, Headless UI)
@@ -88,6 +90,15 @@ Objectif : aucun cas limite connu laissé de côté. Ordre recommandé ci-dessou
   - [ ] Type `PageError` partagé (au lieu d’être copié dans chaque page)
   - [x] Commiter `.vscode/settings.json`
 - [ ] Q9. **Page 404**
+- [ ] Q10. **Secrets hors du dépôt**
+  - [ ] Clé JWT retirée de `appsettings.json` ; `dotnet user-secrets` en développement
+  - [ ] Variable d’environnement en production (ex. `Jwt__Key`)
+  - [ ] Nouvelle clé générée (l’ancienne reste visible dans l’historique Git)
+  - [ ] L’API refuse de démarrer si la clé est absente ou trop courte
+- [ ] Q11. **Passage à .NET 10** (LTS ; .NET 7 n’est plus supporté depuis mai 2024)
+  - [ ] `TargetFramework` + paquets NuGet (EF Core, JWT, Swagger) mis à jour
+  - [ ] Build, migrations et tests manuels OK
+  - [ ] Envisager `TimeProvider` (intégré) à la place de `IAppClock`
 
 ## Notes / blocages
 

@@ -15,6 +15,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddSingleton<PasswordService>();
+builder.Services.AddSingleton<IAppClock, AppClock>();
 
 builder.Services.AddScoped<MustChangePasswordFilter>();
 
@@ -91,6 +92,8 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+app.Services.GetRequiredService<IAppClock>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

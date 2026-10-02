@@ -6,6 +6,7 @@ using System.Security.Claims;
 using PortailInterne.Api.Data;
 using PortailInterne.Api.Dtos;
 using PortailInterne.Api.Models;
+using PortailInterne.Api.Services;
 
 namespace PortailInterne.Api.Controllers;
 
@@ -15,12 +16,14 @@ namespace PortailInterne.Api.Controllers;
 public class LeavesController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly IAppClock _clock;
 
     private const int MaxSickLeaveBackdateDays = 14;
 
-    public LeavesController(AppDbContext db)
+    public LeavesController(AppDbContext db, IAppClock clock)
     {
         _db = db;
+        _clock = clock;
     }
 
     [HttpPost]
@@ -34,7 +37,7 @@ public class LeavesController : ControllerBase
         if (request.EndDate.Date < request.StartDate.Date)
             return BadRequest(new { message = "La date de fin ne peut pas être avant la date de début." });
 
-		var minStartDate = (request.Type == LeaveType.Maladie) ? DateTime.Today.AddDays(-MaxSickLeaveBackdateDays) : DateTime.Today;
+		var minStartDate = (request.Type == LeaveType.Maladie) ? _clock.Today.AddDays(-MaxSickLeaveBackdateDays) : _clock.Today;
 
 		if (request.StartDate.Date < minStartDate)
 		{
