@@ -10,6 +10,7 @@ import {
 	type AccountListItem,
 } from "../api/admin"
 import { ErrorBanner } from "../components/ErrorBanner"
+import { ConfirmDialog } from "../components/ConfirmDialog"
 
 type PageError = {
 	message: string
@@ -69,6 +70,12 @@ export function AdminAccountsPage() {
 	const [temporaryPassword, setTemporaryPassword] = useState<string | null>(null)
 	const [resetForEmail, setResetForEmail] = useState<string | null>(null)
 	const [passwordCopied, setPasswordCopied] = useState(false)
+	const [confirmOpen, setConfirmOpen] = useState(false)
+	const [selectedAccount, setSelectedAccount] = useState<AccountListItem | null>(null)
+
+	const resetMessage = selectedAccount
+		? `Un mot de passe temporaire sera généré pour ${selectedAccount.firstName} ${selectedAccount.lastName}. Son mot de passe actuel ne fonctionnera plus, et ${selectedAccount.firstName} devra en choisir un nouveau à sa prochaine connexion.`
+		: ""
 
 	useEffect(() => {
 		listAccounts()
@@ -105,11 +112,6 @@ export function AdminAccountsPage() {
 	}
 
 	async function handleResetPassword(account: AccountListItem) {
-		const ok = window.confirm(
-			`Réinitialiser le mot de passe de ${account.firstName} ${account.lastName} ?`,
-		)
-		if (!ok) return
-
 		setError(null)
 		setTemporaryPassword(null)
 		setPasswordCopied(false)
@@ -132,6 +134,18 @@ export function AdminAccountsPage() {
 		} finally {
 			setResettingId(null)
 		}
+	}
+
+	async function handleResetting() {
+		if (!selectedAccount) return
+
+		await handleResetPassword(selectedAccount)
+		setConfirmOpen(false)
+	}
+
+	function openResetConfirm(account: AccountListItem) {
+		setSelectedAccount(account)
+		setConfirmOpen(true)
 	}
 
 	return (
@@ -196,9 +210,7 @@ export function AdminAccountsPage() {
 
 			<section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/50">
 				{loading ? (
-					<p className="px-6 py-12 text-center text-sm text-slate-500">
-						Chargement des comptes...
-					</p>
+					<p className="px-6 py-12 text-center text-sm text-slate-500">Chargement des comptes...</p>
 				) : accounts.length === 0 ? (
 					!(error && !error.dismissible) && (
 						<p className="px-6 py-12 text-center text-sm text-slate-500">
@@ -265,7 +277,7 @@ export function AdminAccountsPage() {
 												<button
 													type="button"
 													disabled={resettingId === account.userAccountId}
-													onClick={() => handleResetPassword(account)}
+													onClick={() => openResetConfirm(account)}
 													title="Réinitialiser le mot de passe"
 													className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
 												>
@@ -289,6 +301,15 @@ export function AdminAccountsPage() {
 					</div>
 				)}
 			</section>
+			<ConfirmDialog
+				open={confirmOpen}
+				title="Réinitialiser le mot de passe ?"
+				message={resetMessage}
+				confirmLabel="Réinitialiser"
+				busyLabel="Réinitialisation…"
+				onClose={() => setConfirmOpen(false)}
+				onConfirm={handleResetting}
+			/>
 		</div>
 	)
 }

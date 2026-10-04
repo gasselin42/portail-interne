@@ -77,7 +77,12 @@ Objectif : aucun cas limite connu laissé de côté. Ordre recommandé ci-dessou
   - [x] Réglage `App:TimeZone` + service `IAppClock` (vérifié au démarrage)
   - [x] Frontend aligné sur le même fuseau (`APP_TIME_ZONE`, `daysFromToday`)
 - [x] Q4. **Dates lisibles** : `formatDate` (`Intl.DateTimeFormat("fr-CA")`) dans tous les affichages
-- [ ] Q5. **`ConfirmDialog`** réutilisable pour remplacer les 3 `window.confirm` (Échap, focus piégé, variante destructive)
+- [x] Q5. **`ConfirmDialog`** réutilisable pour remplacer les 3 `window.confirm` (Échap, focus piégé, variante destructive)
+- [ ] Q5b. **Mot de passe temporaire dans une boîte de dialogue**
+  - [ ] Composant `Modal` (coquille commune), utilisé par `ConfirmDialog`
+  - [ ] `TemporaryPasswordDialog` : fermeture par « Terminé » seulement, `autoFocus` sur Copier, `select-all`
+  - [ ] Copie : échec géré (message), « Copié ✓ » pendant 2 s
+  - [ ] `AdminAccountsPage` et `CreateEmployeePage` : encadré jaune remplacé, `key` pour un état neuf à chaque mot de passe
 - [ ] Q6. **Choix du manager par son nom** (combobox, Headless UI)
   - [ ] Recherche via `GET /api/employees?search=` avec debounce + annulation des requêtes périmées
   - [ ] États : recherche en cours, aucun résultat, erreur API

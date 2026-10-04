@@ -85,7 +85,8 @@ public class LeavesController : ControllerBase
         var leaves = await _db.LeaveRequests
             .AsNoTracking()
             .Where(l => l.EmployeeId == employeeId)
-            .OrderByDescending(l => l.StartDate)
+            .OrderBy(l => l.StartDate)
+            .ThenBy(l => l.EndDate)
             .Select(l => new LeaveRequestResponse
             {
                 Id = l.Id,
@@ -146,6 +147,7 @@ public class LeavesController : ControllerBase
             .Where(l => isAdmin || l.Employee.ManagerId == employeeId)
             .Where(l => l.EmployeeId != employeeId)
             .OrderBy(l => l.StartDate)
+            .ThenBy(l => l.EndDate)
             .Select(l => new LeaveRequestResponse
             {
                 Id = l.Id,
@@ -243,7 +245,8 @@ public class LeavesController : ControllerBase
             .Where(l => l.EmployeeId == employeeId)
             .Where(l => l.StartDate.Date <= to.Date && l.EndDate.Date >= from.Date)
             .Where(l => l.Status == LeaveStatus.EnAttente || l.Status == LeaveStatus.Approuve)
-            .OrderByDescending(l => l.StartDate)
+            .OrderBy(l => l.StartDate)
+            .ThenBy(l => l.EndDate)
             .Select(l => new LeaveRequestResponse
             {
                 Id = l.Id,

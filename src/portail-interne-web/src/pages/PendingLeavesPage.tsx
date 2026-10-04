@@ -9,6 +9,8 @@ import {
 } from "../api/leaves"
 import { CheckCircleOutlineOutlined, HighlightOff } from "@mui/icons-material"
 import { DateText } from "../components/DateText"
+import { formatRange } from "../utils/date"
+import { ConfirmDialog } from "../components/ConfirmDialog"
 
 type PageError = {
 	message: string
@@ -20,6 +22,12 @@ export function PendingLeavesPage() {
 	const [error, setError] = useState<PageError | null>(null)
 	const [loading, setLoading] = useState(true)
 	const [reviewingId, setReviewingId] = useState<number | null>(null)
+	const [confirmOpen, setConfirmOpen] = useState(false)
+	const [selectedLeave, setSelectedLeave] = useState<LeaveRequestResponse | null>(null)
+
+	const declineMessage = selectedLeave
+			? `Cette demande (${LEAVE_TYPE_LABELS[selectedLeave.type]}) de ${selectedLeave.employeeFirstName} ${selectedLeave.employeeLastName} du ${formatRange(selectedLeave.startDate, selectedLeave.endDate)} sera refusée. ${selectedLeave.employeeFirstName} verra le statut Refusé.`
+			: ""
 
 	const loadLeaves = useCallback(() => {
 		return listLeavesPending()
@@ -55,12 +63,6 @@ export function PendingLeavesPage() {
 	}
 
 	async function handleDecline(leave: LeaveRequestResponse) {
-		if (
-			!window.confirm(
-				`Refuser cette demande de congé de ${leave.employeeFirstName} ${leave.employeeLastName} ?`,
-			)
-		)
-			return
 		setError(null)
 		setReviewingId(leave.id)
 		try {
@@ -75,6 +77,18 @@ export function PendingLeavesPage() {
 		} finally {
 			setReviewingId(null)
 		}
+	}
+
+	async function handleConfirmDecline() {
+		if (!selectedLeave) return
+
+		await handleDecline(selectedLeave)
+		setConfirmOpen(false)
+	}
+
+	function openDeclineConfirm(leave: LeaveRequestResponse) {
+		setSelectedLeave(leave)
+		setConfirmOpen(true)
 	}
 
 	return (
@@ -163,17 +177,17 @@ export function PendingLeavesPage() {
 													onClick={() => handleValidation(leave.id)}
 													disabled={reviewingId === leave.id}
 													title="Accepter"
-													aria-label="Accepter"
+													aria-label={`Accepter la demande de ${leave.employeeFirstName} ${leave.employeeLastName}`}
 													className="rounded-lg p-1.5 text-slate-400 transition hover:bg-emerald-50 hover:text-emerald-600 disabled:opacity-50"
 												>
 													<CheckCircleOutlineOutlined fontSize="small" />
 												</button>
 												<button
 													type="button"
-													onClick={() => handleDecline(leave)}
+													onClick={() => openDeclineConfirm(leave)}
 													disabled={reviewingId === leave.id}
 													title="Refuser"
-													aria-label="Refuser"
+													aria-label={`Refuser la demande de ${leave.employeeFirstName} ${leave.employeeLastName}`}
 													className="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
 												>
 													<HighlightOff fontSize="small" />
@@ -187,6 +201,16 @@ export function PendingLeavesPage() {
 					</div>
 				)}
 			</section>
+			<ConfirmDialog
+				open={confirmOpen}
+				title="Refuser cette demande ?"
+				message={declineMessage}
+				confirmLabel="Refuser"
+				busyLabel="Refus…"
+				destructive
+				onClose={() => setConfirmOpen(false)}
+				onConfirm={handleConfirmDecline}
+			/>
 		</div>
 	)
 }

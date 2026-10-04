@@ -12,6 +12,8 @@ import {
 } from "../api/leaves"
 import { ErrorBanner } from "../components/ErrorBanner"
 import { DateText } from "../components/DateText"
+import { ConfirmDialog } from "../components/ConfirmDialog"
+import { formatRange } from "../utils/date"
 
 type PageError = {
 	message: string
@@ -50,6 +52,12 @@ export function LeavesPage() {
 	const [error, setError] = useState<PageError | null>(null)
 	const [loading, setLoading] = useState(true)
 	const [cancellingId, setCancellingId] = useState<number | null>(null)
+	const [confirmOpen, setConfirmOpen] = useState(false)
+	const [selectedLeave, setSelectedLeave] = useState<LeaveRequestResponse | null>(null)
+
+	const cancelMessage = selectedLeave
+		? `Ta demande (${LEAVE_TYPE_LABELS[selectedLeave.type]}) du ${formatRange(selectedLeave.startDate, selectedLeave.endDate)} sera annulée. Cette action est définitive.`
+		: ""
 
 	const loadLeaves = useCallback(() => {
 		return listLeaves()
@@ -68,7 +76,6 @@ export function LeavesPage() {
 	}, [loadLeaves])
 
 	async function handleCancel(id: number) {
-		if (!window.confirm("Annuler cette demande de congé ?")) return
 		setError(null)
 		setCancellingId(id)
 		try {
@@ -82,6 +89,18 @@ export function LeavesPage() {
 		} finally {
 			setCancellingId(null)
 		}
+	}
+
+	async function handleCancellation() {
+		if (!selectedLeave) return
+
+		await handleCancel(selectedLeave.id)
+		setConfirmOpen(false)
+	}
+
+	function openCancelLeave(leave: LeaveRequestResponse) {
+		setSelectedLeave(leave)
+		setConfirmOpen(true)
 	}
 
 	return (
@@ -167,7 +186,7 @@ export function LeavesPage() {
 											{leave.status === LeaveStatus.EnAttente && (
 												<button
 													type="button"
-													onClick={() => handleCancel(leave.id)}
+													onClick={() => openCancelLeave(leave)}
 													disabled={cancellingId === leave.id}
 													aria-label="Annuler la demande"
 													title="Annuler la demande"
@@ -184,6 +203,16 @@ export function LeavesPage() {
 					</div>
 				)}
 			</section>
+			<ConfirmDialog
+				open={confirmOpen}
+				title="Annuler cette demande ?"
+				message={cancelMessage}
+				confirmLabel="Annuler la demande"
+				busyLabel="Annulation…"
+				destructive
+				onClose={() => setConfirmOpen(false)}
+				onConfirm={handleCancellation}
+			/>
 		</div>
 	)
 }

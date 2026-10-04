@@ -28,6 +28,12 @@ export function formatWeekday(value: string): string {
 	return weekdayFormatter.format(date);
 }
 
+export function formatRange(start: string, end: string): string {
+	const startDate = toUtcDate(start)
+	const endDate = toUtcDate(end)
+	return dateFormatter.formatRange(startDate, endDate)
+}
+
 export function daysFromToday(offset: number): string {
 	// 1. La date du jour dans le fuseau de l'entreprise, ex. "2026-10-02"
 	const today = new Date().toLocaleDateString("en-CA", { timeZone: APP_TIME_ZONE })
