@@ -78,11 +78,12 @@ Objectif : aucun cas limite connu laissé de côté. Ordre recommandé ci-dessou
   - [x] Frontend aligné sur le même fuseau (`APP_TIME_ZONE`, `daysFromToday`)
 - [x] Q4. **Dates lisibles** : `formatDate` (`Intl.DateTimeFormat("fr-CA")`) dans tous les affichages
 - [x] Q5. **`ConfirmDialog`** réutilisable pour remplacer les 3 `window.confirm` (Échap, focus piégé, variante destructive)
-- [ ] Q5b. **Mot de passe temporaire dans une boîte de dialogue**
-  - [ ] Composant `Modal` (coquille commune), utilisé par `ConfirmDialog`
-  - [ ] `TemporaryPasswordDialog` : fermeture par « Terminé » seulement, `autoFocus` sur Copier, `select-all`
-  - [ ] Copie : échec géré (message), « Copié ✓ » pendant 2 s
-  - [ ] `AdminAccountsPage` et `CreateEmployeePage` : encadré jaune remplacé, `key` pour un état neuf à chaque mot de passe
+- [x] Q5b. **Mot de passe temporaire dans une boîte de dialogue**
+  - [x] Composant `Modal` (coquille commune), utilisé par `ConfirmDialog`
+  - [x] `TemporaryPasswordDialog` : fermeture par « Terminé » seulement, `data-autofocus` sur Copier, `select-all`
+  - [x] Copie : échec géré (message), « Copié ✓ » pendant 2 s
+  - [x] `AdminAccountsPage` et `CreateEmployeePage` : encadré jaune remplacé, `key` pour un état neuf à chaque mot de passe
+  - [x] Boîtes enchaînées après la fin de l’animation (`afterLeave`) : le focus n’est plus volé par la confirmation
 - [ ] Q6. **Choix du manager par son nom** (combobox, Headless UI)
   - [ ] Recherche via `GET /api/employees?search=` avec debounce + annulation des requêtes périmées
   - [ ] États : recherche en cours, aucun résultat, erreur API
@@ -93,6 +94,7 @@ Objectif : aucun cas limite connu laissé de côté. Ordre recommandé ci-dessou
 - [ ] Q7. **Pages de connexion et de changement de mot de passe** au même style que le reste de l’application
 - [ ] Q8. **Nettoyages**
   - [ ] Type `PageError` partagé (au lieu d’être copié dans chaque page)
+  - [x] Classes de boutons partagées (`src/ui/buttons.ts`)
   - [x] Commiter `.vscode/settings.json`
 - [ ] Q9. **Page 404**
 - [ ] Q10. **Secrets hors du dépôt**

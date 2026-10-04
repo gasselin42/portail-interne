@@ -14,6 +14,7 @@ import { ErrorBanner } from "../components/ErrorBanner"
 import { DateText } from "../components/DateText"
 import { ConfirmDialog } from "../components/ConfirmDialog"
 import { formatRange } from "../utils/date"
+import { primaryButton, rowIconDangerButton } from "../ui/buttons"
 
 type PageError = {
 	message: string
@@ -111,10 +112,7 @@ export function LeavesPage() {
 					<h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900">Mes congés</h1>
 					<p className="mt-1 text-sm text-slate-500">Voir et créer tes demandes de congés</p>
 				</div>
-				<Link
-					to="/leaves/new"
-					className="rounded-lg bg-sky-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-sky-700"
-				>
+				<Link to="/leaves/new" className={primaryButton}>
 					Nouvelle demande
 				</Link>
 			</header>
@@ -190,7 +188,7 @@ export function LeavesPage() {
 													disabled={cancellingId === leave.id}
 													aria-label="Annuler la demande"
 													title="Annuler la demande"
-													className="inline-flex items-center justify-center rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+													className={rowIconDangerButton}
 												>
 													<DeleteForever fontSize="small" />
 												</button>

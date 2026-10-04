@@ -4,6 +4,7 @@ import { Departement } from "../api/admin"
 import { listEmployees, type EmployeeListItem } from "../api/employees"
 import { ErrorBanner } from "../components/ErrorBanner"
 import { ContactPage } from "@mui/icons-material"
+import { primaryButton, rowIconButton } from "../ui/buttons"
 
 type PageError = {
 	message: string
@@ -59,10 +60,7 @@ export function AnnuairePage() {
 					placeholder="Nom, email, poste, département..."
 					className="min-w-[16rem] flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
 				/>
-				<button
-					type="submit"
-					className="rounded-lg bg-sky-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-sky-700"
-				>
+				<button type="submit" className={primaryButton}>
 					Rechercher
 				</button>
 			</form>
@@ -124,7 +122,7 @@ export function AnnuairePage() {
 											<Link
 												to={`/employees/${employee.id}`}
 												title="Voir la fiche"
-												className="inline-flex text-slate-400 transition hover:text-sky-600"
+												className={rowIconButton}
 											>
 												<ContactPage fontSize="small" />
 											</Link>

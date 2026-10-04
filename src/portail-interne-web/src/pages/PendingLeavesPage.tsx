@@ -11,6 +11,7 @@ import { CheckCircleOutlineOutlined, HighlightOff } from "@mui/icons-material"
 import { DateText } from "../components/DateText"
 import { formatRange } from "../utils/date"
 import { ConfirmDialog } from "../components/ConfirmDialog"
+import { rowIconDangerButton, rowIconSuccessButton } from "../ui/buttons"
 
 type PageError = {
 	message: string
@@ -26,8 +27,8 @@ export function PendingLeavesPage() {
 	const [selectedLeave, setSelectedLeave] = useState<LeaveRequestResponse | null>(null)
 
 	const declineMessage = selectedLeave
-			? `Cette demande (${LEAVE_TYPE_LABELS[selectedLeave.type]}) de ${selectedLeave.employeeFirstName} ${selectedLeave.employeeLastName} du ${formatRange(selectedLeave.startDate, selectedLeave.endDate)} sera refusée. ${selectedLeave.employeeFirstName} verra le statut Refusé.`
-			: ""
+		? `Cette demande (${LEAVE_TYPE_LABELS[selectedLeave.type]}) de ${selectedLeave.employeeFirstName} ${selectedLeave.employeeLastName} du ${formatRange(selectedLeave.startDate, selectedLeave.endDate)} sera refusée. ${selectedLeave.employeeFirstName} verra le statut Refusé.`
+		: ""
 
 	const loadLeaves = useCallback(() => {
 		return listLeavesPending()
@@ -115,9 +116,7 @@ export function PendingLeavesPage() {
 
 			<section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/50">
 				{loading ? (
-					<p className="px-6 py-12 text-center text-sm text-slate-500">
-						Chargement des congés...
-					</p>
+					<p className="px-6 py-12 text-center text-sm text-slate-500">Chargement des congés...</p>
 				) : leaves.length === 0 ? (
 					!(error && !error.dismissible) && (
 						<p className="px-6 py-12 text-center text-sm text-slate-500">
@@ -178,7 +177,7 @@ export function PendingLeavesPage() {
 													disabled={reviewingId === leave.id}
 													title="Accepter"
 													aria-label={`Accepter la demande de ${leave.employeeFirstName} ${leave.employeeLastName}`}
-													className="rounded-lg p-1.5 text-slate-400 transition hover:bg-emerald-50 hover:text-emerald-600 disabled:opacity-50"
+													className={rowIconSuccessButton}
 												>
 													<CheckCircleOutlineOutlined fontSize="small" />
 												</button>
@@ -188,7 +187,7 @@ export function PendingLeavesPage() {
 													disabled={reviewingId === leave.id}
 													title="Refuser"
 													aria-label={`Refuser la demande de ${leave.employeeFirstName} ${leave.employeeLastName}`}
-													className="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+													className={rowIconDangerButton}
 												>
 													<HighlightOff fontSize="small" />
 												</button>

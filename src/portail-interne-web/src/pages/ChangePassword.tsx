@@ -4,6 +4,7 @@ import { Visibility, VisibilityOff } from "@mui/icons-material"
 import { changePassword } from "../api/password"
 import { ErrorBanner } from "../components/ErrorBanner"
 import { useSession } from "../session/useSession"
+import { primaryButton } from "../ui/buttons"
 
 export function ChangePassword() {
 	const { refresh } = useSession()
@@ -107,11 +108,7 @@ export function ChangePassword() {
 					</button>
 				</div>
 			</div>
-			<button
-				type="submit"
-				disabled={enCours}
-				className="mt-4 w-full rounded bg-sky-600 px-4 py-2 font-medium text-white hover:cursor-pointer hover:bg-sky-700 disabled:opacity-50"
-			>
+			<button type="submit" disabled={enCours} className={`${primaryButton} mt-4 w-full`}>
 				<span>Enregistrer</span>
 			</button>
 			{erreur && <ErrorBanner message={erreur} dismissible onDismiss={() => setErreur(null)} />}

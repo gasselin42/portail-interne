@@ -11,6 +11,8 @@ import {
 } from "../api/admin"
 import { AccountCircleOutlined } from "@mui/icons-material"
 import { ErrorBanner } from "../components/ErrorBanner"
+import { TemporaryPasswordDialog } from "../components/TemporaryPasswordDialog"
+import { primaryButton, secondaryButton } from "../ui/buttons"
 
 export function CreateEmployeePage() {
 	const [firstName, setFirstName] = useState<string>("")
@@ -28,6 +30,7 @@ export function CreateEmployeePage() {
 	const [erreur, setErreur] = useState<string | null>(null)
 
 	const [temporaryPassword, setTemporaryPassword] = useState<string>("")
+	const [passwordDialogOpen, setPasswordDialogOpen] = useState(false)
 
 	const { id } = useParams()
 	const employeId = id ? Number(id) : null
@@ -99,6 +102,7 @@ export function CreateEmployeePage() {
 			)
 
 			setTemporaryPassword(data.temporaryPassword)
+			setPasswordDialogOpen(true)
 		} catch (e) {
 			setErreur(e instanceof Error ? e.message : "Erreur à la création du compte")
 		} finally {
@@ -144,22 +148,12 @@ export function CreateEmployeePage() {
 						Créer un employé et noter le mot de passe temporaire
 					</p>
 				</div>
-				<Link
-					to="/admin/accounts"
-					className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
-				>
+				<Link to="/admin/accounts" className={secondaryButton}>
 					Retour aux comptes
 				</Link>
 			</header>
 
 			{erreur && <ErrorBanner message={erreur} dismissible onDismiss={() => setErreur(null)} />}
-
-			{temporaryPassword && (
-				<div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-					<p className="font-medium">Mot de passe temporaire (affiché une seule fois)</p>
-					<p className="mt-1 font-mono text-base tracking-wide">{temporaryPassword}</p>
-				</div>
-			)}
 
 			<section className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
 				<form onSubmit={handleSubmit} className="space-y-5">
@@ -204,10 +198,7 @@ export function CreateEmployeePage() {
 							/>
 						</div>
 						<div>
-							<label
-								htmlFor="lastName"
-								className="mb-1.5 block text-sm font-medium text-slate-700"
-							>
+							<label htmlFor="lastName" className="mb-1.5 block text-sm font-medium text-slate-700">
 								Nom
 							</label>
 							<input
@@ -336,15 +327,21 @@ export function CreateEmployeePage() {
 						</div>
 					</div>
 
-					<button
-						type="submit"
-						disabled={enCours}
-						className="w-full rounded-lg bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
-					>
+					<button type="submit" disabled={enCours} className={`${primaryButton} w-full`}>
 						{enCours ? "Enregistrement..." : enEdition ? "Enregistrer" : "Créer l'employé"}
 					</button>
 				</form>
 			</section>
+			<TemporaryPasswordDialog
+				key={temporaryPassword}
+				open={passwordDialogOpen}
+				title="Compte créé"
+				password={temporaryPassword}
+				employeeName={`${firstName} ${lastName}`}
+				onClose={() => {
+					navigate("/admin/accounts")
+				}}
+			/>
 		</div>
 	)
 }

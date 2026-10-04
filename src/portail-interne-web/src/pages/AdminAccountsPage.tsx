@@ -11,6 +11,8 @@ import {
 } from "../api/admin"
 import { ErrorBanner } from "../components/ErrorBanner"
 import { ConfirmDialog } from "../components/ConfirmDialog"
+import { TemporaryPasswordDialog } from "../components/TemporaryPasswordDialog"
+import { primaryButton, rowIconButton, smallSecondaryButton } from "../ui/buttons"
 
 type PageError = {
 	message: string
@@ -68,8 +70,8 @@ export function AdminAccountsPage() {
 	const [togglingId, setTogglingId] = useState<number | null>(null)
 	const [resettingId, setResettingId] = useState<number | null>(null)
 	const [temporaryPassword, setTemporaryPassword] = useState<string | null>(null)
-	const [resetForEmail, setResetForEmail] = useState<string | null>(null)
-	const [passwordCopied, setPasswordCopied] = useState(false)
+	const [resetForName, setResetForName] = useState<string | null>(null)
+	const [passwordDialogOpen, setPasswordDialogOpen] = useState(false)
 	const [confirmOpen, setConfirmOpen] = useState(false)
 	const [selectedAccount, setSelectedAccount] = useState<AccountListItem | null>(null)
 
@@ -113,14 +115,14 @@ export function AdminAccountsPage() {
 
 	async function handleResetPassword(account: AccountListItem) {
 		setError(null)
+		setResetForName(null)
 		setTemporaryPassword(null)
-		setPasswordCopied(false)
+		setPasswordDialogOpen(false)
 		setResettingId(account.userAccountId)
 		try {
 			const data = await resetAccountPassword(account.userAccountId)
 			setTemporaryPassword(data.temporaryPassword)
-			setResetForEmail(account.email)
-			setPasswordCopied(false)
+			setResetForName(`${account.firstName} ${account.lastName}`)
 			setAccounts((prev) =>
 				prev.map((a) =>
 					a.userAccountId === account.userAccountId ? { ...a, mustChangePassword: true } : a,
@@ -158,10 +160,7 @@ export function AdminAccountsPage() {
 						Gérer les accès et l'activation des employés
 					</p>
 				</div>
-				<Link
-					to="/admin/employees/new"
-					className="rounded-lg bg-sky-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-sky-700"
-				>
+				<Link to="/admin/employees/new" className={primaryButton}>
 					Créer un employé
 				</Link>
 			</header>
@@ -172,40 +171,6 @@ export function AdminAccountsPage() {
 					dismissible={error.dismissible}
 					onDismiss={() => setError(null)}
 				/>
-			)}
-
-			{temporaryPassword && (
-				<div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-					<p className="font-medium">
-						Nouveau mot de passe temporaire
-						{resetForEmail ? ` pour ${resetForEmail}` : ""} (affiché une seule fois)
-					</p>
-					<div className="mt-2 flex flex-wrap items-center gap-3">
-						<p className="font-mono text-base tracking-wide">{temporaryPassword}</p>
-						<button
-							type="button"
-							disabled={passwordCopied}
-							className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-medium text-amber-900 transition hover:bg-amber-100 disabled:cursor-default disabled:opacity-70"
-							onClick={async () => {
-								await navigator.clipboard.writeText(temporaryPassword)
-								setPasswordCopied(true)
-							}}
-						>
-							{passwordCopied ? "Copié" : "Copier"}
-						</button>
-						<button
-							type="button"
-							className="rounded-lg px-3 py-1.5 text-xs font-medium text-amber-800 hover:underline"
-							onClick={() => {
-								setTemporaryPassword(null)
-								setResetForEmail(null)
-								setPasswordCopied(false)
-							}}
-						>
-							Fermer
-						</button>
-					</div>
-				</div>
 			)}
 
 			<section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/50">
@@ -271,7 +236,12 @@ export function AdminAccountsPage() {
 										</td>
 										<td className="w-0 px-5 py-3.5 whitespace-nowrap">
 											<div className="flex items-center gap-2">
-												<Link to={`/admin/employees/${account.employeeId}/edit`} title="Modifier">
+												<Link
+													to={`/admin/employees/${account.employeeId}/edit`}
+													title="Modifier"
+													aria-label={`Modifier ${account.firstName} ${account.lastName}`}
+													className={rowIconButton}
+												>
 													<Edit fontSize="small" />
 												</Link>
 												<button
@@ -279,7 +249,7 @@ export function AdminAccountsPage() {
 													disabled={resettingId === account.userAccountId}
 													onClick={() => openResetConfirm(account)}
 													title="Réinitialiser le mot de passe"
-													className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+													className={smallSecondaryButton}
 												>
 													<LockReset fontSize="small" />
 													{resettingId === account.userAccountId ? "…" : "Réinit. mdp"}
@@ -307,8 +277,24 @@ export function AdminAccountsPage() {
 				message={resetMessage}
 				confirmLabel="Réinitialiser"
 				busyLabel="Réinitialisation…"
-				onClose={() => setConfirmOpen(false)}
 				onConfirm={handleResetting}
+				onClose={() => setConfirmOpen(false)}
+				onAfterClose={() => {
+					if (temporaryPassword) setPasswordDialogOpen(true)
+				}}
+			/>
+			<TemporaryPasswordDialog
+				key={temporaryPassword ?? "aucun"}
+				open={passwordDialogOpen}
+				password={temporaryPassword ?? ""}
+				employeeName={resetForName ?? ""}
+				onClose={() => {
+					setPasswordDialogOpen(false)
+				}}
+				onAfterClose={() => {
+					setTemporaryPassword(null)
+					setResetForName(null)
+				}}
 			/>
 		</div>
 	)

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { createLeave, LEAVE_TYPE_LABELS, LeaveType, type LeaveTypeId } from "../api/leaves"
 import { ErrorBanner } from "../components/ErrorBanner"
 import { daysFromToday } from "../utils/date"
+import { primaryButton, secondaryButton } from "../ui/buttons"
 
 const MAX_SICK_BACKDATE_DAYS = 14
 
@@ -70,10 +71,7 @@ export function NewLeavePage() {
 					</h1>
 					<p className="mt-1 text-sm text-slate-500">Créer une nouvelle demande de congé</p>
 				</div>
-				<Link
-					to="/leaves"
-					className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
-				>
+				<Link to="/leaves" className={secondaryButton}>
 					Retour à mes congés
 				</Link>
 			</header>
@@ -127,10 +125,7 @@ export function NewLeavePage() {
 							/>
 						</div>
 						<div>
-							<label
-								htmlFor="endDate"
-								className="mb-1.5 block text-sm font-medium text-slate-700"
-							>
+							<label htmlFor="endDate" className="mb-1.5 block text-sm font-medium text-slate-700">
 								Fin
 							</label>
 							<input
@@ -157,11 +152,7 @@ export function NewLeavePage() {
 						/>
 					</div>
 
-					<button
-						type="submit"
-						disabled={enCours}
-						className="w-full rounded-lg bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
-					>
+					<button type="submit" disabled={enCours} className={`${primaryButton} w-full`}>
 						{enCours ? "Enregistrement..." : "Créer la demande de congé"}
 					</button>
 				</form>

@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { primaryButton } from "../ui/buttons"
 
 type Props = {
 	title: string
@@ -49,7 +50,7 @@ export function FullPageStatus({ title, message, loading = false, action }: Prop
 						type="button"
 						onClick={handleAction}
 						disabled={busy}
-						className="mt-6 w-full rounded-lg bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+						className={`${primaryButton} mt-6 w-full`}
 					>
 						{busy ? (action.busyLabel ?? "Chargement...") : action.label}
 					</button>

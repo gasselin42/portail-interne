@@ -5,6 +5,7 @@ import { login } from "../api/auth"
 import { ErrorBanner } from "../components/ErrorBanner"
 import { useSession } from "../session/useSession"
 import { FullPageStatus } from "../components/FullPageStatus"
+import { primaryButton } from "../ui/buttons"
 
 export function LoginPage() {
 	const { me, loading, refresh } = useSession()
@@ -72,11 +73,7 @@ export function LoginPage() {
 					</button>
 				</div>
 			</div>
-			<button
-				type="submit"
-				disabled={enCours}
-				className="mt-4 w-full rounded bg-sky-600 px-4 py-2 font-medium text-white hover:cursor-pointer hover:bg-sky-700 disabled:opacity-50"
-			>
+			<button type="submit" disabled={enCours} className={`${primaryButton} mt-4 w-full`}>
 				<span>Se connecter</span>
 			</button>
 			{erreur && <ErrorBanner message={erreur} dismissible onDismiss={() => setErreur(null)} />}
