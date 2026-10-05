@@ -38,6 +38,10 @@ public class AdminController : ControllerBase
 		[FromForm] CreateEmployeeRequest request,
 		IFormFile? photo)
 	{
+		var managerError = await ValidateManagerAsync(request.ManagerId, null);
+		if (managerError is not null)
+			return BadRequest(new { message = managerError });
+
 		string email = request.Email.Trim().ToLowerInvariant();
 
         if (await _db.UserAccounts.AnyAsync(u => u.Email == email)
@@ -74,10 +78,10 @@ public class AdminController : ControllerBase
 			FirstName = request.FirstName,
 			LastName = request.LastName,
 			Email = email,
-			JobTitle = request.JobTitle,
 			Departement = request.Departement,
-			PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber,
-			ManagerId = request.ManagerId > 0 ? request.ManagerId : null,
+			JobTitle = request.JobTitle?.Trim() ?? string.Empty,
+            PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber,
+			ManagerId = request.ManagerId,
 			IsActive = true,
 			CreatedAt = DateTime.UtcNow,
 			PhotoFileName = photoFileName,
@@ -119,6 +123,11 @@ public class AdminController : ControllerBase
         if (employee is null || employee.UserAccount is null || employee.UserAccount.Role is null)
             return NotFound();
 
+		Employee? manager = null;
+
+		if (employee.ManagerId is not null)
+			manager = await _db.Employees.AsNoTracking().FirstOrDefaultAsync(e => e.Id == employee.ManagerId);
+
         var employeeDetails = new AdminEmployeeResponse
         {
             Id = employee.Id,
@@ -129,7 +138,9 @@ public class AdminController : ControllerBase
             Departement = employee.Departement!.Value,
             PhoneNumber = employee.PhoneNumber ?? string.Empty,
             ManagerId = employee.ManagerId,
-			Role = employee.UserAccount.Role.Value,
+			ManagerFirstName = manager?.FirstName,
+			ManagerLastName = manager?.LastName,
+            Role = employee.UserAccount.Role.Value,
             PhotoUrl = employee.PhotoFileName == null
                 ? null
                 : $"{Request.Scheme}://{Request.Host}/photos/{employee.PhotoFileName}",
@@ -151,7 +162,12 @@ public class AdminController : ControllerBase
 		if (employee is null)
 			return NotFound();
 
-		if (employee.UserAccount is null || request.Role is null)
+        var managerError = await ValidateManagerAsync(request.ManagerId, id);
+
+        if (managerError is not null)
+            return BadRequest(new { message = managerError });
+
+        if (employee.UserAccount is null || request.Role is null)
 			return BadRequest(new { message = "Rôle manquant." });
 
 		if (photo is not null && photo.Length > 0)
@@ -185,10 +201,10 @@ public class AdminController : ControllerBase
 
 		employee.FirstName = request.FirstName.Trim();
 		employee.LastName = request.LastName.Trim();
-		employee.JobTitle = request.JobTitle;
+		employee.JobTitle = request.JobTitle?.Trim() ?? string.Empty;
 		employee.Departement = request.Departement;
 		employee.PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber;
-		employee.ManagerId = request.ManagerId > 0 ? request.ManagerId : null;
+		employee.ManagerId = request.ManagerId;
 		employee.UserAccount.Role = request.Role;
 
 		await _db.SaveChangesAsync();
@@ -272,5 +288,45 @@ public class AdminController : ControllerBase
 		return Ok(new { temporaryPassword = temp });
     }
 
+	private async Task<string?> ValidateManagerAsync(int? managerId, int? employeeId)
+	{
+		if (managerId is null)
+			return null;
+
+		if (managerId == employeeId)
+			return "Un employé ne peut pas être son propre manager.";
+
+        var manager = await _db.Employees
+            .AsNoTracking()
+            .FirstOrDefaultAsync(e => e.Id == managerId);
+
+		if (manager is null)
+			return "Le manager choisi n'existe pas.";
+
+		if (!manager.IsActive)
+			return "Le manager choisi est désactivé.";
+
+		if (employeeId is not null)
+		{
+			var current = manager.ManagerId;
+			var i = 0;
+			while (current is not null && i++ < 100)
+			{
+				if (current == employeeId)
+					return "Ce choix créerait une boucle dans la hiérarchie.";
+
+				current = await _db.Employees
+							.Where(e => e.Id == current)
+							.Select(e => e.ManagerId)
+							.FirstOrDefaultAsync();
+			}
+
+			if (current is not null)
+				return "La hiérarchie actuelle est invalide : contactez le support.";
+
+        }
+
+		return null;
+    }
 }
 

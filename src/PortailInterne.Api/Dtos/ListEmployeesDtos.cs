@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using PortailInterne.Api.Models;
+﻿using PortailInterne.Api.Models;
 
 namespace PortailInterne.Api.Dtos;
 

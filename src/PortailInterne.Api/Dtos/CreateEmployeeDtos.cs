@@ -20,11 +20,11 @@ public class CreateEmployeeRequest
     [Required]
     public Role? Role { get; set; }
 
-    public string JobTitle { get; set; } = string.Empty;
+    public string? JobTitle { get; set; }
 
-    public string PhoneNumber { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; }
 
-    public int ManagerId { get; set; }
+    public int? ManagerId { get; set; }
 }
 
 public class UpdateEmployeeRequest
@@ -41,11 +41,11 @@ public class UpdateEmployeeRequest
     [Required]
     public Role? Role { get; set; }
 
-    public string JobTitle { get; set; } = string.Empty;
+    public string? JobTitle { get; set; }
 
-    public string PhoneNumber { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; }
 
-    public int ManagerId { get; set; }
+    public int? ManagerId { get; set; }
 }
 
 public class CreateEmployeeResponse

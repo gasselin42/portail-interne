@@ -90,7 +90,8 @@ Objectif : aucun cas limite connu laissé de côté. Ordre recommandé ci-dessou
   - [ ] Bouton pour retirer le manager ; texte tapé sans sélection = envoi bloqué
   - [ ] En modification : nom du manager actuel affiché, l’employé exclu des résultats
   - [ ] Résultats avec nom + poste (homonymes)
-  - [ ] API : manager existant et actif, pas soi-même, pas de boucle ; nom du manager dans le détail admin
+  - [x] API : manager existant et actif, pas soi-même, pas de boucle ; nom du manager dans le détail admin
+  - [x] API : poste et téléphone réellement optionnels (`string?`), `ManagerId` en `int?` (plus de « 0 » magique)
 - [ ] Q7. **Pages de connexion et de changement de mot de passe** au même style que le reste de l’application
 - [ ] Q8. **Nettoyages**
   - [ ] Type `PageError` partagé (au lieu d’être copié dans chaque page)
