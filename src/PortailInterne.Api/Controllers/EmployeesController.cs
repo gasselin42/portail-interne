@@ -27,19 +27,7 @@ public class EmployeesController : ControllerBase
             .AsNoTracking()
             .Where(e => e.IsActive);
 
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            string filter = search.Trim().ToLowerInvariant();
-
-            Departement? depFilter = Enum.TryParse<Departement>(filter, true, out var d) ? d : null;
-
-            query = query.Where(e =>
-                e.FirstName.ToLower().Contains(filter)
-                || e.LastName.ToLower().Contains(filter)
-                || e.Email.ToLower().Contains(filter)
-                || e.JobTitle.ToLower().Contains(filter)
-                || (depFilter != null && e.Departement == depFilter));
-        }
+        query = ApplySearch(query, search);
 
         var photosBase = $"{Request.Scheme}://{Request.Host}/photos/";
 
@@ -97,6 +85,100 @@ public class EmployeesController : ControllerBase
         }
 
         return Ok(employeeDetails);
+    }
+
+    [HttpGet("lookup")]
+    public async Task<ActionResult<EmployeeLookupResponse>> Lookup(
+        [FromQuery] string? search,
+        [FromQuery] int limit = 10,
+        [FromQuery] int? excludeTeamOf = null)
+    {
+        limit = Math.Clamp(limit, 1, 50);
+
+        var query = _db.Employees
+            .AsNoTracking()
+            .Where(e => e.IsActive);
+
+        query = ApplySearch(query, search);
+
+        if (excludeTeamOf is > 0)
+        {
+            var team = await GetTeamIdsAsync(excludeTeamOf.Value);
+            query = query.Where(e => !team.Contains(e.Id));
+        }
+
+        var items = await query
+            .OrderBy(e => e.LastName)
+            .ThenBy(e => e.FirstName)
+            .ThenBy(e => e.Id)
+            .Take(limit + 1)
+            .Select(e => new EmployeeLookupItem
+            {
+                Id = e.Id,
+                FirstName = e.FirstName,
+                LastName = e.LastName,
+                JobTitle = e.JobTitle,
+                Departement = e.Departement!.Value,
+            })
+            .ToListAsync();
+
+        var hasMore = items.Count > limit;
+        if (hasMore) items.RemoveAt(items.Count - 1);
+
+        return Ok(new EmployeeLookupResponse { Items = items, HasMore = hasMore });
+    }
+
+    private static IQueryable<Employee> ApplySearch(IQueryable<Employee> query, string? search)
+    {
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            string filter = search.Trim().ToLowerInvariant();
+
+            Departement? depFilter = Enum.TryParse<Departement>(filter, true, out var d) ? d : null;
+
+            query = query.Where(e =>
+                e.FirstName.ToLower().Contains(filter)
+                || e.LastName.ToLower().Contains(filter)
+                || e.Email.ToLower().Contains(filter)
+                || e.JobTitle.ToLower().Contains(filter)
+                || (depFilter != null && e.Departement == depFilter));
+        }
+
+        return query;
+    }
+
+    private async Task<HashSet<int>> GetTeamIdsAsync(int rootId)
+    {
+        // Toutes les paires (Id, ManagerId), y compris les employés INACTIFS :
+        // un inactif peut avoir des subordonnés actifs, la chaîne doit passer par lui.
+        var links = await _db.Employees
+            .AsNoTracking()
+            .Select(e => new { e.Id, e.ManagerId })
+            .ToListAsync();
+
+        // Pour chaque manager, la liste de ses subordonnés directs.
+        var reportsByManager = links
+            .Where(l => l.ManagerId is not null)
+            .ToLookup(l => l.ManagerId!.Value, l => l.Id);
+
+        // Parcours en largeur; le HashSet évite de tourner en rond si la base contenait une boucle.
+        var team = new HashSet<int> { rootId };
+
+        var queue = new Queue<int>();
+        queue.Enqueue(rootId);
+
+        while (queue.Count > 0)
+        {
+            var id = queue.Dequeue();
+            var subordinates = reportsByManager[id];
+            foreach (var sub in subordinates)
+            {
+                if (team.Add(sub))
+                    queue.Enqueue(sub);
+            }
+        }
+
+        return team;
     }
 }
 

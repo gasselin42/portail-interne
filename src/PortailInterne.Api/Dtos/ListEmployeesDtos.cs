@@ -26,3 +26,18 @@ public class AdminEmployeeResponse : EmployeeDetailResponse
     public Role Role { get; set; }
 }
 
+public class EmployeeLookupItem
+{
+    public int Id { get; set; }
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string JobTitle { get; set; } = string.Empty;
+    public Departement Departement { get; set; }
+}
+
+public class EmployeeLookupResponse
+{
+    public List<EmployeeLookupItem> Items { get; set; } = new();
+    public bool HasMore { get; set; }
+}
+
