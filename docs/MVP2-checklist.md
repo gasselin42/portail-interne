@@ -84,17 +84,17 @@ Objectif : aucun cas limite connu laissé de côté. Ordre recommandé ci-dessou
   - [x] Copie : échec géré (message), « Copié ✓ » pendant 2 s
   - [x] `AdminAccountsPage` et `CreateEmployeePage` : encadré jaune remplacé, `key` pour un état neuf à chaque mot de passe
   - [x] Boîtes enchaînées après la fin de l’animation (`afterLeave`) : le focus n’est plus volé par la confirmation
-- [ ] Q6. **Choix du manager par son nom** (combobox, Headless UI)
+- [x] Q6. **Choix du manager par son nom** (combobox, Headless UI)
   - [x] API : manager existant et actif, pas soi-même, pas de boucle ; nom du manager dans le détail admin
   - [x] API : poste et téléphone réellement optionnels (`string?`), `ManagerId` en `int?` (plus de « 0 » magique)
   - [x] API : endpoint de recherche léger `GET /api/employees/lookup` (`search`, `limit`, `excludeTeamOf`) → `{ items, hasMore }`
   - [x] API : `excludeTeamOf` exclut l’employé et toute son équipe (directe et indirecte) : aucune boucle proposable
-  - [ ] Composant **réutilisable** `EmployeeCombobox` (manager ici ; participants MVP 3, assignation MVP 5)
-  - [ ] Recherche avec debounce + annulation des requêtes périmées (`AbortController`)
-  - [ ] États : recherche en cours, aucun résultat, erreur API, « Affine ta recherche » si résultats coupés
-  - [ ] Résultats riches : avatar à initiales, nom, poste et département (homonymes)
-  - [ ] Bouton pour retirer le manager ; le champ revient toujours à la sélection (aucun texte orphelin)
-  - [ ] En modification : nom du manager actuel affiché dès l’ouverture
+  - [x] Composant **réutilisable** `EmployeeCombobox` (manager ici ; participants MVP 3, assignation MVP 5)
+  - [x] Recherche avec debounce + annulation des requêtes périmées (`AbortController`)
+  - [x] États : recherche en cours, aucun résultat, erreur API, « Affine ta recherche » si résultats coupés
+  - [x] Résultats riches : avatar à initiales, nom, poste et département (homonymes)
+  - [x] Bouton pour retirer le manager ; le champ revient toujours à la sélection (aucun texte orphelin)
+  - [x] En modification : nom du manager actuel affiché dès l’ouverture
 - [ ] Q7. **Pages de connexion et de changement de mot de passe** au même style que le reste de l’application
 - [ ] Q8. **Nettoyages**
   - [ ] Type `PageError` partagé (au lieu d’être copié dans chaque page)

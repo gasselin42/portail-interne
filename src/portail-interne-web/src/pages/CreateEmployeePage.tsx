@@ -5,6 +5,7 @@ import {
 	Role,
 	type RoleId,
 	Departement,
+	DEPARTEMENT_LABELS,
 	type DepartementId,
 	getAdminEmployee,
 	updateEmployee,
@@ -13,6 +14,8 @@ import { AccountCircleOutlined } from "@mui/icons-material"
 import { ErrorBanner } from "../components/ErrorBanner"
 import { TemporaryPasswordDialog } from "../components/TemporaryPasswordDialog"
 import { primaryButton, secondaryButton } from "../ui/buttons"
+import { EmployeeCombobox } from "../components/EmployeeCombobox"
+import type { EmployeeOption } from "../api/employees"
 
 export function CreateEmployeePage() {
 	const [firstName, setFirstName] = useState<string>("")
@@ -22,7 +25,7 @@ export function CreateEmployeePage() {
 	const [role, setRole] = useState<RoleId | null>(null)
 	const [jobTitle, setJobTitle] = useState<string>("")
 	const [phoneNumber, setPhoneNumber] = useState<string>("")
-	const [managerId, setManagerId] = useState<number>()
+	const [manager, setManager] = useState<EmployeeOption | null>(null)
 	const [photo, setPhoto] = useState<File | null>(null)
 	const [photoPreview, setPhotoPreview] = useState<string | null>(null)
 
@@ -46,11 +49,19 @@ export function CreateEmployeePage() {
 				setFirstName(employee.firstName)
 				setLastName(employee.lastName)
 				setEmail(employee.email)
-				setDepartement(employee.departement as DepartementId)
+				setDepartement(employee.departement)
 				setRole(employee.role as RoleId)
 				setJobTitle(employee.jobTitle)
 				setPhoneNumber(employee.phoneNumber)
-				setManagerId(employee.managerId ?? undefined)
+				setManager(
+					employee.managerId !== null
+						? {
+								id: employee.managerId,
+								firstName: employee.managerFirstName ?? "",
+								lastName: employee.managerLastName ?? "",
+							}
+						: null,
+				)
 				setPhotoPreview(employee.photoUrl)
 			})
 			.catch((e) => setErreur(e instanceof Error ? e.message : "Employé introuvable"))
@@ -79,7 +90,7 @@ export function CreateEmployeePage() {
 						role,
 						jobTitle,
 						phoneNumber,
-						managerId,
+						managerId: manager?.id,
 					},
 					photo,
 				)
@@ -96,7 +107,7 @@ export function CreateEmployeePage() {
 					role: role,
 					jobTitle,
 					phoneNumber,
-					managerId,
+					managerId: manager?.id,
 				},
 				photo,
 			)
@@ -250,9 +261,9 @@ export function CreateEmployeePage() {
 								className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
 							>
 								<option value="">Choisir...</option>
-								{Object.entries(Departement).map(([label, id]) => (
+								{Object.entries(Departement).map(([, id]) => (
 									<option key={id} value={id}>
-										{label}
+										{DEPARTEMENT_LABELS[id]}
 									</option>
 								))}
 							</select>
@@ -309,20 +320,15 @@ export function CreateEmployeePage() {
 							/>
 						</div>
 						<div>
-							<label
-								htmlFor="managerId"
-								className="mb-1.5 block text-sm font-medium text-slate-700"
-							>
-								ID manager (optionnel)
+							<label htmlFor="manager" className="mb-1.5 block text-sm font-medium text-slate-700">
+								Manager
 							</label>
-							<input
-								id="managerId"
-								type="text"
-								value={managerId ?? ""}
-								onChange={(e) =>
-									setManagerId(e.target.value === "" ? undefined : Number(e.target.value))
-								}
-								className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+							<EmployeeCombobox
+								id="manager"
+								value={manager}
+								onChange={setManager}
+								excludeTeamOf={employeId ?? undefined}
+								clearLabel="Retirer le manager"
 							/>
 						</div>
 					</div>

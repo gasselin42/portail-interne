@@ -3,6 +3,7 @@ import { useSession } from "../session/useSession"
 import { isNavItemActive, NAV_ITEMS } from "./navItems"
 import { ROLE_LABELS } from "../api/admin"
 import { KeyOutlined, LogoutOutlined } from "@mui/icons-material"
+import { Avatar } from "../components/Avatar"
 
 type Props = {
 	collapsed: boolean
@@ -74,9 +75,7 @@ export function SidebarContent({ collapsed, onNavigate }: Props) {
 			<div className="border-t border-slate-200 px-3 py-4">
 				{me && (
 					<div className={`flex items-center gap-3 px-3 ${collapsed ? "justify-center" : ""}`}>
-						<span className="h-9 w-9 shrink-0 rounded-full flex items-center justify-center bg-sky-100 text-sky-700 text-sm font-semibold" aria-hidden="true">
-							{me.firstName[0].toLocaleUpperCase()}{me.lastName[0].toLocaleUpperCase()}
-						</span>
+						<Avatar firstName={me.firstName} lastName={me.lastName} size="md" />
 						<div className={`min-w-0 ${labelClass}`}>
 							<p className="truncate text-sm font-medium text-slate-900">
 								{me.firstName} {me.lastName}
