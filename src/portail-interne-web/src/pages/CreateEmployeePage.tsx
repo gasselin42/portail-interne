@@ -5,17 +5,19 @@ import {
 	Role,
 	type RoleId,
 	Departement,
-	DEPARTEMENT_LABELS,
 	type DepartementId,
+	DEPARTEMENT_LABELS,
 	getAdminEmployee,
 	updateEmployee,
 } from "../api/admin"
 import { AccountCircleOutlined } from "@mui/icons-material"
 import { ErrorBanner } from "../components/ErrorBanner"
 import { TemporaryPasswordDialog } from "../components/TemporaryPasswordDialog"
-import { primaryButton, secondaryButton } from "../ui/buttons"
 import { EmployeeCombobox } from "../components/EmployeeCombobox"
+import { primaryButton, secondaryButton } from "../ui/buttons"
 import type { EmployeeOption } from "../api/employees"
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function CreateEmployeePage() {
 	const [firstName, setFirstName] = useState<string>("")
@@ -70,15 +72,26 @@ export function CreateEmployeePage() {
 	async function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
 		e.preventDefault()
 		setErreur(null)
-		setEnCours(true)
+
 		try {
-			if (departement === null) {
+			if (firstName.trim() === "") {
+				setErreur("Veuillez inscrire un prénom")
+				return
+			} else if (lastName.trim() === "") {
+				setErreur("Veuillez inscrire un nom")
+				return
+			} else if (!EMAIL_PATTERN.test(email.trim())) {
+				setErreur("Veuillez saisir un email valide")
+				return
+			} else if (departement === null) {
 				setErreur("Veuillez choisir un département")
 				return
 			} else if (role === null) {
 				setErreur("Veuillez choisir un rôle")
 				return
 			}
+
+			setEnCours(true)
 
 			if (enEdition && employeId !== null) {
 				await updateEmployee(
@@ -167,7 +180,10 @@ export function CreateEmployeePage() {
 			{erreur && <ErrorBanner message={erreur} dismissible onDismiss={() => setErreur(null)} />}
 
 			<section className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
-				<form onSubmit={handleSubmit} className="space-y-5">
+				<form noValidate onSubmit={handleSubmit} className="space-y-5">
+					<p className="text-sm text-slate-500">
+						Les champs marqués d’un <span className="text-red-600">*</span> sont obligatoires.
+					</p>
 					<div>
 						<label htmlFor="photo" className="mb-1.5 block text-sm font-medium text-slate-700">
 							Photo
@@ -194,6 +210,9 @@ export function CreateEmployeePage() {
 								className="mb-1.5 block text-sm font-medium text-slate-700"
 							>
 								Prénom
+								<span className="ml-0.5 text-red-600" aria-hidden="true">
+									*
+								</span>
 							</label>
 							<input
 								id="firstName"
@@ -211,6 +230,9 @@ export function CreateEmployeePage() {
 						<div>
 							<label htmlFor="lastName" className="mb-1.5 block text-sm font-medium text-slate-700">
 								Nom
+								<span className="ml-0.5 text-red-600" aria-hidden="true">
+									*
+								</span>
 							</label>
 							<input
 								id="lastName"
@@ -230,6 +252,9 @@ export function CreateEmployeePage() {
 					<div>
 						<label htmlFor="email" className="mb-1.5 block text-sm font-medium text-slate-700">
 							Email
+							<span className="ml-0.5 text-red-600" aria-hidden="true">
+								*
+							</span>
 						</label>
 						<input
 							id="email"
@@ -249,9 +274,13 @@ export function CreateEmployeePage() {
 								className="mb-1.5 block text-sm font-medium text-slate-700"
 							>
 								Département
+								<span className="ml-0.5 text-red-600" aria-hidden="true">
+									*
+								</span>
 							</label>
 							<select
 								id="departement"
+								required
 								value={departement ?? ""}
 								onChange={(e) =>
 									setDepartement(
@@ -271,9 +300,13 @@ export function CreateEmployeePage() {
 						<div>
 							<label htmlFor="role" className="mb-1.5 block text-sm font-medium text-slate-700">
 								Rôle
+								<span className="ml-0.5 text-red-600" aria-hidden="true">
+									*
+								</span>
 							</label>
 							<select
 								id="role"
+								required
 								value={role ?? ""}
 								onChange={(e) =>
 									setRole(e.target.value === "" ? null : (Number(e.target.value) as RoleId))
