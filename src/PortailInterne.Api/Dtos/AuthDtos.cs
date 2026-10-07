@@ -31,7 +31,7 @@ public class MeResponse
     public string Email { get; set; } = string.Empty;
     public string JobTitle { get; set; } = string.Empty;
     public string? PhoneNumber { get; set; } = string.Empty;
-    public Departement? Departement { get; set; }
+    public Departement Departement { get; set; }
     public Role Role { get; set; }
     public bool IsManager { get; set; }
     public bool MustChangePassword { get; set; }

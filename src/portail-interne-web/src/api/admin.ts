@@ -38,10 +38,16 @@ export const Departement = {
 	Ventes: 1,
 	RH: 2,
 	TI: 3,
-	Finances: 4,
 } as const
 
 export type DepartementId = (typeof Departement)[keyof typeof Departement]
+
+export const DEPARTEMENT_LABELS: Record<DepartementId, string> = {
+	[Departement.Direction]: "Direction",
+	[Departement.Ventes]: "Ventes",
+	[Departement.RH]: "Ressources humaines",
+	[Departement.TI]: "Technologies de l'information",
+}
 
 export const Role = {
 	Admin: 0,
@@ -113,8 +119,8 @@ export type AccountListItem = {
 	email: string
 	firstName: string
 	lastName: string
-	role: number
-	departement: number | null
+	role: RoleId
+	departement: DepartementId
 	accountIsActive: boolean
 	employeeIsActive: boolean
 	mustChangePassword: boolean

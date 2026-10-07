@@ -6,7 +6,7 @@ import {
 	listAccounts,
 	setAccountActive,
 	resetAccountPassword,
-	Departement,
+	DEPARTEMENT_LABELS,
 	type AccountListItem,
 } from "../api/admin"
 import { ErrorBanner } from "../components/ErrorBanner"
@@ -55,12 +55,6 @@ function RoleBadge({ role }: { role: number }) {
 			{isAdmin ? "Admin" : "Employé"}
 		</span>
 	)
-}
-
-function departementLabel(id: number | null): string {
-	if (id === null) return "—"
-	const entry = Object.entries(Departement).find(([, value]) => value === id)
-	return entry?.[0] ?? "—"
 }
 
 export function AdminAccountsPage() {
@@ -225,7 +219,7 @@ export function AdminAccountsPage() {
 											<RoleBadge role={account.role} />
 										</td>
 										<td className="px-5 py-3.5 text-sm text-slate-600">
-											{departementLabel(account.departement)}
+											{DEPARTEMENT_LABELS[account.departement]}
 										</td>
 										<td className="px-5 py-3.5">
 											<AccountActiveToggle

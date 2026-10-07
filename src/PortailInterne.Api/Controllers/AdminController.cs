@@ -75,10 +75,10 @@ public class AdminController : ControllerBase
 
 		var employee = new Employee
 		{
-			FirstName = request.FirstName,
-			LastName = request.LastName,
+			FirstName = request.FirstName.Trim(),
+			LastName = request.LastName.Trim(),
 			Email = email,
-			Departement = request.Departement,
+			Departement = request.Departement!.Value,
 			JobTitle = request.JobTitle?.Trim() ?? string.Empty,
             PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber,
 			ManagerId = request.ManagerId,
@@ -135,7 +135,7 @@ public class AdminController : ControllerBase
             LastName = employee.LastName,
             Email = employee.Email,
             JobTitle = employee.JobTitle,
-            Departement = employee.Departement!.Value,
+            Departement = employee.Departement,
             PhoneNumber = employee.PhoneNumber ?? string.Empty,
             ManagerId = employee.ManagerId,
 			ManagerFirstName = manager?.FirstName,
@@ -202,7 +202,7 @@ public class AdminController : ControllerBase
 		employee.FirstName = request.FirstName.Trim();
 		employee.LastName = request.LastName.Trim();
 		employee.JobTitle = request.JobTitle?.Trim() ?? string.Empty;
-		employee.Departement = request.Departement;
+		employee.Departement = request.Departement!.Value;
 		employee.PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber;
 		employee.ManagerId = request.ManagerId;
 		employee.UserAccount.Role = request.Role;

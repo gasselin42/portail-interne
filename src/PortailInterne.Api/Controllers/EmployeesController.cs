@@ -41,7 +41,7 @@ public class EmployeesController : ControllerBase
                 LastName = e.LastName,
                 Email = e.Email,
                 JobTitle = e.JobTitle,
-                Departement = e.Departement!.Value,
+                Departement = e.Departement,
                 PhoneNumber = e.PhoneNumber ?? string.Empty,
                 PhotoUrl = e.PhotoFileName == null ? null : photosBase + e.PhotoFileName,
             })
@@ -65,7 +65,7 @@ public class EmployeesController : ControllerBase
             LastName = employee.LastName,
             Email = employee.Email,
             JobTitle = employee.JobTitle,
-            Departement = employee.Departement!.Value,
+            Departement = employee.Departement,
             PhoneNumber = employee.PhoneNumber ?? string.Empty,
             ManagerId = employee.ManagerId,
             PhotoUrl = employee.PhotoFileName == null
@@ -118,7 +118,7 @@ public class EmployeesController : ControllerBase
                 FirstName = e.FirstName,
                 LastName = e.LastName,
                 JobTitle = e.JobTitle,
-                Departement = e.Departement!.Value,
+                Departement = e.Departement,
             })
             .ToListAsync();
 

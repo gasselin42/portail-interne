@@ -11,7 +11,7 @@ public class AccountListItemResponse
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public Role Role { get; set; }
-    public Departement? Departement { get; set; }
+    public Departement Departement { get; set; }
     public bool AccountIsActive { get; set; }
     public bool EmployeeIsActive { get; set; }
     public bool MustChangePassword { get; set; }

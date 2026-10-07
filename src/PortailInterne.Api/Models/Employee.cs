@@ -8,7 +8,6 @@ public enum Departement
     Ventes,
     RH,
     TI,
-    Finances,
 }
 
 public class Employee
@@ -26,8 +25,7 @@ public class Employee
 
     public string JobTitle { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Veuillez sélectionner un département")]
-    public Departement? Departement { get; set; }
+    public Departement Departement { get; set; }
 
     public string? PhoneNumber { get; set; }
 

@@ -1,3 +1,4 @@
+import type { DepartementId } from "./admin"
 import { apiFetch, readApiError } from "./client"
 
 export type EmployeeListItem = {
@@ -6,7 +7,7 @@ export type EmployeeListItem = {
 	lastName: string
 	email: string
 	jobTitle: string
-	departement: number
+	departement: DepartementId
 	phoneNumber: string
 	photoUrl: string | null
 }

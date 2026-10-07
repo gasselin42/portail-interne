@@ -1,14 +1,9 @@
 import { useEffect, useState } from "react"
 import { Link, useParams } from "react-router-dom"
 import { AccountCircleOutlined } from "@mui/icons-material"
-import { Departement } from "../api/admin"
+import { DEPARTEMENT_LABELS } from "../api/admin"
 import { getEmployee, type EmployeeDetail } from "../api/employees"
 import { ErrorBanner } from "../components/ErrorBanner"
-
-function departementLabel(id: number): string {
-	const entry = Object.entries(Departement).find(([, value]) => value === id)
-	return entry?.[0] ?? "-"
-}
 
 export function FicheEmployePage() {
 	const { id } = useParams()
@@ -71,7 +66,7 @@ export function FicheEmployePage() {
 								</div>
 								<div>
 									<dt className="font-medium text-slate-500">Département</dt>
-									<dd className="text-slate-900">{departementLabel(employee.departement)}</dd>
+									<dd className="text-slate-900">{DEPARTEMENT_LABELS[employee.departement]}</dd>
 								</div>
 								<div>
 									<dt className="font-medium text-slate-500">Téléphone</dt>

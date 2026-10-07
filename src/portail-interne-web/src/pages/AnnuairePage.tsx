@@ -1,6 +1,6 @@
 import { useEffect, useState, type SubmitEvent } from "react"
 import { Link } from "react-router-dom"
-import { Departement } from "../api/admin"
+import { DEPARTEMENT_LABELS } from "../api/admin"
 import { listEmployees, type EmployeeListItem } from "../api/employees"
 import { ErrorBanner } from "../components/ErrorBanner"
 import { ContactPage } from "@mui/icons-material"
@@ -9,11 +9,6 @@ import { primaryButton, rowIconButton } from "../ui/buttons"
 type PageError = {
 	message: string
 	dismissible: boolean
-}
-
-function departementLabel(id: number): string {
-	const entry = Object.entries(Departement).find(([, value]) => value === id)
-	return entry?.[0] ?? "-"
 }
 
 export function AnnuairePage() {
@@ -116,7 +111,7 @@ export function AnnuairePage() {
 										<td className="px-5 py-3.5 text-sm text-slate-600">{employee.email}</td>
 										<td className="px-5 py-3.5 text-sm text-slate-600">{employee.jobTitle}</td>
 										<td className="px-5 py-3.5 text-sm text-slate-600">
-											{departementLabel(employee.departement)}
+											{DEPARTEMENT_LABELS[employee.departement]}
 										</td>
 										<td className="w-0 px-5 py-3.5">
 											<Link
