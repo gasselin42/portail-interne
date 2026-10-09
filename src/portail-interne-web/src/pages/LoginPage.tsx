@@ -1,11 +1,13 @@
 import { useState, type SubmitEvent } from "react"
 import { useNavigate, Navigate } from "react-router-dom"
-import { Visibility, VisibilityOff } from "@mui/icons-material"
 import { login } from "../api/auth"
 import { ErrorBanner } from "../components/Banner"
 import { useSession } from "../session/useSession"
 import { FullPageStatus } from "../components/FullPageStatus"
 import { primaryButton } from "../ui/buttons"
+import { AuthCard } from "../components/AuthCard"
+import { inputClass, labelClass } from "../ui/fields"
+import { PasswordInput } from "../components/PasswordInput"
 
 export function LoginPage() {
 	const { me, loading, refresh } = useSession()
@@ -13,7 +15,6 @@ export function LoginPage() {
 	const [email, setEmail] = useState<string>("")
 	const [password, setPassword] = useState<string>("")
 
-	const [motDePasseVisible, setMotDePasseVisible] = useState<boolean>(false)
 	const [enCours, setEnCours] = useState<boolean>(false)
 	const [erreur, setErreur] = useState<string | null>(null)
 
@@ -51,40 +52,35 @@ export function LoginPage() {
 	}
 
 	return (
-		<form onSubmit={handleSubmit} className="mx-auto mt-16 max-w-sm space-y-4 rounded p-6">
-			<div className="mb-3">
-				<label htmlFor="email">Email</label>
-				<input
-					id="email"
-					type="email"
-					value={email}
-					onChange={(e) => setEmail(e.target.value)}
-					className="w-full rounded border border-gray-300 px-3 py-2"
-				/>
-			</div>
-			<div>
-				<label htmlFor="password">Mot de passe</label>
-				<div className="relative mb-3">
+		<AuthCard title="Connexion" description="Accède à ton portail.">
+			<form onSubmit={handleSubmit} className="space-y-5" noValidate>
+				{erreur && <ErrorBanner message={erreur} dismissible onDismiss={() => setErreur(null)} />}
+				<div>
+					<label htmlFor="email" className={labelClass}>
+						Email
+					</label>
 					<input
-						id="password"
-						type={motDePasseVisible ? "text" : "password"}
-						value={password}
-						onChange={(p) => setPassword(p.target.value)}
-						className="w-full rounded border border-gray-300 px-3 py-2"
+						id="email"
+						type="email"
+						value={email}
+						onChange={(e) => setEmail(e.target.value)}
+						className={inputClass}
+						autoComplete="username"
+						autoFocus
+						required
 					/>
-					<button
-						className="absolute top-0.5 right-2 translate-y-1 border-2 border-b-gray-800"
-						type="button"
-						onClick={() => setMotDePasseVisible((v) => !v)}
-					>
-						{motDePasseVisible ? <VisibilityOff /> : <Visibility />}
-					</button>
 				</div>
-			</div>
-			<button type="submit" disabled={enCours} className={`${primaryButton} mt-4 w-full`}>
-				<span>Se connecter</span>
-			</button>
-			{erreur && <ErrorBanner message={erreur} dismissible onDismiss={() => setErreur(null)} />}
-		</form>
+				<PasswordInput
+					id="password"
+					label="Mot de passe"
+					value={password}
+					onChange={setPassword}
+					autoComplete="current-password"
+				/>
+				<button type="submit" disabled={enCours} className={`${primaryButton} w-full`}>
+					{enCours ? "Connexion…" : "Se connecter"}
+				</button>
+			</form>
+		</AuthCard>
 	)
 }

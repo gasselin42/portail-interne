@@ -1,117 +1,147 @@
 import { useState, type SubmitEvent } from "react"
 import { useNavigate } from "react-router-dom"
-import { Visibility, VisibilityOff } from "@mui/icons-material"
 import { changePassword } from "../api/password"
-import { ErrorBanner } from "../components/Banner"
+import { ErrorBanner, SuccessBanner } from "../components/Banner"
 import { useSession } from "../session/useSession"
-import { primaryButton } from "../ui/buttons"
+import { focusRing, primaryButton } from "../ui/buttons"
+import { PasswordInput } from "../components/PasswordInput"
+import { AuthCard } from "../components/AuthCard"
 
 export function ChangePassword() {
-	const { refresh } = useSession()
+	const { me, logout, refresh } = useSession()
 
 	const [actualPassword, setActualPassword] = useState<string>("")
 	const [newPassword, setNewPassword] = useState<string>("")
 	const [confirmNewPassword, setConfirmNewPassword] = useState<string>("")
 
-	const [actualPasswordVisible, setActualPasswordVisible] = useState<boolean>(false)
-	const [newPasswordVisible, setNewPasswordVisible] = useState<boolean>(false)
-	const [confirmPasswordVisible, setConfirmPasswordVisible] = useState<boolean>(false)
-
 	const [enCours, setEnCours] = useState<boolean>(false)
+	const [success, setSuccess] = useState<boolean>(false)
 	const [erreur, setErreur] = useState<string | null>(null)
 
 	const navigate = useNavigate()
 
+	const forced = me?.mustChangePassword === true
+
 	async function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
 		e.preventDefault()
+		setSuccess(false)
 		setErreur(null)
+
+		if (actualPassword === "" || newPassword === "" || confirmNewPassword === "") {
+			setErreur("Remplis les 3 champs.")
+			return
+		} else if (newPassword.length < 8) {
+			setErreur("Le nouveau mot de passe doit faire au moins 8 caractères.")
+			return
+		} else if (newPassword !== confirmNewPassword) {
+			setErreur("Les deux nouveaux mots de passe ne concordent pas.")
+			return
+		} else if (newPassword === actualPassword) {
+			setErreur("Le nouveau mot de passe doit être différent de l'actuel.")
+			return
+		}
+
 		setEnCours(true)
+
 		try {
-			if (newPassword !== confirmNewPassword) {
-				setErreur("Vos nouveaux mots de passe ne concordent pas")
-				return
-			}
-			if (newPassword.length < 8) {
-				setErreur("Votre mot de passe doit faire au moins 8 caractères")
-				return
-			}
 			await changePassword(actualPassword, newPassword, confirmNewPassword)
-			await refresh()
-			navigate("/")
+			if (forced) {
+				await refresh()
+				navigate("/")
+			} else {
+				setSuccess(true)
+				setActualPassword("")
+				setNewPassword("")
+				setConfirmNewPassword("")
+			}
 		} catch (err) {
 			if (err instanceof Error) {
 				setErreur(err.message) // le texte du throw dans password.ts
 			} else {
-				setErreur("Une erreur est survenue")
+				setErreur("Une erreur est survenue.")
 			}
 		} finally {
 			setEnCours(false)
 		}
 	}
 
-	return (
-		<form onSubmit={handleSubmit} className="mx-auto mt-16 max-w-sm space-y-4 rounded p-6">
-			<div>
-				<label htmlFor="newPassword">Mot de passe actuel</label>
-				<div className="relative mb-3">
-					<input
-						id="confirmPassword"
-						type={actualPasswordVisible ? "text" : "password"}
-						value={actualPassword}
-						onChange={(p) => setActualPassword(p.target.value)}
-						className="w-full rounded border border-gray-300 px-3 py-2"
-					/>
-					<button
-						className="absolute top-0.5 right-2 translate-y-1 border-2 border-b-gray-800"
-						type="button"
-						onClick={() => setActualPasswordVisible((v) => !v)}
-					>
-						{actualPasswordVisible ? <VisibilityOff /> : <Visibility />}
-					</button>
-				</div>
-			</div>
-			<div>
-				<label htmlFor="newPassword">Nouveau mot de passe</label>
-				<div className="relative mb-3">
-					<input
-						id="confirmPassword"
-						type={newPasswordVisible ? "text" : "password"}
-						value={newPassword}
-						onChange={(p) => setNewPassword(p.target.value)}
-						className="w-full rounded border border-gray-300 px-3 py-2"
-					/>
-					<button
-						className="absolute top-0.5 right-2 translate-y-1 border-2 border-b-gray-800"
-						type="button"
-						onClick={() => setNewPasswordVisible((v) => !v)}
-					>
-						{newPasswordVisible ? <VisibilityOff /> : <Visibility />}
-					</button>
-				</div>
-			</div>
-			<div>
-				<label htmlFor="confirmPassword">Confirme ton nouveau mot de passe</label>
-				<div className="relative mb-3">
-					<input
-						id="confirmPassword"
-						type={confirmPasswordVisible ? "text" : "password"}
-						value={confirmNewPassword}
-						onChange={(p) => setConfirmNewPassword(p.target.value)}
-						className="w-full rounded border border-gray-300 px-3 py-2"
-					/>
-					<button
-						className="absolute top-0.5 right-2 translate-y-1 border-2 border-b-gray-800"
-						type="button"
-						onClick={() => setConfirmPasswordVisible((v) => !v)}
-					>
-						{confirmPasswordVisible ? <VisibilityOff /> : <Visibility />}
-					</button>
-				</div>
-			</div>
-			<button type="submit" disabled={enCours} className={`${primaryButton} mt-4 w-full`}>
-				<span>Enregistrer</span>
-			</button>
+	const form = (
+		<form noValidate onSubmit={handleSubmit} className="space-y-5">
 			{erreur && <ErrorBanner message={erreur} dismissible onDismiss={() => setErreur(null)} />}
+			<PasswordInput
+				id="currentPassword"
+				label={forced ? "Mot de passe temporaire" : "Mot de passe actuel"}
+				value={actualPassword}
+				onChange={setActualPassword}
+				autoComplete="current-password"
+			/>
+			<PasswordInput
+				id="newPassword"
+				label="Nouveau mot de passe"
+				value={newPassword}
+				onChange={setNewPassword}
+				autoComplete="new-password"
+				hint="Au moins 8 caractères."
+			/>
+			<PasswordInput
+				id="confirmPassword"
+				label="Confirme le nouveau mot de passe"
+				value={confirmNewPassword}
+				onChange={setConfirmNewPassword}
+				autoComplete="new-password"
+			/>
+			<button type="submit" disabled={enCours} className={`${primaryButton} w-full`}>
+				{enCours ? "Enregistrement…" : "Enregistrer"}
+			</button>
 		</form>
+	)
+
+	if (forced) {
+		return (
+			<AuthCard
+				title="Choisis ton mot de passe"
+				description="Remplace le mot de passe temporaire reçu de ton administrateur."
+			>
+				{form}
+				<button
+					type="button"
+					onClick={() => {
+						logout()
+						navigate("/login", { replace: true })
+					}}
+					className={`mt-4 w-full text-center text-sm text-slate-500 hover:text-slate-700 hover:underline ${focusRing}`}
+				>
+					Pas maintenant ? Se déconnecter
+				</button>
+			</AuthCard>
+		)
+	}
+
+	return (
+		<div className="mx-auto max-w-2xl px-6 py-10">
+			<header className="mb-8 flex flex-wrap items-end justify-between gap-4">
+				<div>
+					<p className="text-sm font-medium text-sky-700">Compte</p>
+					<h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900">
+						Changer mon mot de passe
+					</h1>
+					<p className="mt-1 text-sm text-slate-500">
+						Choisis un nouveau mot de passe pour ton compte.
+					</p>
+				</div>
+			</header>
+
+			{success && (
+				<SuccessBanner
+					message="Ton mot de passe a été modifié avec succès."
+					dismissible
+					onDismiss={() => setSuccess(false)}
+				/>
+			)}
+
+			<section className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
+				{form}
+			</section>
+		</div>
 	)
 }

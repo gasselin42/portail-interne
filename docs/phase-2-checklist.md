@@ -95,7 +95,11 @@ Objectif : aucun cas limite connu laissé de côté. Ordre recommandé ci-dessou
   - [x] Résultats riches : avatar à initiales, nom, poste et département (homonymes)
   - [x] Bouton pour retirer le manager ; le champ revient toujours à la sélection (aucun texte orphelin)
   - [x] En modification : nom du manager actuel affiché dès l’ouverture
-- [ ] Q7. **Pages de connexion et de changement de mot de passe** au même style que le reste de l’application
+- [x] Q7. **Pages de connexion et de changement de mot de passe** au même style que le reste de l’application
+  - [x] API : erreurs de saisie en 400 avec message (plus de déconnexion sur un mauvais mot de passe)
+  - [x] `Brand`, `AuthCard` (aussi utilisée par `FullPageStatus`), `PasswordInput` (bouton bascule accessible)
+  - [x] `autoComplete` pour les gestionnaires de mots de passe ; validation avant l’envoi
+  - [x] Changement forcé : carte centrée + déconnexion ; volontaire : page dans le menu + message de succès
 - [ ] Q8. **Nettoyages**
   - [ ] Type `PageError` partagé (au lieu d’être copié dans chaque page)
   - [x] Classes de boutons partagées (`src/ui/buttons.ts`)

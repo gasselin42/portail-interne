@@ -5,6 +5,7 @@ import { SidebarContent } from "./SidebarContent"
 import { useSession } from "../session/useSession"
 import { MenuOutlined, MenuOpenOutlined, CloseOutlined } from "@mui/icons-material"
 import { iconButton } from "../ui/buttons"
+import { Brand } from "../components/Brand"
 
 const COLLAPSED_KEY = "portail_sidebar_collapsed"
 
@@ -73,13 +74,7 @@ export function AppLayout() {
 					>
 						<MenuOutlined fontSize="small" />
 					</button>
-					<span
-						aria-hidden="true"
-						className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-600 text-sm font-semibold text-white"
-					>
-						P
-					</span>
-					<span className="text-lg font-semibold text-slate-900">Portail</span>
+					<Brand />
 				</header>
 				<main className="flex-1">
 					<Outlet />

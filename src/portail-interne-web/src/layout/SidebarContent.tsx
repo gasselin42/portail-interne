@@ -4,6 +4,7 @@ import { isNavItemActive, NAV_ITEMS } from "./navItems"
 import { ROLE_LABELS } from "../api/admin"
 import { KeyOutlined, LogoutOutlined } from "@mui/icons-material"
 import { Avatar } from "../components/Avatar"
+import { Brand } from "../components/Brand"
 
 type Props = {
 	collapsed: boolean
@@ -38,14 +39,8 @@ export function SidebarContent({ collapsed, onNavigate }: Props) {
 	return (
 		<div className="flex h-full flex-col">
 			{/* 1. En-tête */}
-			<div className={`flex items-center gap-3 px-4 py-5 ${collapsed ? "justify-center" : ""}`}>
-				<span
-					aria-hidden="true"
-					className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-600 text-sm font-semibold text-white"
-				>
-					P
-				</span>
-				<span className={`text-lg font-semibold text-slate-900 ${labelClass}`}>Portail</span>
+			<div className={`flex px-4 py-5 ${collapsed ? "justify-center" : ""}`}>
+				<Brand hideName={collapsed} />
 			</div>
 
 			{/* 2. Liens : flex-1 prend toute la hauteur restante */}
