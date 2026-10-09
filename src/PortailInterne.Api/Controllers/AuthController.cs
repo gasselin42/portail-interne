@@ -125,10 +125,10 @@ public class AuthController : ControllerBase
             return Unauthorized();
 
         if (!_passwords.Verify(account.PasswordHash, request.ActualPassword))
-            return Unauthorized();
+            return BadRequest(new { message = "Le mot de passe actuel est incorrect." });
 
         if (request.NewPassword == request.ActualPassword)
-            return BadRequest();
+            return BadRequest(new { message = "Le nouveau mot de passe doit être différent de l'actuel." });
 
         string newHash = _passwords.Hash(request.NewPassword);
         account.PasswordHash = newHash;
@@ -139,4 +139,3 @@ public class AuthController : ControllerBase
         return Ok();
     }
 }
-

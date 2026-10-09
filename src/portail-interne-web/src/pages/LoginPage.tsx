@@ -22,13 +22,21 @@ export function LoginPage() {
 	async function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
 		e.preventDefault()
 		setErreur(null)
+
+		if (email.trim() === "" || password === "") {
+			setErreur("Entre ton email et ton mot de passe.")
+			return
+		}
+
 		setEnCours(true)
 		try {
 			await login(email, password)
 			await refresh()
 			navigate("/")
-		} catch {
-			setErreur("Email ou mot de passe invalide")
+		} catch (e) {
+			if (e instanceof TypeError)
+				setErreur("Impossible de joindre le serveur. Vérifie ta connexion.")
+			else setErreur(e instanceof Error ? e.message : "Email ou mot de passe invalide")
 		} finally {
 			setEnCours(false)
 		}

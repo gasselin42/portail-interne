@@ -55,8 +55,10 @@ export async function login(email: string, password: string): Promise<LoginRespo
 		body: JSON.stringify({ email, password }),
 	})
 
-	if (!res.ok) {
-		throw new Error("LOGIN_FAILED")
+	if (res.status === 401) {
+		throw new Error(await readApiError(res, "Email ou mot de passe invalide."))
+	} else if (!res.ok) {
+		throw new Error(await readApiError(res, "La connexion a échoué. Réessaie dans un instant."))
 	}
 
 	const data = (await res.json()) as LoginResponse

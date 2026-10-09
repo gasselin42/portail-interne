@@ -20,7 +20,7 @@ public class Employee
     [Required(ErrorMessage = "Le nom de famille est obligatoire.")]
     public string LastName { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Le courriel est obligatoire.")]
+    [Required(ErrorMessage = "L'email est obligatoire.")]
     public string Email { get; set; } = string.Empty;
 
     public string JobTitle { get; set; } = string.Empty;

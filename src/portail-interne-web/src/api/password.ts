@@ -1,4 +1,4 @@
-import { apiFetch } from "./client"
+import { apiFetch, readApiError } from "./client"
 
 export async function changePassword(
 	actualPassword: string,
@@ -11,8 +11,6 @@ export async function changePassword(
 	})
 
 	if (!res.ok) {
-		if (res.status === 400) throw new Error("Vous devez choisir un nouveau mot de passe")
-		else if (res.status === 401) throw new Error("Votre mot de passe actuel ne concorde pas")
-		throw new Error("Une erreur est survenue")
+		throw new Error(await readApiError(res, "Impossible de changer le mot de passe."))
 	}
 }
