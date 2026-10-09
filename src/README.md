@@ -9,10 +9,16 @@ Code applicatif du portail :
 
 ### API
 
+La clé de signature JWT n'est pas dans le dépôt. Avant le premier lancement, la générer dans les user-secrets (stockés hors du projet, chargés seulement en Development) :
+
 ```bash
 cd src/PortailInterne.Api
+dotnet user-secrets set "Jwt:Key" "$(openssl rand -base64 48)"
 dotnet run --launch-profile http
 ```
+
+- En production, fournir la clé par la variable d'environnement `Jwt__Key` (le `__` remplace le `:`)
+- L'API refuse de démarrer si la clé est absente ou fait moins de 32 octets
 
 - Écoute sur `http://localhost:5222`
 - Au démarrage, les migrations EF Core sont appliquées et un compte admin est créé (voir `Data/DbSeeder.cs`)

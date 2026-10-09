@@ -24,8 +24,15 @@ builder.Services.AddControllers(options =>
     options.Filters.Add<MustChangePasswordFilter>();
 });
 
-var jwtKey = builder.Configuration["Jwt:Key"]
-    ?? throw new InvalidOperationException("Jwt:Key manquante dans la config.");
+// HMAC-SHA256 exige une clé d'au moins 256 bits (32 octets).
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrWhiteSpace(jwtKey) || Encoding.UTF8.GetByteCount(jwtKey) < 32)
+{
+    throw new InvalidOperationException(
+        "Jwt:Key absente ou trop courte (32 octets minimum). " +
+        "En développement : dotnet user-secrets set \"Jwt:Key\" \"$(openssl rand -base64 48)\". " +
+        "En production : variable d'environnement Jwt__Key.");
+}
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

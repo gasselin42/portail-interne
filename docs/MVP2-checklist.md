@@ -101,11 +101,11 @@ Objectif : aucun cas limite connu laissé de côté. Ordre recommandé ci-dessou
   - [x] Classes de boutons partagées (`src/ui/buttons.ts`)
   - [x] Commiter `.vscode/settings.json`
 - [ ] Q9. **Page 404**
-- [ ] Q10. **Secrets hors du dépôt**
-  - [ ] Clé JWT retirée de `appsettings.json` ; `dotnet user-secrets` en développement
-  - [ ] Variable d’environnement en production (ex. `Jwt__Key`)
-  - [ ] Nouvelle clé générée (l’ancienne reste visible dans l’historique Git)
-  - [ ] L’API refuse de démarrer si la clé est absente ou trop courte
+- [x] Q10. **Secrets hors du dépôt**
+  - [x] Clé JWT retirée de `appsettings.json` ; `dotnet user-secrets` en développement
+  - [x] Variable d’environnement en production (ex. `Jwt__Key`)
+  - [x] Nouvelle clé générée (l’ancienne reste visible dans l’historique Git)
+  - [x] L’API refuse de démarrer si la clé est absente ou trop courte
 - [ ] Q11. **Passage à .NET 10** (LTS ; .NET 7 n’est plus supporté depuis mai 2024)
   - [ ] `TargetFramework` + paquets NuGet (EF Core, JWT, Swagger) mis à jour
   - [ ] Build, migrations et tests manuels OK
