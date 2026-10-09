@@ -116,10 +116,10 @@ Objectif : aucun cas limite connu laissé de côté. Ordre recommandé ci-dessou
   - [x] Variable d’environnement en production (ex. `Jwt__Key`)
   - [x] Nouvelle clé générée (l’ancienne reste visible dans l’historique Git)
   - [x] L’API refuse de démarrer si la clé est absente ou trop courte
-- [ ] Q11. **Passage à .NET 10** (LTS ; .NET 7 n’est plus supporté depuis mai 2024)
-  - [ ] `TargetFramework` + paquets NuGet (EF Core, JWT, Swagger) mis à jour
-  - [ ] Build, migrations et tests manuels OK
-  - [ ] Envisager `TimeProvider` (intégré) à la place de `IAppClock`
+- [x] Q11. **Passage à .NET 10** (LTS ; .NET 7 n’est plus supporté depuis mai 2024)
+  - [x] `TargetFramework` + paquets NuGet (EF Core, JWT, Swagger) mis à jour
+  - [x] Build, migrations et tests manuels OK
+  - [x] Envisager `TimeProvider` (intégré) à la place de `IAppClock`
 - [ ] Q12. **Recherche et tri d’employés insensibles aux accents et à la casse** (« helene » trouve « Hélène » ; « doe » et « Émond » triés comme un humain l’attend)
   - [ ] Noms affichés **tels que saisis** (aucune capitalisation automatique : « van der Berg », « McDonald », « D’Amours »)
   - [ ] Clés normalisées stockées à côté (minuscules, sans accents, apostrophes unifiées), calculées automatiquement à chaque enregistrement
