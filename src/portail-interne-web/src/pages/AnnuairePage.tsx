@@ -2,7 +2,7 @@ import { useEffect, useState, type SubmitEvent } from "react"
 import { Link } from "react-router-dom"
 import { DEPARTEMENT_LABELS } from "../api/admin"
 import { listEmployees, type EmployeeListItem } from "../api/employees"
-import { ErrorBanner } from "../components/ErrorBanner"
+import { ErrorBanner } from "../components/Banner"
 import { ContactPage } from "@mui/icons-material"
 import { primaryButton, rowIconButton } from "../ui/buttons"
 

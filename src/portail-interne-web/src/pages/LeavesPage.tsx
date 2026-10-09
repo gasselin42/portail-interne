@@ -10,7 +10,7 @@ import {
 	LEAVE_TYPE_LABELS,
 	type LeaveStatusId,
 } from "../api/leaves"
-import { ErrorBanner } from "../components/ErrorBanner"
+import { ErrorBanner } from "../components/Banner"
 import { DateText } from "../components/DateText"
 import { ConfirmDialog } from "../components/ConfirmDialog"
 import { formatRange } from "../utils/date"

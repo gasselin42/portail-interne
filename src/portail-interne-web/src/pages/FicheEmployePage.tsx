@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom"
 import { AccountCircleOutlined } from "@mui/icons-material"
 import { DEPARTEMENT_LABELS } from "../api/admin"
 import { getEmployee, type EmployeeDetail } from "../api/employees"
-import { ErrorBanner } from "../components/ErrorBanner"
+import { ErrorBanner } from "../components/Banner"
 
 export function FicheEmployePage() {
 	const { id } = useParams()

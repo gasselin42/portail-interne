@@ -1,7 +1,7 @@
 import { useState, type SubmitEvent } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { createLeave, LEAVE_TYPE_LABELS, LeaveType, type LeaveTypeId } from "../api/leaves"
-import { ErrorBanner } from "../components/ErrorBanner"
+import { ErrorBanner } from "../components/Banner"
 import { daysFromToday } from "../utils/date"
 import { primaryButton, secondaryButton } from "../ui/buttons"
 

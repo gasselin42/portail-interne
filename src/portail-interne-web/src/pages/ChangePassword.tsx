@@ -2,7 +2,7 @@ import { useState, type SubmitEvent } from "react"
 import { useNavigate } from "react-router-dom"
 import { Visibility, VisibilityOff } from "@mui/icons-material"
 import { changePassword } from "../api/password"
-import { ErrorBanner } from "../components/ErrorBanner"
+import { ErrorBanner } from "../components/Banner"
 import { useSession } from "../session/useSession"
 import { primaryButton } from "../ui/buttons"
 

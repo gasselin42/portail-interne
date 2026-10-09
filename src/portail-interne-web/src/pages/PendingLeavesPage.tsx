@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
-import { ErrorBanner } from "../components/ErrorBanner"
+import { ErrorBanner } from "../components/Banner"
 import {
 	listLeavesPending,
 	type LeaveRequestResponse,

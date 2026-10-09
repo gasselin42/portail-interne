@@ -11,11 +11,12 @@ import {
 	updateEmployee,
 } from "../api/admin"
 import { AccountCircleOutlined } from "@mui/icons-material"
-import { ErrorBanner } from "../components/ErrorBanner"
+import { ErrorBanner } from "../components/Banner"
 import { TemporaryPasswordDialog } from "../components/TemporaryPasswordDialog"
 import { EmployeeCombobox } from "../components/EmployeeCombobox"
 import { primaryButton, secondaryButton } from "../ui/buttons"
 import type { EmployeeOption } from "../api/employees"
+import { inputClass } from "../ui/fields"
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -224,7 +225,7 @@ export function CreateEmployeePage() {
 									setFirstName(next)
 									if (!enEdition) setEmail(buildEmail(next, lastName))
 								}}
-								className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+								className={inputClass}
 							/>
 						</div>
 						<div>
@@ -244,7 +245,7 @@ export function CreateEmployeePage() {
 									setLastName(next)
 									if (!enEdition) setEmail(buildEmail(firstName, next))
 								}}
-								className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+								className={inputClass}
 							/>
 						</div>
 					</div>
@@ -263,7 +264,7 @@ export function CreateEmployeePage() {
 							value={email}
 							readOnly={enEdition}
 							onChange={(e) => setEmail(e.target.value)}
-							className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none read-only:cursor-default read-only:border-slate-200 read-only:bg-slate-100 read-only:text-slate-500 read-only:shadow-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 read-only:focus:ring-0"
+							className={`${inputClass} read-only:cursor-default read-only:border-slate-200 read-only:bg-slate-100 read-only:text-slate-500 read-only:shadow-none read-only:focus:ring-0`}
 						/>
 					</div>
 
@@ -287,7 +288,7 @@ export function CreateEmployeePage() {
 										e.target.value === "" ? null : (Number(e.target.value) as DepartementId),
 									)
 								}
-								className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+								className={inputClass}
 							>
 								<option value="">Choisir...</option>
 								{Object.entries(Departement).map(([, id]) => (
@@ -311,7 +312,7 @@ export function CreateEmployeePage() {
 								onChange={(e) =>
 									setRole(e.target.value === "" ? null : (Number(e.target.value) as RoleId))
 								}
-								className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+								className={inputClass}
 							>
 								<option value="">Choisir...</option>
 								{Object.entries(Role).map(([label, id]) => (
@@ -332,7 +333,7 @@ export function CreateEmployeePage() {
 							type="text"
 							value={jobTitle}
 							onChange={(e) => setJobTitle(e.target.value)}
-							className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+							className={inputClass}
 						/>
 					</div>
 
@@ -349,7 +350,7 @@ export function CreateEmployeePage() {
 								type="tel"
 								value={phoneNumber}
 								onChange={(e) => setPhoneNumber(e.target.value)}
-								className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+								className={inputClass}
 							/>
 						</div>
 						<div>

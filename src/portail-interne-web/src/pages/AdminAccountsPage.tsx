@@ -9,7 +9,7 @@ import {
 	DEPARTEMENT_LABELS,
 	type AccountListItem,
 } from "../api/admin"
-import { ErrorBanner } from "../components/ErrorBanner"
+import { ErrorBanner } from "../components/Banner"
 import { ConfirmDialog } from "../components/ConfirmDialog"
 import { TemporaryPasswordDialog } from "../components/TemporaryPasswordDialog"
 import { primaryButton, rowIconButton, smallSecondaryButton } from "../ui/buttons"
