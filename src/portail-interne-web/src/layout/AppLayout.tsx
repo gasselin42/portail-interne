@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react"
 import { Dialog, DialogBackdrop, DialogPanel } from "@headlessui/react"
-import { Outlet } from "react-router-dom"
+import { Outlet, useLocation } from "react-router-dom"
 import { SidebarContent } from "./SidebarContent"
 import { useSession } from "../session/useSession"
 import { MenuOutlined, MenuOpenOutlined, CloseOutlined } from "@mui/icons-material"
 import { iconButton } from "../ui/buttons"
 import { Brand } from "../components/Brand"
+import { ErrorBoundary } from "../components/ErrorBoundary"
+import { PageCrash } from "../components/PageCrash"
 
 const COLLAPSED_KEY = "portail_sidebar_collapsed"
 
@@ -21,6 +23,8 @@ export function AppLayout() {
 	const { me } = useSession()
 	const [collapsed, setCollapsed] = useState(readCollapsed)
 	const [mobileOpen, setMobileOpen] = useState(false)
+
+	const { pathname } = useLocation()
 
 	function toggleCollapsed() {
 		const next = !collapsed
@@ -77,7 +81,9 @@ export function AppLayout() {
 					<Brand />
 				</header>
 				<main className="flex-1">
-					<Outlet />
+					<ErrorBoundary key={pathname} fallback={(reset) => <PageCrash onRetry={reset} />}>
+						<Outlet />
+					</ErrorBoundary>
 				</main>
 			</div>
 			<Dialog open={mobileOpen} onClose={setMobileOpen} className="relative z-50 lg:hidden">

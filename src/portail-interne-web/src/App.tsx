@@ -15,45 +15,52 @@ import { FicheEmployePage } from "./pages/FicheEmployePage"
 import { LeavesPage } from "./pages/LeavesPage"
 import { NewLeavePage } from "./pages/NewLeavePage"
 import { PendingLeavesPage } from "./pages/PendingLeavesPage"
+import { NotFoundPage } from "./pages/NotFoundPage"
+import { ErrorBoundary } from "./components/ErrorBoundary"
+import { AppCrash } from "./components/AppCrash"
 
 export default function App() {
 	return (
 		<BrowserRouter>
-			<SessionProvider>
-				<Routes>
-					{/* Public */}
-					<Route path="/login" element={<LoginPage />} />
+			<ErrorBoundary fallback={() => <AppCrash />}>
+				<SessionProvider>
+					<Routes>
+						{/* Public */}
+						<Route path="/login" element={<LoginPage />} />
 
-					{/* Connecté + autorisé à changer le mdp */}
-					<Route element={<RequireAuth allowPasswordChange />}>
-						<Route element={<AppLayout />}>
-							<Route path="/change-password" element={<ChangePassword />} />
-						</Route>
-					</Route>
-
-					{/* Connecté + mdp déjà OK */}
-					<Route element={<RequireAuth />}>
-						<Route element={<AppLayout />}>
-							<Route path="/" element={<HomePage />} />
-							<Route path="/employees" element={<AnnuairePage />} />
-							<Route path="/employees/:id" element={<FicheEmployePage />} />
-							<Route path="/leaves" element={<LeavesPage />} />
-							<Route path="/leaves/new" element={<NewLeavePage />} />
-							<Route path="/calendar" element={<h1>Calendrier</h1>} />
-
-							<Route element={<RequireApprover />}>
-								<Route path="/approvals" element={<PendingLeavesPage />} />
-							</Route>
-
-							<Route element={<RequireAdmin />}>
-								<Route path="/admin/accounts" element={<AdminAccountsPage />} />
-								<Route path="/admin/employees/new" element={<CreateEmployeePage />} />
-								<Route path="/admin/employees/:id/edit" element={<CreateEmployeePage />} />
+						{/* Connecté + autorisé à changer le mdp */}
+						<Route element={<RequireAuth allowPasswordChange />}>
+							<Route element={<AppLayout />}>
+								<Route path="/change-password" element={<ChangePassword />} />
 							</Route>
 						</Route>
-					</Route>
-				</Routes>
-			</SessionProvider>
+
+						{/* Connecté + mdp déjà OK */}
+						<Route element={<RequireAuth />}>
+							<Route element={<AppLayout />}>
+								<Route path="/" element={<HomePage />} />
+								<Route path="/employees" element={<AnnuairePage />} />
+								<Route path="/employees/:id" element={<FicheEmployePage />} />
+								<Route path="/leaves" element={<LeavesPage />} />
+								<Route path="/leaves/new" element={<NewLeavePage />} />
+								<Route path="/calendar" element={<h1>Calendrier</h1>} />
+
+								<Route element={<RequireApprover />}>
+									<Route path="/approvals" element={<PendingLeavesPage />} />
+								</Route>
+
+								<Route element={<RequireAdmin />}>
+									<Route path="/admin/accounts" element={<AdminAccountsPage />} />
+									<Route path="/admin/employees/new" element={<CreateEmployeePage />} />
+									<Route path="/admin/employees/:id/edit" element={<CreateEmployeePage />} />
+								</Route>
+
+								<Route path="*" element={<NotFoundPage />} />
+							</Route>
+						</Route>
+					</Routes>
+				</SessionProvider>
+			</ErrorBoundary>
 		</BrowserRouter>
 	)
 }

@@ -106,7 +106,11 @@ Objectif : aucun cas limite connu laissé de côté. Ordre recommandé ci-dessou
   - [x] Commiter `.vscode/settings.json`
   - [x] Champs et libellés des formulaires basés sur `src/ui/fields.ts`
   - [x] En-tête de page partagé (`PageHeader`) et vocabulaire harmonisé (titres = menu, tutoiement)
-- [ ] Q9. **Page 404**
+- [x] Q9. **Page 404 et écran d’erreur** (plus aucune page blanche)
+  - [x] Route `*` : « Page introuvable » dans le menu, avec retour à l’accueil et à la page précédente
+  - [x] Error Boundary autour des pages : un plantage affiche un écran d’erreur, le menu reste utilisable
+  - [x] L’écran d’erreur disparaît quand on change de page
+  - [x] Error Boundary global (au-dessus du menu et de la session) en dernier recours
 - [x] Q10. **Secrets hors du dépôt**
   - [x] Clé JWT retirée de `appsettings.json` ; `dotnet user-secrets` en développement
   - [x] Variable d’environnement en production (ex. `Jwt__Key`)
