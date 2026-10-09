@@ -45,6 +45,11 @@ function Banner({ tone, message, dismissible = false, onDismiss }: BannerProps &
 	)
 }
 
+export type PageError = {
+	message: string
+	dismissible: boolean
+}
+
 export function ErrorBanner(props: BannerProps) {
 	return <Banner tone="error" {...props} />
 }

@@ -100,10 +100,12 @@ Objectif : aucun cas limite connu laissé de côté. Ordre recommandé ci-dessou
   - [x] `Brand`, `AuthCard` (aussi utilisée par `FullPageStatus`), `PasswordInput` (bouton bascule accessible)
   - [x] `autoComplete` pour les gestionnaires de mots de passe ; validation avant l’envoi
   - [x] Changement forcé : carte centrée + déconnexion ; volontaire : page dans le menu + message de succès
-- [ ] Q8. **Nettoyages**
-  - [ ] Type `PageError` partagé (au lieu d’être copié dans chaque page)
+- [x] Q8. **Nettoyages**
+  - [x] Type `PageError` partagé (au lieu d’être copié dans chaque page)
   - [x] Classes de boutons partagées (`src/ui/buttons.ts`)
   - [x] Commiter `.vscode/settings.json`
+  - [x] Champs et libellés des formulaires basés sur `src/ui/fields.ts`
+  - [x] En-tête de page partagé (`PageHeader`) et vocabulaire harmonisé (titres = menu, tutoiement)
 - [ ] Q9. **Page 404**
 - [x] Q10. **Secrets hors du dépôt**
   - [x] Clé JWT retirée de `appsettings.json` ; `dotnet user-secrets` en développement

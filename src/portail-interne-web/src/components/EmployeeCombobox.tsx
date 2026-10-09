@@ -5,6 +5,7 @@ import { DEPARTEMENT_LABELS } from "../api/admin"
 import { CloseOutlined } from "@mui/icons-material"
 import { focusRing } from "../ui/buttons"
 import { Avatar } from "./Avatar"
+import { fieldBase } from "../ui/fields"
 
 const SEARCH_DELAY_MS = 250
 
@@ -82,7 +83,7 @@ export function EmployeeCombobox({
 							onChange={(event) => setQuery(event.target.value)}
 							autoComplete="off"
 							spellCheck={false}
-							className="w-full rounded-lg border border-slate-200 pl-3 pr-9 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+							className={`${fieldBase} pl-3 pr-9`}
 							ref={inputRef}
 						/>
 						{value && (

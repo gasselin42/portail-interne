@@ -9,15 +9,11 @@ import {
 	DEPARTEMENT_LABELS,
 	type AccountListItem,
 } from "../api/admin"
-import { ErrorBanner } from "../components/Banner"
+import { ErrorBanner, type PageError } from "../components/Banner"
 import { ConfirmDialog } from "../components/ConfirmDialog"
 import { TemporaryPasswordDialog } from "../components/TemporaryPasswordDialog"
 import { primaryButton, rowIconButton, smallSecondaryButton } from "../ui/buttons"
-
-type PageError = {
-	message: string
-	dismissible: boolean
-}
+import { PageHeader } from "../components/PageHeader"
 
 function AccountActiveToggle({
 	checked,
@@ -146,18 +142,16 @@ export function AdminAccountsPage() {
 
 	return (
 		<div className="mx-auto max-w-6xl px-6 py-10">
-			<header className="mb-8 flex flex-wrap items-end justify-between gap-4">
-				<div>
-					<p className="text-sm font-medium text-sky-700">Administration</p>
-					<h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900">Comptes</h1>
-					<p className="mt-1 text-sm text-slate-500">
-						Gérer les accès et l'activation des employés
-					</p>
-				</div>
-				<Link to="/admin/employees/new" className={primaryButton}>
-					Créer un employé
-				</Link>
-			</header>
+			<PageHeader
+				eyebrow="Administration"
+				title="Comptes"
+				description="Gère les accès et l'activation des employés."
+				actions={
+					<Link to="/admin/employees/new" className={primaryButton}>
+						Crée un employé
+					</Link>
+				}
+			/>
 
 			{error && (
 				<ErrorBanner

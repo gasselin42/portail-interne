@@ -16,7 +16,8 @@ import { TemporaryPasswordDialog } from "../components/TemporaryPasswordDialog"
 import { EmployeeCombobox } from "../components/EmployeeCombobox"
 import { primaryButton, secondaryButton } from "../ui/buttons"
 import type { EmployeeOption } from "../api/employees"
-import { inputClass } from "../ui/fields"
+import { inputClass, labelClass } from "../ui/fields"
+import { PageHeader } from "../components/PageHeader"
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -163,20 +164,19 @@ export function CreateEmployeePage() {
 
 	return (
 		<div className="mx-auto max-w-2xl px-6 py-10">
-			<header className="mb-8 flex flex-wrap items-end justify-between gap-4">
-				<div>
-					<p className="text-sm font-medium text-sky-700">Administration</p>
-					<h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900">
-						{enEdition ? "Modifier l'employé" : "Nouvel employé"}
-					</h1>
-					<p className="mt-1 text-sm text-slate-500">
-						Créer un employé et noter le mot de passe temporaire
-					</p>
-				</div>
-				<Link to="/admin/accounts" className={secondaryButton}>
-					Retour aux comptes
-				</Link>
-			</header>
+			<PageHeader
+				eyebrow="Administration"
+				title={enEdition ? "Modifier l'employé" : "Nouvel employé"}
+				description={enEdition 
+					? "Modifie les informations de l'employé." 
+					: "Crée un employé et noter le mot de passe temporaire."
+				}
+				actions={
+					<Link to="/admin/accounts" className={secondaryButton}>
+						Retour aux comptes
+					</Link>
+				}
+			/>
 
 			{erreur && <ErrorBanner message={erreur} dismissible onDismiss={() => setErreur(null)} />}
 
@@ -186,7 +186,7 @@ export function CreateEmployeePage() {
 						Les champs marqués d’un <span className="text-red-600">*</span> sont obligatoires.
 					</p>
 					<div>
-						<label htmlFor="photo" className="mb-1.5 block text-sm font-medium text-slate-700">
+						<label htmlFor="photo" className={labelClass}>
 							Photo
 						</label>
 						<div className="flex items-center gap-4">
@@ -208,7 +208,7 @@ export function CreateEmployeePage() {
 						<div>
 							<label
 								htmlFor="firstName"
-								className="mb-1.5 block text-sm font-medium text-slate-700"
+								className={labelClass}
 							>
 								Prénom
 								<span className="ml-0.5 text-red-600" aria-hidden="true">
@@ -229,7 +229,7 @@ export function CreateEmployeePage() {
 							/>
 						</div>
 						<div>
-							<label htmlFor="lastName" className="mb-1.5 block text-sm font-medium text-slate-700">
+							<label htmlFor="lastName" className={labelClass}>
 								Nom
 								<span className="ml-0.5 text-red-600" aria-hidden="true">
 									*
@@ -251,7 +251,7 @@ export function CreateEmployeePage() {
 					</div>
 
 					<div>
-						<label htmlFor="email" className="mb-1.5 block text-sm font-medium text-slate-700">
+						<label htmlFor="email" className={labelClass}>
 							Email
 							<span className="ml-0.5 text-red-600" aria-hidden="true">
 								*
@@ -272,7 +272,7 @@ export function CreateEmployeePage() {
 						<div>
 							<label
 								htmlFor="departement"
-								className="mb-1.5 block text-sm font-medium text-slate-700"
+								className={labelClass}
 							>
 								Département
 								<span className="ml-0.5 text-red-600" aria-hidden="true">
@@ -299,7 +299,7 @@ export function CreateEmployeePage() {
 							</select>
 						</div>
 						<div>
-							<label htmlFor="role" className="mb-1.5 block text-sm font-medium text-slate-700">
+							<label htmlFor="role" className={labelClass}>
 								Rôle
 								<span className="ml-0.5 text-red-600" aria-hidden="true">
 									*
@@ -325,7 +325,7 @@ export function CreateEmployeePage() {
 					</div>
 
 					<div>
-						<label htmlFor="jobTitle" className="mb-1.5 block text-sm font-medium text-slate-700">
+						<label htmlFor="jobTitle" className={labelClass}>
 							Titre de poste
 						</label>
 						<input
@@ -341,7 +341,7 @@ export function CreateEmployeePage() {
 						<div>
 							<label
 								htmlFor="phoneNumber"
-								className="mb-1.5 block text-sm font-medium text-slate-700"
+								className={labelClass}
 							>
 								Téléphone
 							</label>
@@ -354,7 +354,7 @@ export function CreateEmployeePage() {
 							/>
 						</div>
 						<div>
-							<label htmlFor="manager" className="mb-1.5 block text-sm font-medium text-slate-700">
+							<label htmlFor="manager" className={labelClass}>
 								Manager
 							</label>
 							<EmployeeCombobox

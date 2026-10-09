@@ -10,16 +10,12 @@ import {
 	LEAVE_TYPE_LABELS,
 	type LeaveStatusId,
 } from "../api/leaves"
-import { ErrorBanner } from "../components/Banner"
+import { ErrorBanner, type PageError } from "../components/Banner"
 import { DateText } from "../components/DateText"
 import { ConfirmDialog } from "../components/ConfirmDialog"
 import { formatRange } from "../utils/date"
 import { primaryButton, rowIconDangerButton } from "../ui/buttons"
-
-type PageError = {
-	message: string
-	dismissible: boolean
-}
+import { PageHeader } from "../components/PageHeader"
 
 const STATUS_STYLES: Record<LeaveStatusId, { label: string; className: string }> = {
 	[LeaveStatus.EnAttente]: {
@@ -106,16 +102,16 @@ export function LeavesPage() {
 
 	return (
 		<div className="mx-auto max-w-6xl px-6 py-10">
-			<header className="mb-8 flex flex-wrap items-end justify-between gap-4">
-				<div>
-					<p className="text-sm font-medium text-sky-700">Congés</p>
-					<h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900">Mes congés</h1>
-					<p className="mt-1 text-sm text-slate-500">Voir et créer tes demandes de congés</p>
-				</div>
-				<Link to="/leaves/new" className={primaryButton}>
-					Nouvelle demande
-				</Link>
-			</header>
+			<PageHeader
+				eyebrow="Congés"
+				title="Mes congés"
+				description="Vois et crée tes demandes de congés."
+				actions={
+					<Link to="/leaves/new" className={primaryButton}>
+						Nouvelle demande
+					</Link>
+				}
+			/>
 
 			{error && (
 				<ErrorBanner

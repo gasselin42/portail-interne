@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
-import { ErrorBanner } from "../components/Banner"
+import { ErrorBanner, type PageError } from "../components/Banner"
 import {
 	listLeavesPending,
 	type LeaveRequestResponse,
@@ -12,11 +12,7 @@ import { DateText } from "../components/DateText"
 import { formatRange } from "../utils/date"
 import { ConfirmDialog } from "../components/ConfirmDialog"
 import { rowIconDangerButton, rowIconSuccessButton } from "../ui/buttons"
-
-type PageError = {
-	message: string
-	dismissible: boolean
-}
+import { PageHeader } from "../components/PageHeader"
 
 export function PendingLeavesPage() {
 	const [leaves, setLeaves] = useState<LeaveRequestResponse[]>([])
@@ -94,17 +90,11 @@ export function PendingLeavesPage() {
 
 	return (
 		<div className="mx-auto max-w-6xl px-6 py-10">
-			<header className="mb-8 flex flex-wrap items-end justify-between gap-4">
-				<div>
-					<p className="text-sm font-medium text-sky-700">Congés</p>
-					<h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900">
-						Congés en attente
-					</h1>
-					<p className="mt-1 text-sm text-slate-500">
-						Voir et accepter ou refuser les demandes de congés
-					</p>
-				</div>
-			</header>
+			<PageHeader
+				eyebrow="Congés"
+				title="À approuver"
+				description="Vois et accepte ou refuse les demandes de congés."
+			/>
 
 			{error && (
 				<ErrorBanner

@@ -4,6 +4,8 @@ import { createLeave, LEAVE_TYPE_LABELS, LeaveType, type LeaveTypeId } from "../
 import { ErrorBanner } from "../components/Banner"
 import { daysFromToday } from "../utils/date"
 import { primaryButton, secondaryButton } from "../ui/buttons"
+import { inputClass, labelClass } from "../ui/fields"
+import { PageHeader } from "../components/PageHeader"
 
 const MAX_SICK_BACKDATE_DAYS = 14
 
@@ -63,18 +65,16 @@ export function NewLeavePage() {
 
 	return (
 		<div className="mx-auto max-w-2xl px-6 py-10">
-			<header className="mb-8 flex flex-wrap items-end justify-between gap-4">
-				<div>
-					<p className="text-sm font-medium text-sky-700">Congés</p>
-					<h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900">
-						Nouveau congé
-					</h1>
-					<p className="mt-1 text-sm text-slate-500">Créer une nouvelle demande de congé</p>
-				</div>
-				<Link to="/leaves" className={secondaryButton}>
-					Retour à mes congés
-				</Link>
-			</header>
+			<PageHeader
+				eyebrow="Congés"
+				title="Nouvelle demande de congé"
+				description="Crée une nouvelle demande de congé."
+				actions={
+					<Link to="/leaves" className={secondaryButton}>
+						Retour à mes congés
+					</Link>
+				}
+			/>
 
 			{erreur && <ErrorBanner message={erreur} dismissible onDismiss={() => setErreur(null)} />}
 
@@ -84,7 +84,7 @@ export function NewLeavePage() {
 						<div>
 							<label
 								htmlFor="leaveType"
-								className="mb-1.5 block text-sm font-medium text-slate-700"
+								className={labelClass}
 							>
 								Type
 							</label>
@@ -97,7 +97,7 @@ export function NewLeavePage() {
 										e.target.value === "" ? null : (Number(e.target.value) as LeaveTypeId),
 									)
 								}
-								className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+								className={inputClass}
 							>
 								<option value="">Choisir...</option>
 								{Object.entries(LeaveType).map(([, id]) => (
@@ -110,7 +110,7 @@ export function NewLeavePage() {
 						<div>
 							<label
 								htmlFor="startDate"
-								className="mb-1.5 block text-sm font-medium text-slate-700"
+								className={labelClass}
 							>
 								Début
 							</label>
@@ -121,11 +121,11 @@ export function NewLeavePage() {
 								min={minStartDate}
 								value={startDate}
 								onChange={(e) => setStartDate(e.target.value)}
-								className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+								className={inputClass}
 							/>
 						</div>
 						<div>
-							<label htmlFor="endDate" className="mb-1.5 block text-sm font-medium text-slate-700">
+							<label htmlFor="endDate" className={labelClass}>
 								Fin
 							</label>
 							<input
@@ -135,12 +135,12 @@ export function NewLeavePage() {
 								min={startDate || minStartDate}
 								value={endDate}
 								onChange={(e) => setEndDate(e.target.value)}
-								className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+								className={inputClass}
 							/>
 						</div>
 					</div>
 					<div>
-						<label htmlFor="reason" className="mb-1.5 block text-sm font-medium text-slate-700">
+						<label htmlFor="reason" className={labelClass}>
 							Motif
 						</label>
 						<input
@@ -148,7 +148,7 @@ export function NewLeavePage() {
 							type="text"
 							value={reason}
 							onChange={(e) => setReason(e.target.value)}
-							className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+							className={inputClass}
 						/>
 					</div>
 

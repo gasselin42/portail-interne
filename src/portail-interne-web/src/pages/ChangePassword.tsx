@@ -6,6 +6,7 @@ import { useSession } from "../session/useSession"
 import { focusRing, primaryButton } from "../ui/buttons"
 import { PasswordInput } from "../components/PasswordInput"
 import { AuthCard } from "../components/AuthCard"
+import { PageHeader } from "../components/PageHeader"
 
 export function ChangePassword() {
 	const { me, logout, refresh } = useSession()
@@ -119,17 +120,11 @@ export function ChangePassword() {
 
 	return (
 		<div className="mx-auto max-w-2xl px-6 py-10">
-			<header className="mb-8 flex flex-wrap items-end justify-between gap-4">
-				<div>
-					<p className="text-sm font-medium text-sky-700">Compte</p>
-					<h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900">
-						Changer mon mot de passe
-					</h1>
-					<p className="mt-1 text-sm text-slate-500">
-						Choisis un nouveau mot de passe pour ton compte.
-					</p>
-				</div>
-			</header>
+			<PageHeader
+				eyebrow="Compte"
+				title="Changer mon mot de passe"
+				description="Choisis un nouveau mot de passe pour ton compte."
+			/>
 
 			{success && (
 				<SuccessBanner

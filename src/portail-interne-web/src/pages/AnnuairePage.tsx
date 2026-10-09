@@ -2,14 +2,11 @@ import { useEffect, useState, type SubmitEvent } from "react"
 import { Link } from "react-router-dom"
 import { DEPARTEMENT_LABELS } from "../api/admin"
 import { listEmployees, type EmployeeListItem } from "../api/employees"
-import { ErrorBanner } from "../components/Banner"
+import { ErrorBanner, type PageError } from "../components/Banner"
 import { ContactPage } from "@mui/icons-material"
 import { primaryButton, rowIconButton } from "../ui/buttons"
-
-type PageError = {
-	message: string
-	dismissible: boolean
-}
+import { inputClass } from "../ui/fields"
+import { PageHeader } from "../components/PageHeader"
 
 export function AnnuairePage() {
 	const [search, setSearch] = useState("")
@@ -39,13 +36,11 @@ export function AnnuairePage() {
 
 	return (
 		<div className="mx-auto max-w-6xl px-6 py-10">
-			<header className="mb-8">
-				<p className="text-sm font-medium text-sky-700">Équipe</p>
-				<h1 className="mt-1 text-3xl font-semibold tracking-tight text-slate-900">Annuaire</h1>
-				<p className="mt-1 text-sm text-slate-500">
-					Rechercher un employé par nom, email, poste ou département.
-				</p>
-			</header>
+			<PageHeader
+				eyebrow="Équipe"
+				title="Annuaire"
+				description="Recherche un employé par nom, email, poste ou département."
+			/>
 
 			<form onSubmit={handleSearch} className="mb-6 flex flex-wrap gap-3">
 				<input
@@ -53,7 +48,7 @@ export function AnnuairePage() {
 					value={search}
 					onChange={(e) => setSearch(e.target.value)}
 					placeholder="Nom, email, poste, département..."
-					className="min-w-[16rem] flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+					className={`${inputClass} min-w-[16rem] flex-1`}
 				/>
 				<button type="submit" className={primaryButton}>
 					Rechercher
