@@ -218,8 +218,9 @@ public class AdminController : ControllerBase
 		var accounts = await _db.UserAccounts
 			.AsNoTracking()
 			.Include(u => u.Employee)
-			.OrderBy(u => u.Employee.LastName)
-			.ThenBy(u => u.Employee.FirstName)
+			.OrderBy(u => u.Employee.LastNameKey)
+			.ThenBy(u => u.Employee.FirstNameKey)
+			.ThenBy(u => u.Id)
 			.Select(u => new AccountListItemResponse
 			{
 				UserAccountId = u.Id,

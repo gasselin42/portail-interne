@@ -1,15 +1,19 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PortailInterne.Api.Models;
+using PortailInterne.Api.Services;
 
 namespace PortailInterne.Api.Data;
 
 public class AppDbContext : DbContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<UserAccount> UserAccounts => Set<UserAccount>();
     public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
+
+	public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+	{
+		SavingChanges += (_, _) => UpdateSearchKeys();
+	}
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -22,6 +26,7 @@ public class AppDbContext : DbContext
 
             entity.Property(e => e.FirstName).HasMaxLength(100);
             entity.Property(e => e.LastName).HasMaxLength(100);
+			entity.HasIndex(e => new { e.LastNameKey, e.FirstNameKey });
             entity.Property(e => e.Email).HasMaxLength(256);
             entity.Property(e => e.JobTitle).HasMaxLength(150);
             entity.Property(e => e.PhoneNumber).HasMaxLength(30);
@@ -56,4 +61,19 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }
+
+	private void UpdateSearchKeys()
+	{
+		foreach (var entry in ChangeTracker.Entries<Employee>())
+		{
+			if (entry.State is not (EntityState.Added or EntityState.Modified))
+				continue;
+
+			var employee = entry.Entity;
+
+			employee.FirstNameKey = TextKey.From(employee.FirstName);
+			employee.LastNameKey = TextKey.From(employee.LastName);
+			employee.JobTitleKey = TextKey.From(employee.JobTitle);
+		}
+	}
 }

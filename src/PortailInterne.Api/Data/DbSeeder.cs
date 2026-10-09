@@ -1,4 +1,5 @@
-﻿using PortailInterne.Api.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using PortailInterne.Api.Models;
 using PortailInterne.Api.Services;
 
 namespace PortailInterne.Api.Data;
@@ -90,5 +91,19 @@ public class DbSeeder
             db.SaveChanges();
         }
     }
+
+	/// Calcule les clés de recherche des employés qui n'en ont pas encore
+	/// (ceux créés avant la migration ClesDeRechercheEmployes).
+	public static void BackfillSearchKeys(AppDbContext db)
+	{
+		var employees = db.Employees.Where(e => e.LastNameKey == "").ToList();
+		if (employees.Count == 0)
+			return;
+		
+		foreach (var employee in employees)
+			db.Entry(employee).State = EntityState.Modified;
+
+		db.SaveChanges();
+	}
 }
 

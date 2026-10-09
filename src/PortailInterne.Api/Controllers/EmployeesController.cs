@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using PortailInterne.Api.Data;
 using PortailInterne.Api.Dtos;
 using PortailInterne.Api.Models;
+using PortailInterne.Api.Services;
 
 namespace PortailInterne.Api.Controllers;
 
@@ -32,8 +33,9 @@ public class EmployeesController : ControllerBase
         var photosBase = $"{Request.Scheme}://{Request.Host}/photos/";
 
         var employees = await query
-            .OrderBy(e => e.LastName)
-            .ThenBy(e => e.FirstName)
+            .OrderBy(e => e.LastNameKey)
+            .ThenBy(e => e.FirstNameKey)
+			.ThenBy(e => e.Id)
             .Select(e => new EmployeeListItemResponse
             {
                 Id = e.Id,
@@ -108,8 +110,8 @@ public class EmployeesController : ControllerBase
         }
 
         var items = await query
-            .OrderBy(e => e.LastName)
-            .ThenBy(e => e.FirstName)
+            .OrderBy(e => e.LastNameKey)
+            .ThenBy(e => e.FirstNameKey)
             .ThenBy(e => e.Id)
             .Take(limit + 1)
             .Select(e => new EmployeeLookupItem
@@ -132,16 +134,22 @@ public class EmployeesController : ControllerBase
     {
         if (!string.IsNullOrWhiteSpace(search))
         {
-            string filter = search.Trim().ToLowerInvariant();
+            string key = TextKey.From(search);
+			string emailSearch = search.Trim().ToLowerInvariant();
 
-            Departement? depFilter = Enum.TryParse<Departement>(filter, true, out var d) ? d : null;
+           	var departements = DepartementLabels.All
+				.Where(d => TextKey.From(d.Value).Contains(key) || TextKey.From(d.Key.ToString()) == key)
+				.Select(d => d.Key)
+				.ToList();
 
             query = query.Where(e =>
-                e.FirstName.ToLower().Contains(filter)
-                || e.LastName.ToLower().Contains(filter)
-                || e.Email.ToLower().Contains(filter)
-                || e.JobTitle.ToLower().Contains(filter)
-                || (depFilter != null && e.Departement == depFilter));
+                e.FirstNameKey.Contains(key)
+                || e.LastNameKey.Contains(key)
+                || e.JobTitleKey.Contains(key)
+                || e.Email.Contains(emailSearch)
+                || departements.Contains(e.Departement)
+				|| (e.FirstNameKey + " " + e.LastNameKey).Contains(key)
+				|| (e.LastNameKey + " " + e.FirstNameKey).Contains(key));
         }
 
         return query;

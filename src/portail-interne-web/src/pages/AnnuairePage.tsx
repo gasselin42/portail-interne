@@ -11,27 +11,37 @@ import { PageHeader } from "../components/PageHeader"
 export function AnnuairePage() {
 	const [search, setSearch] = useState("")
 	const [query, setQuery] = useState("")
+	const [searchRun, setSearchRun] = useState(0)
 	const [employees, setEmployees] = useState<EmployeeListItem[]>([])
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<PageError | null>(null)
 
 	useEffect(() => {
-		listEmployees(query || undefined)
+		const controller = new AbortController()
+
+		listEmployees(query || undefined, controller.signal)
 			.then(setEmployees)
-			.catch((e) =>
+			.catch((e) => {
+				if (controller.signal.aborted) return
 				setError({
 					message: e instanceof Error ? e.message : "Erreur",
 					dismissible: false,
-				}),
-			)
-			.finally(() => setLoading(false))
-	}, [query])
+				})
+			})
+			.finally(() => {
+				if (controller.signal.aborted) return
+				setLoading(false)
+			})
+		
+		return () => controller.abort()
+	}, [query, searchRun])
 
 	function handleSearch(e: SubmitEvent<HTMLFormElement>) {
 		e.preventDefault()
 		setError(null)
 		setLoading(true)
 		setQuery(search.trim())
+		setSearchRun((n) => n + 1)
 	}
 
 	return (

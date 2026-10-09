@@ -120,12 +120,22 @@ Objectif : aucun cas limite connu laissé de côté. Ordre recommandé ci-dessou
   - [x] `TargetFramework` + paquets NuGet (EF Core, JWT, Swagger) mis à jour
   - [x] Build, migrations et tests manuels OK
   - [x] Envisager `TimeProvider` (intégré) à la place de `IAppClock`
-- [ ] Q12. **Recherche et tri d’employés insensibles aux accents et à la casse** (« helene » trouve « Hélène » ; « doe » et « Émond » triés comme un humain l’attend)
-  - [ ] Noms affichés **tels que saisis** (aucune capitalisation automatique : « van der Berg », « McDonald », « D’Amours »)
-  - [ ] Clés normalisées stockées à côté (minuscules, sans accents, apostrophes unifiées), calculées automatiquement à chaque enregistrement
-  - [ ] Migration + remplissage des employés existants
-  - [ ] Tri (Annuaire, `lookup`) et recherche (`ApplySearch`) sur les clés normalisées
-  - [ ] Vérifier les noms composés et les apostrophes
+- [x] Q12. **Recherche et tri d’employés insensibles aux accents et à la casse** (« helene » trouve « Hélène » ; « doe » et « Émond » triés comme un humain l’attend)
+  - [x] Noms affichés **tels que saisis** (aucune capitalisation automatique : « van der Berg », « McDonald », « D’Amours »)
+  - [x] Clés normalisées stockées à côté (minuscules, sans accents, apostrophes unifiées), calculées automatiquement à chaque enregistrement
+  - [x] Migration + remplissage des employés existants
+  - [x] Tri (Annuaire, `lookup`) et recherche (`ApplySearch`) sur les clés normalisées
+  - [x] Vérifier les noms composés et les apostrophes
+  - [x] Recherche par nom complet (« jane doe », « doe jane »), par libellé de département, et par courriel exact
+  - [x] Annuaire : nouvelle recherche identique relancée, requêtes périmées annulées
+- [ ] Q13. **Champ photo** de la fiche employé au style de l’application
+  - [ ] Bouton de choix stylé (variante `file:`), nom du fichier affiché
+  - [ ] Format et taille (2 Mo) vérifiés dès le choix, message immédiat
+  - [ ] Bouton « Retirer » pour annuler le choix avant d’enregistrer
+- [ ] Q14. **Recherche dans la page Comptes**
+  - [ ] API : logique de recherche partagée (`EmployeeSearch`) utilisée par l’Annuaire, `lookup` et `ListAccounts`
+  - [ ] Composant `SearchBar` partagé par l’Annuaire et Comptes
+  - [ ] Recherche relancée à chaque envoi, requêtes périmées annulées
 
 ## Notes / blocages
 

@@ -42,6 +42,7 @@ export const Departement = {
 
 export type DepartementId = (typeof Departement)[keyof typeof Departement]
 
+// Renommer dans Employee.cs en cas de changement
 export const DEPARTEMENT_LABELS: Record<DepartementId, string> = {
 	[Departement.Direction]: "Direction",
 	[Departement.Ventes]: "Ventes",

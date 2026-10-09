@@ -40,10 +40,10 @@ export type EmployeeLookupResult = {
 	hasMore: boolean
 }
 
-export async function listEmployees(search?: string): Promise<EmployeeListItem[]> {
+export async function listEmployees(search?: string, signal?: AbortSignal): Promise<EmployeeListItem[]> {
 	const query = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : ""
 
-	const res = await apiFetch(`/api/employees${query}`)
+	const res = await apiFetch(`/api/employees${query}`, { signal })
 
 	if (!res.ok) {
 		throw new Error(await readApiError(res, "Impossible de charger l'annuaire"))

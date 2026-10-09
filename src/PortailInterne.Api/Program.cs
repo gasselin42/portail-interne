@@ -102,6 +102,7 @@ if (app.Environment.IsDevelopment())
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         db.Database.Migrate(); // À éviter en prod
         DbSeeder.Seed(db);
+		DbSeeder.BackfillSearchKeys(db);
     }
 
     app.UseSwagger();
