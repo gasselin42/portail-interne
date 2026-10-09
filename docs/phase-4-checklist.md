@@ -1,15 +1,15 @@
-# Checklist MVP 4 — Salles et équipements
+# Checklist de la phase 4 — Salles et équipements
 
 Référence produit : [PROJET.md](../PROJET.md) §5.4, §6, §7, §8, §9 (R8).
 
 Stack figée : **ASP.NET Core Web API + React + SQLite**.  
 Coche au fur et à mesure. Le code n’est fourni que sur demande.
 
-**Prérequis :** MVP 3 (meetings) — réservations souvent liées à un meeting ; réservation seule possible.
+**Prérequis :** phase 3 (meetings) — réservations souvent liées à un meeting ; réservation seule possible.
 
 ## Préparation
 
-- [ ] Relire le périmètre MVP 4 dans `PROJET.md`
+- [ ] Relire le périmètre de la phase 4 dans `PROJET.md`
 - [ ] Figer : `Room`, `Equipment`, `ResourceReservation`
 - [ ] Clarifier : réservation **liée au meeting** vs **réservation seule**
 - [ ] Règle R8 : ressource libre sur **tout** l’intervalle `[début, fin]`, sinon refus clair

@@ -17,7 +17,7 @@ Construire un **portail interne d’entreprise** qui centralise :
 - les **notifications** liées aux conflits, validations et assignations ;
 - une **gestion des rôles** (admin vs employé, puis rôles spécialisés).
 
-Objectif pédagogique : pratiquer un vrai produit .NET volumineux, versionné par MVP, avec règles métier réalistes.
+Objectif pédagogique : pratiquer un vrai produit .NET volumineux, découpé en phases, avec règles métier réalistes.
 
 ---
 
@@ -25,7 +25,7 @@ Objectif pédagogique : pratiquer un vrai produit .NET volumineux, versionné pa
 
 1. **Pas de code donné par défaut** — uniquement objectifs, pistes et critères de validation.
 2. Le code n’est fourni **que si demandé explicitement**.
-3. Livrer par **MVP** : chaque phase doit être demoable seule.
+3. Livrer par **phase** : chaque phase doit être demoable seule.
 4. Documenter les décisions importantes dans ce fichier (ou dans `docs/`).
 5. Priorité à la **clarté des règles métier** avant l’UI fancy.
 
@@ -37,7 +37,7 @@ Objectif pédagogique : pratiquer un vrai produit .NET volumineux, versionné pa
 |--------|--------|-------|
 | Backend | **ASP.NET Core Web API** | Controllers JSON, pas de vues Razor |
 | Frontend | **React** (Vite recommandé) | SPA séparée qui consomme l’API |
-| Auth | **JWT** (Bearer) | Tranché pour MVP 1 ; cookies possibles plus tard |
+| Auth | **JWT** (Bearer) | Tranché pour la phase 1 ; cookies possibles plus tard |
 | BDD | **SQLite** (dev) | Simple sur Mac ; SQL Server possible plus tard |
 | ORM | Entity Framework Core | Migrations |
 | Tests API | xUnit | Règles critiques d’abord |
@@ -64,7 +64,7 @@ React (UI)  ←HTTP JSON→  ASP.NET Core Web API  ←→  SQLite
 | **Manager** | Approuver/refuser les congés de son équipe |
 | **Agent IT** / **IT Lead** | Voir toutes les demandes IT, les assigner, les traiter |
 
-### 4.2 Rôles au MVP 1
+### 4.2 Rôles à la phase 1
 
 - **Admin**
 - **Employé**
@@ -74,7 +74,7 @@ Les rôles Manager / Agent IT seront introduits aux phases concernées.
 ### 4.3 Règles d’accès transverses
 
 - Un employé « au bas de l’échelle » **ne peut pas** créer de compte.
-- Seul un **Admin** (MVP 1) crée un nouvel employé / compte.
+- Seul un **Admin** (phase 1) crée un nouvel employé / compte.
 - À la création d’un compte : **mot de passe temporaire** généré.
 - À la **1re connexion**, l’utilisateur **doit** changer ce mot de passe avant d’accéder au reste.
 - Un compte **inactif** ne peut pas se connecter.
@@ -93,8 +93,8 @@ Les rôles Manager / Agent IT seront introduits aux phases concernées.
 ### 5.2 Congés et absences
 
 - Demande de congé / absence (période, type, commentaire).
-- Statuts : `EnAttente`, `Approuve`, `Refuse`, `Annule` (liste exacte à figer au MVP 2).
-- Approbation par un Manager (MVP 2+).
+- Statuts : `EnAttente`, `Approuve`, `Refuse`, `Annule` (liste exacte à figer à la phase 2).
+- Approbation par un Manager (phase 2+).
 - Affichage dans le calendrier :
   - congé **approuvé** → indication visuelle sur la journée (ex. bandeau / diagonale) ;
   - congé **en attente** → indication distincte (ex. « Demande en attente »).
@@ -119,7 +119,7 @@ Les rôles Manager / Agent IT seront introduits aux phases concernées.
 ### 5.5 Portail de demandes IT
 
 - N’importe quel employé peut créer une demande (panne, accès, matériel, etc.).
-- Statuts typiques : `Nouvelle`, `Assignee`, `EnCours`, `Resolue`, `Fermee` (à figer au MVP 5).
+- Statuts typiques : `Nouvelle`, `Assignee`, `EnCours`, `Resolue`, `Fermee` (à figer à la phase 5).
 - Seuls les profils **autorisés** (Agent IT / IT Lead / Admin) voient **toutes** les requêtes.
 - Assignation à un technicien / employé.
 - La personne assignée reçoit un **avertissement** : elle doit **prévoir un créneau** dans son horaire pour la tâche.
@@ -135,7 +135,7 @@ Types prévus (non exhaustif) :
 - Ticket IT assigné / mis à jour
 - Rappel « prévoir un slot » pour une tâche IT
 
-Canal MVP : **notifications in-app** (table + cloche / liste). Email = bonus ultérieur.
+Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus ultérieur.
 
 ### 5.7 Horaires de travail
 
@@ -148,13 +148,13 @@ Canal MVP : **notifications in-app** (table + cloche / liste). Email = bonus ult
   - Demandé par l’employé → approbation du manager (même file que les congés).
   - Créé par le manager → approuvé directement.
   - Aucune banque d’heures : le portail enregistre les heures prévues, la paie reste hors périmètre.
-- La disponibilité d’une personne se calcule par couches : horaire type → férié → ajustement → congé approuvé (→ meetings au MVP 3).
+- La disponibilité d’une personne se calcule par couches : horaire type → férié → ajustement → congé approuvé (→ meetings à la phase 3).
 
 ---
 
-## 6. Roadmap par MVP
+## 6. Roadmap par phase
 
-### MVP 1 — Fondations : Auth, rôles, annuaire
+### Phase 1 — Fondations : Auth, rôles, annuaire
 
 **Objectif :** comptes sécurisés + annuaire consultable.
 
@@ -179,7 +179,7 @@ Canal MVP : **notifications in-app** (table + cloche / liste). Email = bonus ult
 
 ---
 
-### MVP 2 — Congés + calendrier personnel
+### Phase 2 — Congés + calendrier personnel
 
 **Objectif :** demander / approuver des absences et les voir sur un calendrier jour par jour.
 
@@ -199,7 +199,7 @@ Canal MVP : **notifications in-app** (table + cloche / liste). Email = bonus ult
 
 ---
 
-### MVP 2.5 — Horaires de travail
+### Phase 2.5 — Horaires de travail
 
 **Objectif :** savoir qui travaille quand, chaque semaine, sans saisie répétée.
 
@@ -221,7 +221,7 @@ Canal MVP : **notifications in-app** (table + cloche / liste). Email = bonus ult
 
 ---
 
-### MVP 3 — Meetings (solo / groupe) + conflits
+### Phase 3 — Meetings (solo / groupe) + conflits
 
 **Objectif :** planifier des réunions avec règles de conflit et de congé.
 
@@ -243,7 +243,7 @@ Canal MVP : **notifications in-app** (table + cloche / liste). Email = bonus ult
 
 ---
 
-### MVP 4 — Salles et équipements
+### Phase 4 — Salles et équipements
 
 **Objectif :** aucune réservation de créneau acceptée si la ressource demandée n’est pas libre sur tout l’intervalle.
 
@@ -261,7 +261,7 @@ Canal MVP : **notifications in-app** (table + cloche / liste). Email = bonus ult
 
 ---
 
-### MVP 5 — Portail IT + assignation + créneau
+### Phase 5 — Portail IT + assignation + créneau
 
 **Objectif :** circuit de demandes IT relié à l’annuaire et au planning.
 
@@ -282,7 +282,7 @@ Canal MVP : **notifications in-app** (table + cloche / liste). Email = bonus ult
 
 ---
 
-### Post-MVP (idées, non prioritaires)
+### Plus tard (idées, non prioritaires)
 
 - Emails / webhooks
 - Soldes de congés avancés + types d’absence
@@ -298,33 +298,33 @@ Canal MVP : **notifications in-app** (table + cloche / liste). Email = bonus ult
 
 ## 7. Modèle de données (cible, évolutif)
 
-> Noms indicatifs — à affiner à chaque MVP.
+> Noms indicatifs — à affiner à chaque phase.
 
-### MVP 1
+### Phase 1
 - **Employee** : Id, FirstName, LastName, Email, JobTitle, Department/Team, Phone?, ManagerId?, IsActive, CreatedAt
 - **UserAccount** : Id, EmployeeId, Email (unique), PasswordHash, Role, MustChangePassword, IsActive, CreatedAt, LastLoginAt?
 - **Role** : enum ou table (`Admin`, `Employee`, puis `Manager`, `ItAgent`, …)
 
-### MVP 2
+### Phase 2
 - **LeaveRequest** : Id, EmployeeId, StartDate, EndDate, Type, Status, Reason?, ReviewedById?, ReviewedAt?, CreatedAt
 
-### MVP 2.5
+### Phase 2.5
 - **Site** : Id, Name, TimeZoneId (IANA) — `Employee.SiteId` obligatoire
 - **WorkSchedule** : Id, EmployeeId, EffectiveFrom, CreatedById, CreatedAt
 - **WorkScheduleDay** : WorkScheduleId, DayOfWeek, StartTime, EndTime, BreakMinutes
 - **Holiday** : Id, SiteId, Date, Name
 - **ScheduleAdjustment** : Id, EmployeeId, Date, StartTime?, EndTime?, BreakMinutes, Reason?, Status, CreatedById, ReviewedById?, ReviewedAt?, CreatedAt
 
-### MVP 3
+### Phase 3
 - **CalendarEvent / Meeting** : Id, Title, Description?, StartAt, EndAt, OrganizerId, IsTeamMeeting, CreatedAt
 - **MeetingParticipant** : MeetingId, EmployeeId, ResponseStatus?
 
-### MVP 4
+### Phase 4
 - **Room** : Id, Name, Capacity?, IsActive
 - **Equipment** : Id, Name, Type?, IsActive
 - **ResourceReservation** : Id, ResourceType (Room/Equipment), ResourceId, StartAt, EndAt, MeetingId?, ReservedById
 
-### MVP 5
+### Phase 5
 - **ItTicket** : Id, Title, Description, Category?, Status, CreatedById, AssignedToId?, CreatedAt, UpdatedAt, ResolvedAt?
 - **TicketComment** (optionnel)
 
@@ -337,7 +337,7 @@ Canal MVP : **notifications in-app** (table + cloche / liste). Email = bonus ult
 
 Les écrans sont côté **React**. L’API expose les routes `/api/...` correspondantes.
 
-### MVP 1
+### Phase 1
 **Écrans React :**
 1. Login
 2. Changer le mot de passe (forcé)
@@ -357,28 +357,28 @@ Les écrans sont côté **React**. L’API expose les routes `/api/...` correspo
 - `GET  /api/admin/accounts`
 - `PATCH /api/admin/accounts/{id}` (actif/inactif, rôle si besoin)
 
-### MVP 2
+### Phase 2
 7. Mes demandes de congé
 8. Nouvelle demande
 9. (Manager) File d’approbation
 10. Calendrier personnel (vue jour / semaine simple)
 
-### MVP 2.5
+### Phase 2.5
 10a. (Manager/Admin) Horaire d’un employé
 10b. Demander un ajustement + mes ajustements
 10c. (Manager) Vue équipe semaine
 10d. (Admin) Sites et jours fériés
 
-### MVP 3
+### Phase 3
 11. Créer un meeting
 12. Détail meeting
 13. Calendrier enrichi (meetings + congés)
 
-### MVP 4
+### Phase 4
 14. Catalogue salles / équipements
 15. Réservation / sélection ressource à la création de meeting
 
-### MVP 5
+### Phase 5
 16. Mes tickets IT
 17. Nouveau ticket
 18. Console IT (toutes les demandes, assignation)
@@ -416,12 +416,12 @@ portail-interne/
 ├── PROJET.md                      ← ce document (source de vérité produit)
 ├── README.md
 ├── docs/
-│   ├── MVP1-checklist.md
-│   ├── MVP2-checklist.md
-│   ├── MVP2.5-checklist.md
-│   ├── MVP3-checklist.md
-│   ├── MVP4-checklist.md
-│   └── MVP5-checklist.md
+│   ├── phase-1-checklist.md
+│   ├── phase-2-checklist.md
+│   ├── phase-2.5-checklist.md
+│   ├── phase-3-checklist.md
+│   ├── phase-4-checklist.md
+│   └── phase-5-checklist.md
 ├── src/
 │   ├── PortailInterne.Api/        ← ASP.NET Core Web API (.NET)
 │   └── portail-interne-web/       ← React (Vite)
@@ -431,11 +431,11 @@ portail-interne/
     └── mockups/
 ```
 
-> Les dossiers `src/` et `tests/` applicatifs seront créés au démarrage concret du MVP 1.
+> Les dossiers `src/` et `tests/` applicatifs seront créés au démarrage concret de la phase 1.
 
 ---
 
-## 11. Checklist MVP 1 — étapes de réalisation (sans code)
+## 11. Checklist de la phase 1 — étapes de réalisation (sans code)
 
 ### Backend (API)
 1. Créer la solution + projet **Web API** dans `src/` et vérifier Swagger / démarrage
@@ -459,7 +459,7 @@ portail-interne/
 17. Écrans Annuaire + fiche employé
 
 ### Validation
-18. Tests manuels bout en bout (voir §6 MVP 1)
+18. Tests manuels bout en bout (voir §6 phase 1)
 19. Bonus : tests API automatisés (login, mdp temporaire, rôles)
 
 ---
@@ -470,30 +470,30 @@ portail-interne/
 |------|----------|
 | 2026-09-11 | Produit = mélange annuaire + congés/calendrier + meetings + salles/équipements + helpdesk IT |
 | 2026-09-11 | Travail en autonomie guidée (étapes sans code par défaut) |
-| 2026-09-11 | Découpage en 5 MVP |
+| 2026-09-11 | Découpage en 5 phases |
 | 2026-09-11 | Nouveau dépôt hors `tuto dotnet` : `~/Desktop/portail-interne` |
 | 2026-09-11 | Doc produit centralisée dans `PROJET.md` |
-| 2026-09-11 | Stack = **ASP.NET Core Web API + React** (dès le MVP 1) |
+| 2026-09-11 | Stack = **ASP.NET Core Web API + React** (dès la phase 1) |
 | 2026-09-11 | BDD dev = **SQLite** |
-| 2026-09-11 | Auth MVP 1 = **JWT** (pas cookies) |
+| 2026-09-11 | Auth phase 1 = **JWT** (pas cookies) |
 | 2026-09-28 | Congé : date de début ≥ aujourd'hui. Maladie : rétroactif permis jusqu'à 14 jours. Toujours EnAttente à la création
-| 2026-09-28 | Création d'un congé pour autrui (Admin/Manager) : reportée, ajoutée dans les bonus du MVP2, nécessite CreatedById
-| 2026-09-30 | Ajout du MVP 2.5 — Horaires de travail, avant les meetings (les conflits s'appuieront sur l'horaire effectif)
+| 2026-09-28 | Création d'un congé pour autrui (Admin/Manager) : reportée, ajoutée dans les bonus de la phase 2, nécessite CreatedById
+| 2026-09-30 | Ajout de la phase 2.5 — Horaires de travail, avant les meetings (les conflits s'appuieront sur l'horaire effectif)
 | 2026-09-30 | Départ anticipé = ajustement d'horaire approuvé par le manager, pas un congé ; aucune banque d'heures, paie hors périmètre
-| 2026-09-30 | Fuseaux horaires dès le MVP 2.5 via `Site` (modèle de données) ; temps supplémentaire constaté reporté en Post-MVP
+| 2026-09-30 | Fuseaux horaires dès la phase 2.5 via `Site` (modèle de données) ; temps supplémentaire constaté reporté à plus tard
 
 ---
 
 ## 13. État d’avancement
 
-| MVP | Statut |
+| Phase | Statut |
 |-----|--------|
-| MVP 1 — Auth + annuaire | 🔜 À démarrer |
-| MVP 2 — Congés + calendrier | ⏳ |
-| MVP 2.5 — Horaires de travail | ⏳ |
-| MVP 3 — Meetings | ⏳ |
-| MVP 4 — Ressources | ⏳ |
-| MVP 5 — Helpdesk IT | ⏳ |
+| Phase 1 — Auth + annuaire | ✅ Terminée |
+| Phase 2 — Congés + calendrier | 🔨 En cours |
+| Phase 2.5 — Horaires de travail | ⏳ |
+| Phase 3 — Meetings | ⏳ |
+| Phase 4 — Ressources | ⏳ |
+| Phase 5 — Helpdesk IT | ⏳ |
 
 ---
 

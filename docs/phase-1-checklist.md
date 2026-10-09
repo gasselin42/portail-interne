@@ -1,4 +1,4 @@
-# Checklist MVP 1 — Auth, rôles, annuaire
+# Checklist de la phase 1 — Auth, rôles, annuaire
 
 Référence produit : [PROJET.md](../PROJET.md) §6 et §11.
 
@@ -7,7 +7,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 
 ## Préparation
 
-- [x] Relire le périmètre MVP 1 dans `PROJET.md` (inclus / exclu)
+- [x] Relire le périmètre de la phase 1 dans `PROJET.md` (inclus / exclu)
 - [x] Stack UI/backend : **Web API + React** (plus MVC/Razor)
 - [x] BDD : **SQLite**
 - [x] Auth : **JWT** (Bearer)
@@ -35,7 +35,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [x] 16. Écrans Admin (créer + liste comptes)
 - [x] 17. Écrans Annuaire + fiche employé
 
-## Approfondissement (toujours dans le MVP 1)
+## Approfondissement (toujours dans la phase 1)
 
 - [x] 20. Admin : modifier un employé (poste, département, téléphone, photo) après la création
 - [x] 21. Lien « Changer mon mot de passe » utilisable même sans `MustChangePassword`
@@ -58,5 +58,5 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 
 ## Notes / blocages
 
-- Accueil MVP 1 : lien Admin minimal OK. Menu global + widgets (calendrier, notifications) reportés → **MVP 2** (nav/accueil), **MVP 3** (badge notifs), **MVP 5** (widget notifs final).
+- Accueil phase 1 : lien Admin minimal OK. Menu global + widgets (calendrier, notifications) reportés → **phase 2** (nav/accueil), **phase 3** (badge notifs), **phase 5** (widget notifs final).
 -

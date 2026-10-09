@@ -1,18 +1,18 @@
-# Checklist MVP 3 — Meetings (solo / groupe) + conflits
+# Checklist de la phase 3 — Meetings (solo / groupe) + conflits
 
 Référence produit : [PROJET.md](../PROJET.md) §5.3, §6, §7, §8, §9 (R6, R7).
 
 Stack figée : **ASP.NET Core Web API + React + SQLite**.  
 Coche au fur et à mesure. Le code n’est fourni que sur demande.
 
-**Prérequis :** MVP 2 (congés + calendrier perso) et MVP 2.5 (horaires) — les règles de conflit s’appuient sur l’**horaire effectif** (R16), qui inclut les congés **approuvés**.
+**Prérequis :** phase 2 (congés + calendrier perso) et phase 2.5 (horaires) — les règles de conflit s’appuient sur l’**horaire effectif** (R16), qui inclut les congés **approuvés**.
 
 ## Préparation
 
-- [ ] Relire le périmètre MVP 3 dans `PROJET.md` (inclus / exclu)
+- [ ] Relire le périmètre de la phase 3 dans `PROJET.md` (inclus / exclu)
 - [ ] Figer le modèle : `Meeting` + `MeetingParticipant` (+ `ResponseStatus?`)
 - [ ] Clarifier « meeting d’équipe » (`IsTeamMeeting`) et la priorité en cas de conflit (R7)
-- [ ] Décider le canal de notif MVP : table `Notification` in-app (emails = post-MVP)
+- [ ] Décider le canal de notif initial : table `Notification` in-app (emails = plus tard)
 
 ## Backend (API)
 
@@ -35,7 +35,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [ ] 13. Écran **Détail meeting**
 - [ ] 14. Calendrier enrichi (meetings + congés, légende claire)
 - [ ] 15. Affichage des erreurs métier (congé, conflit) côté UI
-- [ ] 16. Centre de notifs simple (badge / liste) — même si MVP 5 le pousse plus loin
+- [ ] 16. Centre de notifs simple (badge / liste) — même si la phase 5 le pousse plus loin
 - [ ] 17. Accueil : widget / badge **notifications** + lien meetings dans le menu
 
 ## Validation manuelle

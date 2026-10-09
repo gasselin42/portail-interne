@@ -1,15 +1,15 @@
-# Checklist MVP 2 — Congés + calendrier personnel
+# Checklist de la phase 2 — Congés + calendrier personnel
 
 Référence produit : [PROJET.md](../PROJET.md) §5.2, §6, §7, §8, §9 (R5).
 
 Stack figée : **ASP.NET Core Web API + React + SQLite**.  
 Coche au fur et à mesure. Le code n’est fourni que sur demande.
 
-**Prérequis :** MVP 1 validé (auth, rôles, annuaire).
+**Prérequis :** phase 1 validée (auth, rôles, annuaire).
 
 ## Préparation
 
-- [ ] Relire le périmètre MVP 2 dans `PROJET.md` (inclus / exclu)
+- [ ] Relire le périmètre de la phase 2 dans `PROJET.md` (inclus / exclu)
 - [ ] Décider qui approuve : **Manager** (via `ManagerId`) et/ou **Admin**
 - [ ] Figer les statuts : `EnAttente`, `Approuve`, `Refuse`, `Annule`
 - [ ] Figer les types d’absence simples (ex. Congé, Maladie) — soldes avancés = optionnel / reporter
@@ -30,7 +30,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 
 ## Frontend (React)
 
-- [x] 12. Navigation globale / **menu Accueil** : liens Congés, Calendrier (+ Admin si rôle) — remplacer le bouton temporaire du MVP 1
+- [x] 12. Navigation globale / **menu Accueil** : liens Congés, Calendrier (+ Admin si rôle) — remplacer le bouton temporaire de la phase 1
 - [x] 13. Écran **Mes demandes** (liste + statuts)
 - [x] 14. Écran **Nouvelle demande** (+ validation dates)
 - [x] 15. Écran **File d’approbation** (Manager/Admin uniquement)
@@ -89,7 +89,7 @@ Objectif : aucun cas limite connu laissé de côté. Ordre recommandé ci-dessou
   - [x] API : poste et téléphone réellement optionnels (`string?`), `ManagerId` en `int?` (plus de « 0 » magique)
   - [x] API : endpoint de recherche léger `GET /api/employees/lookup` (`search`, `limit`, `excludeTeamOf`) → `{ items, hasMore }`
   - [x] API : `excludeTeamOf` exclut l’employé et toute son équipe (directe et indirecte) : aucune boucle proposable
-  - [x] Composant **réutilisable** `EmployeeCombobox` (manager ici ; participants MVP 3, assignation MVP 5)
+  - [x] Composant **réutilisable** `EmployeeCombobox` (manager ici ; participants phase 3, assignation phase 5)
   - [x] Recherche avec debounce + annulation des requêtes périmées (`AbortController`)
   - [x] États : recherche en cours, aucun résultat, erreur API, « Affine ta recherche » si résultats coupés
   - [x] Résultats riches : avatar à initiales, nom, poste et département (homonymes)

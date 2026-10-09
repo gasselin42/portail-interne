@@ -19,7 +19,6 @@ dotnet run --launch-profile http
 
 - En production, fournir la clé par la variable d'environnement `Jwt__Key` (le `__` remplace le `:`)
 - L'API refuse de démarrer si la clé est absente ou fait moins de 32 octets
-
 - Écoute sur `http://localhost:5222`
 - Au démarrage, les migrations EF Core sont appliquées et un compte admin est créé (voir `Data/DbSeeder.cs`)
 - La base SQLite `portail-interne.db` est créée localement (ignorée par git)

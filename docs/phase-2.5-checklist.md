@@ -1,19 +1,19 @@
-# Checklist MVP 2.5 — Horaires de travail
+# Checklist de la phase 2.5 — Horaires de travail
 
 Référence produit : [PROJET.md](../PROJET.md) §5.7, §6, §7, §8, §9 (R11–R16).
 
 Stack figée : **ASP.NET Core Web API + React + SQLite**.  
 Coche au fur et à mesure. Le code n’est fourni que sur demande.
 
-**Prérequis :** MVP 2 terminé (congés, file d’approbation, calendrier personnel) + correctifs qualité Q1–Q9.
+**Prérequis :** phase 2 terminée (congés, file d’approbation, calendrier personnel) + correctifs qualité Q1–Q9.
 
 ## Préparation
 
-- [ ] Relire le périmètre MVP 2.5 dans `PROJET.md` (inclus / exclu)
+- [ ] Relire le périmètre de la phase 2.5 dans `PROJET.md` (inclus / exclu)
 - [ ] Comprendre l’ordre des couches de disponibilité (R16) : horaire type → férié → ajustement → congé approuvé
 - [ ] Distinguer les deux types de date/heure :
   - [ ] **Heure locale du site** (`DateOnly` + `TimeOnly`) : horaires, fériés, ajustements
-  - [ ] **Instant UTC** (`DateTimeOffset`) : meetings (MVP 3), `CreatedAt`, `ReviewedAt`
+  - [ ] **Instant UTC** (`DateTimeOffset`) : meetings (phase 3), `CreatedAt`, `ReviewedAt`
 - [ ] Vérifier la conversion de fuseaux IANA en .NET (`TimeZoneInfo.FindSystemTimeZoneById("America/Toronto")`)
 - [ ] Choisir comment stocker `DateOnly` / `TimeOnly` dans SQLite avec EF Core (texte ISO, tri correct)
 

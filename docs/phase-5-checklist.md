@@ -1,15 +1,15 @@
-# Checklist MVP 5 — Portail IT + assignation + créneau
+# Checklist de la phase 5 — Portail IT + assignation + créneau
 
 Référence produit : [PROJET.md](../PROJET.md) §5.5, §6, §7, §8, §9 (R9, R10).
 
 Stack figée : **ASP.NET Core Web API + React + SQLite**.  
 Coche au fur et à mesure. Le code n’est fourni que sur demande.
 
-**Prérequis :** MVP 1 (annuaire / rôles) ; idéalement MVP 3 (calendrier) pour le warning « prévoir un slot ».
+**Prérequis :** phase 1 (annuaire / rôles) ; idéalement la phase 3 (calendrier) pour le warning « prévoir un slot ».
 
 ## Préparation
 
-- [ ] Relire le périmètre MVP 5 dans `PROJET.md`
+- [ ] Relire le périmètre de la phase 5 dans `PROJET.md`
 - [ ] Figer les statuts : `Nouvelle`, `Assignee`, `EnCours`, `Resolue`, `Fermee`
 - [ ] Introduire le rôle **ItAgent** (ou équivalent) + seed
 - [ ] Clarifier permissions : vue globale = IT / Admin (R9)
@@ -19,7 +19,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 
 - [ ] 1. Modèle `ItTicket` (+ migration)
 - [ ] 2. (Optionnel) `TicketComment` + migration
-- [ ] 3. Brancher / réutiliser `Notification` (si créée en MVP 3)
+- [ ] 3. Brancher / réutiliser `Notification` (si créée en phase 3)
 - [ ] 4. Employé : créer un ticket (titre, description, catégorie?)
 - [ ] 5. Employé : lister **ses** tickets + détail
 - [ ] 6. IT/Admin : liste globale + filtres (statut, assigné)
