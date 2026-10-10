@@ -213,11 +213,25 @@ public class AdminController : ControllerBase
 	}
 
     [HttpGet("accounts")]
-	public async Task<ActionResult<List<AccountListItemResponse>>> ListAccounts()
+	public async Task<ActionResult<List<AccountListItemResponse>>> ListAccounts([FromQuery] string? search)
 	{
-		var accounts = await _db.UserAccounts
-			.AsNoTracking()
-			.Include(u => u.Employee)
+		var query = _db.UserAccounts.AsNoTracking();
+
+		if (!string.IsNullOrWhiteSpace(search))
+		{
+			string key = TextKey.From(search);
+			var matching = EmployeeSearch.Apply(_db.Employees, search);
+			var roles = RoleLabels.All
+				.Where(r => TextKey.From(r.Value).Contains(key) || TextKey.From(r.Key.ToString()) == key)
+				.Select(r => r.Key)
+				.ToList();
+
+			query = query.Where(u => 
+				matching.Any(e => e.Id == u.EmployeeId)
+				|| (u.Role != null && roles.Contains(u.Role.Value)));
+		}
+
+		var accounts = await query
 			.OrderBy(u => u.Employee.LastNameKey)
 			.ThenBy(u => u.Employee.FirstNameKey)
 			.ThenBy(u => u.Id)

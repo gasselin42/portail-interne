@@ -28,7 +28,7 @@ public class EmployeesController : ControllerBase
             .AsNoTracking()
             .Where(e => e.IsActive);
 
-        query = ApplySearch(query, search);
+        query = EmployeeSearch.Apply(query, search);
 
         var photosBase = $"{Request.Scheme}://{Request.Host}/photos/";
 
@@ -101,7 +101,7 @@ public class EmployeesController : ControllerBase
             .AsNoTracking()
             .Where(e => e.IsActive);
 
-        query = ApplySearch(query, search);
+        query = EmployeeSearch.Apply(query, search);
 
         if (excludeTeamOf is > 0)
         {
@@ -128,31 +128,6 @@ public class EmployeesController : ControllerBase
         if (hasMore) items.RemoveAt(items.Count - 1);
 
         return Ok(new EmployeeLookupResponse { Items = items, HasMore = hasMore });
-    }
-
-    private static IQueryable<Employee> ApplySearch(IQueryable<Employee> query, string? search)
-    {
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            string key = TextKey.From(search);
-			string emailSearch = search.Trim().ToLowerInvariant();
-
-           	var departements = DepartementLabels.All
-				.Where(d => TextKey.From(d.Value).Contains(key) || TextKey.From(d.Key.ToString()) == key)
-				.Select(d => d.Key)
-				.ToList();
-
-            query = query.Where(e =>
-                e.FirstNameKey.Contains(key)
-                || e.LastNameKey.Contains(key)
-                || e.JobTitleKey.Contains(key)
-                || e.Email.Contains(emailSearch)
-                || departements.Contains(e.Departement)
-				|| (e.FirstNameKey + " " + e.LastNameKey).Contains(key)
-				|| (e.LastNameKey + " " + e.FirstNameKey).Contains(key));
-        }
-
-        return query;
     }
 
     private async Task<HashSet<int>> GetTeamIdsAsync(int rootId)

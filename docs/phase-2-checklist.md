@@ -133,10 +133,11 @@ Objectif : aucun cas limite connu laissé de côté. Ordre recommandé ci-dessou
   - [x] Format et taille (2 Mo) vérifiés dès le choix, message immédiat
   - [x] Bouton « Retirer » pour annuler le choix avant d’enregistrer
   - [x] En modification, « Retirer » revient à la photo actuelle ; dossier `wwwroot/photos` toujours présent, photos jamais commitées
-- [ ] Q14. **Recherche dans la page Comptes**
-  - [ ] API : logique de recherche partagée (`EmployeeSearch`) utilisée par l’Annuaire, `lookup` et `ListAccounts`
-  - [ ] Composant `SearchBar` partagé par l’Annuaire et Comptes
-  - [ ] Recherche relancée à chaque envoi, requêtes périmées annulées
+- [x] Q14. **Recherche dans la page Comptes**
+  - [x] API : logique de recherche partagée (`EmployeeSearch`) utilisée par l’Annuaire, `lookup` et `ListAccounts`
+  - [x] Composant `SearchBar` partagé par l’Annuaire et Comptes
+  - [x] Recherche relancée à chaque envoi, requêtes périmées annulées
+  - [x] Recherche par rôle (Comptes seulement) ; badge de rôle basé sur `ROLE_LABELS` ; message dédié quand rien ne correspond
 - [ ] Q15. **Photos des employés réservées aux personnes connectées**
   - [ ] Photos stockées hors de `wwwroot` (plus servies comme fichiers publics)
   - [ ] Servies par un endpoint protégé (`[Authorize]`), avec le bon type de contenu et un cache raisonnable

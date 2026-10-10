@@ -8,12 +8,16 @@ import {
 	resetAccountPassword,
 	DEPARTEMENT_LABELS,
 	type AccountListItem,
+	ROLE_LABELS,
+	type RoleId,
+	Role,
 } from "../api/admin"
 import { ErrorBanner, type PageError } from "../components/Banner"
 import { ConfirmDialog } from "../components/ConfirmDialog"
 import { TemporaryPasswordDialog } from "../components/TemporaryPasswordDialog"
 import { primaryButton, rowIconButton, smallSecondaryButton } from "../ui/buttons"
 import { PageHeader } from "../components/PageHeader"
+import { SearchBar } from "../components/SearchBar"
 
 function AccountActiveToggle({
 	checked,
@@ -38,8 +42,8 @@ function AccountActiveToggle({
 	)
 }
 
-function RoleBadge({ role }: { role: number }) {
-	const isAdmin = role === 0
+function RoleBadge({ role }: { role: RoleId }) {
+	const isAdmin = role === Role.Admin
 	return (
 		<span
 			className={
@@ -48,12 +52,15 @@ function RoleBadge({ role }: { role: number }) {
 					: "inline-flex rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-700"
 			}
 		>
-			{isAdmin ? "Admin" : "Employé"}
+			{ROLE_LABELS[role]}
 		</span>
 	)
 }
 
 export function AdminAccountsPage() {
+	const [search, setSearch] = useState("")
+	const [query, setQuery] = useState("")
+	const [searchRun, setSearchRun] = useState(0)
 	const [accounts, setAccounts] = useState<AccountListItem[]>([])
 	const [error, setError] = useState<PageError | null>(null)
 	const [loading, setLoading] = useState(true)
@@ -70,16 +77,31 @@ export function AdminAccountsPage() {
 		: ""
 
 	useEffect(() => {
-		listAccounts()
+		const controller = new AbortController()
+
+		listAccounts(query || undefined, controller.signal)
 			.then(setAccounts)
-			.catch((e) =>
+			.catch((e) => {
+				if (controller.signal.aborted) return
 				setError({
 					message: e instanceof Error ? e.message : "Erreur",
 					dismissible: false,
-				}),
-			)
-			.finally(() => setLoading(false))
-	}, [])
+				})
+			})
+			.finally(() => {
+				if (controller.signal.aborted) return
+				setLoading(false)
+			})
+		
+		return () => controller.abort()
+	}, [query, searchRun])
+
+	function handleSearch() {
+		setError(null)
+		setLoading(true)
+		setQuery(search.trim())
+		setSearchRun((n) => n + 1)
+	}
 
 	async function handleToggle(account: AccountListItem, next: boolean) {
 		setError(null)
@@ -153,6 +175,14 @@ export function AdminAccountsPage() {
 				}
 			/>
 
+			<SearchBar
+				value={search}
+				onChange={setSearch}
+				onSubmit={handleSearch}
+				label="Rechercher un compte"
+				placeholder="Nom, email, poste, rôle, département…"
+			/>
+
 			{error && (
 				<ErrorBanner
 					message={error.message}
@@ -167,7 +197,7 @@ export function AdminAccountsPage() {
 				) : accounts.length === 0 ? (
 					!(error && !error.dismissible) && (
 						<p className="px-6 py-12 text-center text-sm text-slate-500">
-							Aucun compte pour le moment
+							{`Aucun compte ne correspond à « ${query} »`}
 						</p>
 					)
 				) : (

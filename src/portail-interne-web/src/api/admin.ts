@@ -57,8 +57,9 @@ export const Role = {
 
 export type RoleId = (typeof Role)[keyof typeof Role]
 
+// Renommer dans UserAccounts.cs en cas de changement
 export const ROLE_LABELS: Record<RoleId, string> = {
-	[Role.Admin]: "Administrateur",
+	[Role.Admin]: "Admin",
 	[Role.Employé]: "Employé",
 }
 
@@ -128,8 +129,12 @@ export type AccountListItem = {
 	createdAt: string
 }
 
-export async function listAccounts(): Promise<AccountListItem[]> {
-	const res = await apiFetch("/api/admin/accounts")
+export async function listAccounts(search?: string, signal?: AbortSignal): Promise<AccountListItem[]> {
+	const query = new URLSearchParams()
+
+	if (search && search.trim().length > 0) query.set("search", search!.trim())
+	
+	const res = await apiFetch(`/api/admin/accounts?${query}`, { signal })
 	if (!res.ok) {
 		throw new Error(await readApiError(res, "Impossible de charger les comptes"))
 	}

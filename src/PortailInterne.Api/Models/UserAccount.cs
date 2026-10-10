@@ -8,6 +8,16 @@ public enum Role
     Employee
 }
 
+public static class RoleLabels
+{
+	// Renommer dans admin.ts en cas de changement
+	public static readonly IReadOnlyDictionary<Role, string> All = new Dictionary<Role, string>
+	{
+		[Role.Admin] = "Admin",
+		[Role.Employee] = "Employé",
+	};
+}
+
 public class UserAccount
 {
     public int Id { get; set; }
