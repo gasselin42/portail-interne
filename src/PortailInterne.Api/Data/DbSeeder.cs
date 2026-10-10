@@ -15,7 +15,7 @@ public class DbSeeder
             var adminEmployee = new Employee
             {
                 FirstName = "Alex",
-                LastName = "Admin",
+                LastName = "Courtois",
                 Email = "admin@portail.local",
                 JobTitle = "Administrateur système",
                 Departement = Departement.TI,
