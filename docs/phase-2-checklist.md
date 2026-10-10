@@ -128,14 +128,20 @@ Objectif : aucun cas limite connu laissé de côté. Ordre recommandé ci-dessou
   - [x] Vérifier les noms composés et les apostrophes
   - [x] Recherche par nom complet (« jane doe », « doe jane »), par libellé de département, et par courriel exact
   - [x] Annuaire : nouvelle recherche identique relancée, requêtes périmées annulées
-- [ ] Q13. **Champ photo** de la fiche employé au style de l’application
-  - [ ] Bouton de choix stylé (variante `file:`), nom du fichier affiché
-  - [ ] Format et taille (2 Mo) vérifiés dès le choix, message immédiat
-  - [ ] Bouton « Retirer » pour annuler le choix avant d’enregistrer
+- [x] Q13. **Champ photo** de la fiche employé au style de l’application
+  - [x] Bouton de choix stylé (variante `file:`), nom du fichier affiché
+  - [x] Format et taille (2 Mo) vérifiés dès le choix, message immédiat
+  - [x] Bouton « Retirer » pour annuler le choix avant d’enregistrer
+  - [x] En modification, « Retirer » revient à la photo actuelle ; dossier `wwwroot/photos` toujours présent, photos jamais commitées
 - [ ] Q14. **Recherche dans la page Comptes**
   - [ ] API : logique de recherche partagée (`EmployeeSearch`) utilisée par l’Annuaire, `lookup` et `ListAccounts`
   - [ ] Composant `SearchBar` partagé par l’Annuaire et Comptes
   - [ ] Recherche relancée à chaque envoi, requêtes périmées annulées
+- [ ] Q15. **Photos des employés réservées aux personnes connectées**
+  - [ ] Photos stockées hors de `wwwroot` (plus servies comme fichiers publics)
+  - [ ] Servies par un endpoint protégé (`[Authorize]`), avec le bon type de contenu et un cache raisonnable
+  - [ ] Frontend : affichage d’images qui demandent le token (les `<img src>` ne l’envoient pas)
+  - [ ] Photos existantes déplacées vers le nouvel emplacement
 
 ## Notes / blocages
 

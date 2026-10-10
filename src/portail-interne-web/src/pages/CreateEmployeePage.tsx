@@ -1,4 +1,4 @@
-import { useEffect, useState, type SubmitEvent } from "react"
+import { useEffect, useRef, useState, type SubmitEvent } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import {
 	createEmployee,
@@ -14,7 +14,7 @@ import { AccountCircleOutlined } from "@mui/icons-material"
 import { ErrorBanner } from "../components/Banner"
 import { TemporaryPasswordDialog } from "../components/TemporaryPasswordDialog"
 import { EmployeeCombobox } from "../components/EmployeeCombobox"
-import { primaryButton, secondaryButton } from "../ui/buttons"
+import { focusRing, primaryButton, secondaryButton } from "../ui/buttons"
 import type { EmployeeOption } from "../api/employees"
 import { inputClass, labelClass } from "../ui/fields"
 import { PageHeader } from "../components/PageHeader"
@@ -32,6 +32,8 @@ export function CreateEmployeePage() {
 	const [manager, setManager] = useState<EmployeeOption | null>(null)
 	const [photo, setPhoto] = useState<File | null>(null)
 	const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+	const [existingPhotoUrl, setExistingPhotoUrl] = useState<string | null>(null)
+	const [photoError, setPhotoError] = useState<string | null>(null)
 
 	const [enCours, setEnCours] = useState<boolean>(false)
 	const [erreur, setErreur] = useState<string | null>(null)
@@ -44,6 +46,7 @@ export function CreateEmployeePage() {
 	const enEdition = employeId !== null
 
 	const navigate = useNavigate()
+	const photoInputRef = useRef<HTMLInputElement>(null)
 
 	useEffect(() => {
 		if (!enEdition || employeId === null) return
@@ -66,7 +69,7 @@ export function CreateEmployeePage() {
 							}
 						: null,
 				)
-				setPhotoPreview(employee.photoUrl)
+				setExistingPhotoUrl(employee.photoUrl)
 			})
 			.catch((e) => setErreur(e instanceof Error ? e.message : "Employé introuvable"))
 	}, [enEdition, employeId])
@@ -137,14 +140,37 @@ export function CreateEmployeePage() {
 	}
 
 	function handlePhoto(file: File | undefined) {
-		if (photoPreview) URL.revokeObjectURL(photoPreview)
+		setPhotoError(null)
+
 		if (!file) {
 			setPhoto(null)
 			setPhotoPreview(null)
 			return
 		}
+
+		if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+			setPhotoError("Format non supporté : choisis une image JPEG, PNG ou WebP.")
+			if (photoInputRef.current) photoInputRef.current.value = ""
+			return
+		}
+		
+		if (file.size > 2 * 1024 * 1024) {
+			setPhotoError("L'image ne doit pas dépasser 2 Mo.")
+			if (photoInputRef.current) photoInputRef.current.value = ""
+			return
+		}
+		
+		if (photoPreview) URL.revokeObjectURL(photoPreview)
 		setPhoto(file)
 		setPhotoPreview(URL.createObjectURL(file))
+	}
+
+	function handleRemovePhoto() {
+		if (photoPreview) URL.revokeObjectURL(photoPreview)
+		setPhoto(null)
+		setPhotoPreview(null)
+		setPhotoError(null)
+		if (photoInputRef.current) photoInputRef.current.value = ""
 	}
 
 	function slugify(value: string): string {
@@ -161,6 +187,8 @@ export function CreateEmployeePage() {
 		if (!prenom || !nom) return ""
 		return `${prenom}.${nom}@portail.local`
 	}
+
+	const shownPhoto = photoPreview ?? existingPhotoUrl
 
 	return (
 		<div className="mx-auto max-w-2xl px-6 py-10">
@@ -190,18 +218,43 @@ export function CreateEmployeePage() {
 							Photo
 						</label>
 						<div className="flex items-center gap-4">
-							{photoPreview ? (
-								<img src={photoPreview} alt="" className="h-16 w-16 rounded-full object-cover" />
+							{shownPhoto ? (
+								<img src={shownPhoto} alt="" className="h-16 w-16 rounded-full object-cover" />
 							) : (
 								<AccountCircleOutlined className="text-slate-400" sx={{ fontSize: 64 }} />
 							)}
-							<input
-								id="photo"
-								type="file"
-								accept="image/jpeg,image/png,image/webp"
-								onChange={(e) => handlePhoto(e.target.files?.[0])}
-								className="texte-slate-600 text-sm"
-							/>
+							<div className="min-w-0 flex-1">
+								<div className="flex items-center gap-3">
+									<input
+										id="photo"
+										type="file"
+										ref={photoInputRef}
+										accept="image/jpeg,image/png,image/webp"
+										onChange={(e) => handlePhoto(e.target.files?.[0])}
+										aria-describedby={photoError ? "photo-hint photo-error" : "photo-hint"}
+										className={`block w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border file:border-slate-200 file:bg-white file:px-4 file:py-2 file:text-sm file:font-medium file:text-slate-700 file:cursor-pointer file:shadow-sm file:transition hover:file:bg-slate-100 ${focusRing}`}
+									/>
+									{photo && (
+										<button
+											type="button"
+											onClick={handleRemovePhoto}
+											className={`shrink-0 text-sm text-slate-500 transition hover:text-red-600 ${focusRing}`}
+										>
+											Retirer
+										</button>
+									)}
+								</div>
+
+								<p id="photo-hint" className="mt-1.5 text-xs text-slate-500">
+									JPEG, PNG ou WebP, 2 Mo maximum.
+								</p>
+
+								{photoError && (
+									<p id="photo-error" role="alert" className="mt-1.5 text-sm text-red-600">
+										{photoError}
+									</p>
+								)}
+							</div>
 						</div>
 					</div>
 					<div className="grid gap-5 sm:grid-cols-2">

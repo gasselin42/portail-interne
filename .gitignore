@@ -18,3 +18,8 @@ appsettings.Development.json
 
 # IDE
 .idea/
+
+# Photos envoyées par les utilisateurs : jamais dans le dépôt
+src/PortailInterne.Api/wwwroot/photos/*
+!src/PortailInterne.Api/wwwroot/photos/.gitkeep
+
