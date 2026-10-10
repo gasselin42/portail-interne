@@ -18,6 +18,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddSingleton<PasswordService>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IAppClock, AppClock>();
+builder.Services.AddSingleton<PhotoStorage>();
 
 builder.Services.AddScoped<MustChangePasswordFilter>();
 
@@ -93,6 +94,7 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 app.Services.GetRequiredService<IAppClock>();
+app.Services.GetRequiredService<PhotoStorage>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -110,8 +112,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-app.UseStaticFiles();
 
 app.UseCors("Frontend");
 

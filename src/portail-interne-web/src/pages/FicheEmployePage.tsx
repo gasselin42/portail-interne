@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react"
 import { Link, useParams } from "react-router-dom"
-import { AccountCircleOutlined } from "@mui/icons-material"
 import { DEPARTEMENT_LABELS } from "../api/admin"
 import { getEmployee, type EmployeeDetail } from "../api/employees"
 import { ErrorBanner } from "../components/Banner"
+import { EmployeePhoto } from "../components/EmployeePhoto"
 
 export function FicheEmployePage() {
 	const { id } = useParams()
@@ -43,15 +43,12 @@ export function FicheEmployePage() {
 				employee && (
 					<section className="mt-6 overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/50">
 						<div className="flex items-center gap-5">
-							{employee.photoUrl ? (
-								<img
-									src={employee.photoUrl}
-									alt=""
-									className="h-24 w-24 rounded-full object-cover"
-								/>
-							) : (
-								<AccountCircleOutlined className="text-slate-300" sx={{ fontSize: 96 }} />
-							)}
+							<EmployeePhoto
+								photoUrl={employee.photoUrl}
+								firstName={employee.firstName}
+								lastName={employee.lastName}
+								size="xl"
+							/>
 							<div>
 								<h1 className="text-3xl font-semibold tracking-tight text-slate-900">
 									{employee.firstName} {employee.lastName}

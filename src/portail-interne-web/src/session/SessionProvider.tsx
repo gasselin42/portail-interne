@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef, type ReactNode } from "react"
 import { getMe, getToken, type Me } from "../api/auth"
 import { clearSession } from "../api/session"
 import { SessionContext } from "./context"
+import { clearPhotoCache } from "../api/photos"
 
 export function SessionProvider({ children }: { children: ReactNode }) {
 	const [me, setMe] = useState<Me | null>(null)
@@ -30,6 +31,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 	}, [])
 
 	const logout = useCallback(() => {
+		clearPhotoCache()
 		clearSession()
 		setMe(null)
 	}, [])

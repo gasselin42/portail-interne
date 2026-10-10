@@ -10,7 +10,6 @@ import {
 	getAdminEmployee,
 	updateEmployee,
 } from "../api/admin"
-import { AccountCircleOutlined } from "@mui/icons-material"
 import { ErrorBanner } from "../components/Banner"
 import { TemporaryPasswordDialog } from "../components/TemporaryPasswordDialog"
 import { EmployeeCombobox } from "../components/EmployeeCombobox"
@@ -18,6 +17,8 @@ import { focusRing, primaryButton, secondaryButton } from "../ui/buttons"
 import type { EmployeeOption } from "../api/employees"
 import { inputClass, labelClass } from "../ui/fields"
 import { PageHeader } from "../components/PageHeader"
+import { AVATAR_SIZES } from "../ui/avatar"
+import { EmployeePhoto } from "../components/EmployeePhoto"
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -188,8 +189,6 @@ export function CreateEmployeePage() {
 		return `${prenom}.${nom}@portail.local`
 	}
 
-	const shownPhoto = photoPreview ?? existingPhotoUrl
-
 	return (
 		<div className="mx-auto max-w-2xl px-6 py-10">
 			<PageHeader
@@ -218,10 +217,15 @@ export function CreateEmployeePage() {
 							Photo
 						</label>
 						<div className="flex items-center gap-4">
-							{shownPhoto ? (
-								<img src={shownPhoto} alt="" className="h-16 w-16 rounded-full object-cover" />
+							{photoPreview ? (
+								<img src={photoPreview} alt="" className={`${AVATAR_SIZES["lg"].box} h-16 w-16 rounded-full object-cover`} />
 							) : (
-								<AccountCircleOutlined className="text-slate-400" sx={{ fontSize: 64 }} />
+								<EmployeePhoto
+									photoUrl={existingPhotoUrl}
+									firstName={firstName}
+									lastName={lastName}
+									size="lg"
+								/>
 							)}
 							<div className="min-w-0 flex-1">
 								<div className="flex items-center gap-3">

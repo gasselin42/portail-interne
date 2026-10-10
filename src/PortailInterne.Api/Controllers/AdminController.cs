@@ -18,13 +18,13 @@ public class AdminController : ControllerBase
 {
 	private readonly AppDbContext _db;
 	private readonly PasswordService _passwords;
-	private readonly IWebHostEnvironment _env;
+	private readonly PhotoStorage _photos;
 
-	public AdminController(AppDbContext db, PasswordService passwords, IWebHostEnvironment env)
+	public AdminController(AppDbContext db, PasswordService passwords, PhotoStorage photos)
 	{
 		_db = db;
 		_passwords = passwords;
-		_env = env;
+		_photos = photos;
 	}
 
 	[HttpGet("ping")]
@@ -42,6 +42,13 @@ public class AdminController : ControllerBase
 		if (managerError is not null)
 			return BadRequest(new { message = managerError });
 
+		if (photo is not null && photo.Length > 0)
+		{
+			var photoError = _photos.Validate(photo);
+			if (photoError is not null)
+				return BadRequest(new { message = photoError});
+		}
+
 		string email = request.Email.Trim().ToLowerInvariant();
 
         if (await _db.UserAccounts.AnyAsync(u => u.Email == email)
@@ -50,28 +57,6 @@ public class AdminController : ControllerBase
 
 		var temporaryPassword = PasswordService.GenerateTemporaryPassword();
 		var passwordHash = _passwords.Hash(temporaryPassword);
-
-		string? photoFileName = null;
-
-		if (photo is not null && photo.Length > 0)
-		{
-			var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
-			var ext = Path.GetExtension(photo.FileName).ToLowerInvariant();
-
-			if (!allowed.Contains(ext))
-				return BadRequest(new { message = "Format d'image non supporté (jpeg, png webp)." });
-
-			if (photo.Length > 2 * 1024 * 1024)
-				return BadRequest(new { message = "L'image ne doit pas dépasser 2 Mo." });
-
-			photoFileName = $"{Guid.NewGuid()}{ext}";
-			var webRoot = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
-			var folder = Path.Combine(webRoot, "photos");
-			Directory.CreateDirectory(folder);
-
-			await using var stream = System.IO.File.Create(Path.Combine(folder, photoFileName));
-			await photo.CopyToAsync(stream);
-		}
 
 		var employee = new Employee
 		{
@@ -84,7 +69,6 @@ public class AdminController : ControllerBase
 			ManagerId = request.ManagerId,
 			IsActive = true,
 			CreatedAt = DateTime.UtcNow,
-			PhotoFileName = photoFileName,
 			UserAccount = new UserAccount
 			{
 				Email = email,
@@ -96,8 +80,21 @@ public class AdminController : ControllerBase
 			}
 		};
 
+		if (photo is not null && photo.Length > 0)
+			employee.PhotoFileName = await _photos.SaveAsync(photo);
+
 		_db.Employees.Add(employee);
-		await _db.SaveChangesAsync();
+
+		try
+		{
+			await _db.SaveChangesAsync();
+		}
+		catch
+		{
+			// L'employé n'a pas été créé : sa photo, déjà sur le disque, ne doit pas rester orpheline.
+			_photos.Delete(employee.PhotoFileName);
+			throw;
+		}
 
 		return Created($"/api/admin/employees/{employee.Id}", new CreateEmployeeResponse
 		{
@@ -143,7 +140,7 @@ public class AdminController : ControllerBase
             Role = employee.UserAccount.Role.Value,
             PhotoUrl = employee.PhotoFileName == null
                 ? null
-                : $"{Request.Scheme}://{Request.Host}/photos/{employee.PhotoFileName}",
+                : PhotoStorage.UrlFor(employee.PhotoFileName),
         };
 
         return Ok(employeeDetails);
@@ -170,34 +167,14 @@ public class AdminController : ControllerBase
         if (employee.UserAccount is null || request.Role is null)
 			return BadRequest(new { message = "Rôle manquant." });
 
+		var ancienNom = employee.PhotoFileName;
 		if (photo is not null && photo.Length > 0)
 		{
-            var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
-            var ext = Path.GetExtension(photo.FileName).ToLowerInvariant();
-
-            if (!allowed.Contains(ext))
-                return BadRequest(new { message = "Format d'image non supporté (jpeg, png, webp)." });
-
-            if (photo.Length > 2 * 1024 * 1024)
-                return BadRequest(new { message = "L'image ne doit pas dépasser 2 Mo." });
-
-            var photoFileName = $"{Guid.NewGuid()}{ext}";
-            var webRoot = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
-            var folder = Path.Combine(webRoot, "photos");
-            Directory.CreateDirectory(folder);
-
-            await using var stream = System.IO.File.Create(Path.Combine(folder, photoFileName));
-            await photo.CopyToAsync(stream);
-
-			if (!string.IsNullOrEmpty(employee.PhotoFileName))
-			{
-				var oldPath = Path.Combine(folder, employee.PhotoFileName);
-				if (System.IO.File.Exists(oldPath))
-					System.IO.File.Delete(oldPath);
-			}
-
-			employee.PhotoFileName = photoFileName;
-        }
+			var photoError = _photos.Validate(photo);
+			if (photoError is not null)
+				return BadRequest(new { message = photoError});
+			employee.PhotoFileName = await _photos.SaveAsync(photo);
+		}
 
 		employee.FirstName = request.FirstName.Trim();
 		employee.LastName = request.LastName.Trim();
@@ -207,7 +184,22 @@ public class AdminController : ControllerBase
 		employee.ManagerId = request.ManagerId;
 		employee.UserAccount.Role = request.Role;
 
-		await _db.SaveChangesAsync();
+		var photoChanged = ancienNom != employee.PhotoFileName;
+
+		try
+		{
+			await _db.SaveChangesAsync();
+		}
+		catch
+		{
+			// La modification n'a pas été enregistrée : on retire la nouvelle photo et on garde l'ancienne.
+			if (photoChanged)
+				_photos.Delete(employee.PhotoFileName);
+			throw;
+		}
+
+		if (photoChanged)
+			_photos.Delete(ancienNom);
 
 		return NoContent();
 	}

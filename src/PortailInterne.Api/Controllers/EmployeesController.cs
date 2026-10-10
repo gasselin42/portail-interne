@@ -30,8 +30,6 @@ public class EmployeesController : ControllerBase
 
         query = EmployeeSearch.Apply(query, search);
 
-        var photosBase = $"{Request.Scheme}://{Request.Host}/photos/";
-
         var employees = await query
             .OrderBy(e => e.LastNameKey)
             .ThenBy(e => e.FirstNameKey)
@@ -45,7 +43,7 @@ public class EmployeesController : ControllerBase
                 JobTitle = e.JobTitle,
                 Departement = e.Departement,
                 PhoneNumber = e.PhoneNumber ?? string.Empty,
-                PhotoUrl = e.PhotoFileName == null ? null : photosBase + e.PhotoFileName,
+                PhotoUrl = e.PhotoFileName == null ? null : PhotoStorage.UrlFor(e.PhotoFileName),
             })
             .ToListAsync();
 
@@ -72,7 +70,7 @@ public class EmployeesController : ControllerBase
             ManagerId = employee.ManagerId,
             PhotoUrl = employee.PhotoFileName == null
                 ? null
-                : $"{Request.Scheme}://{Request.Host}/photos/{employee.PhotoFileName}",
+                : PhotoStorage.UrlFor(employee.PhotoFileName),
         };
 
         if (employee.ManagerId is not null)

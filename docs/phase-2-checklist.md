@@ -138,11 +138,11 @@ Objectif : aucun cas limite connu laissé de côté. Ordre recommandé ci-dessou
   - [x] Composant `SearchBar` partagé par l’Annuaire et Comptes
   - [x] Recherche relancée à chaque envoi, requêtes périmées annulées
   - [x] Recherche par rôle (Comptes seulement) ; badge de rôle basé sur `ROLE_LABELS` ; message dédié quand rien ne correspond
-- [ ] Q15. **Photos des employés réservées aux personnes connectées**
-  - [ ] Photos stockées hors de `wwwroot` (plus servies comme fichiers publics)
-  - [ ] Servies par un endpoint protégé (`[Authorize]`), avec le bon type de contenu et un cache raisonnable
-  - [ ] Frontend : affichage d’images qui demandent le token (les `<img src>` ne l’envoient pas)
-  - [ ] Photos existantes déplacées vers le nouvel emplacement
+- [x] Q15. **Photos des employés réservées aux personnes connectées**
+  - [x] Photos stockées hors de `wwwroot` (plus servies comme fichiers publics)
+  - [x] Servies par un endpoint protégé (`[Authorize]`), avec le bon type de contenu, jamais gardées dans le cache du navigateur (`no-store`)
+  - [x] Frontend : affichage d’images qui demandent le token (les `<img src>` ne l’envoient pas)
+  - [x] Photos existantes déplacées vers le nouvel emplacement
 
 ## Notes / blocages
 
