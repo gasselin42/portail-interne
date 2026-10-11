@@ -1,13 +1,13 @@
 import { useState, type SubmitEvent } from "react"
 import { useNavigate, Navigate } from "react-router-dom"
 import { login } from "../api/auth"
-import { ErrorBanner } from "../components/Banner"
+import { ErrorBanner } from "../components/feedback/Banner"
 import { useSession } from "../session/useSession"
-import { FullPageStatus } from "../components/FullPageStatus"
+import { FullPageStatus } from "../components/feedback/FullPageStatus"
 import { primaryButton } from "../ui/buttons"
-import { AuthCard } from "../components/AuthCard"
+import { AuthCard } from "../components/auth/AuthCard"
 import { inputClass, labelClass } from "../ui/fields"
-import { PasswordInput } from "../components/PasswordInput"
+import { PasswordInput } from "../components/auth/PasswordInput"
 
 export function LoginPage() {
 	const { me, loading, refresh } = useSession()

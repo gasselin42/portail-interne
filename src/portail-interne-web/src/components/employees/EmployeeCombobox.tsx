@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react"
 import { Combobox, ComboboxInput, ComboboxOption, ComboboxOptions } from "@headlessui/react"
-import { lookupEmployees, type EmployeeLookupItem, type EmployeeOption } from "../api/employees"
-import { DEPARTEMENT_LABELS } from "../api/admin"
+import { lookupEmployees, type EmployeeLookupItem, type EmployeeOption } from "../../api/employees"
+import { DEPARTEMENT_LABELS } from "../../api/admin"
 import { CloseOutlined } from "@mui/icons-material"
-import { focusRing } from "../ui/buttons"
+import { focusRing } from "../../ui/buttons"
 import { Avatar } from "./Avatar"
-import { fieldBase } from "../ui/fields"
+import { fieldBase } from "../../ui/fields"
 
 const SEARCH_DELAY_MS = 250
 

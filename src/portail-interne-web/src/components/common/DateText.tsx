@@ -1,4 +1,4 @@
-import { formatDate, formatWeekday } from "../utils/date"
+import { formatDate, formatWeekday } from "../../utils/date"
 
 type Props = {
 	value: string

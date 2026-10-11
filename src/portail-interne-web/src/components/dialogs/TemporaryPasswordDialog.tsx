@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { Modal } from "./Modal"
-import { primaryButton, secondaryButton } from "../ui/buttons"
+import { primaryButton, secondaryButton } from "../../ui/buttons"
 
 type Props = {
 	open: boolean

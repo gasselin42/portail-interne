@@ -1,5 +1,5 @@
-import { AuthCard } from "./AuthCard"
-import { primaryButton } from "../ui/buttons"
+import { AuthCard } from "../auth/AuthCard"
+import { primaryButton } from "../../ui/buttons"
 
 export function AppCrash() {
 	return (

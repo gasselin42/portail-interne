@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
-import { AVATAR_SIZES, type AvatarSize } from "../ui/avatar"
-import { loadPhoto } from "../api/photos"
+import { AVATAR_SIZES, type AvatarSize } from "../../ui/avatar"
+import { loadPhoto } from "../../api/photos"
 import { Avatar } from "./Avatar"
 
 type Props = {

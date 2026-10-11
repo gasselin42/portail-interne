@@ -1,5 +1,5 @@
 import { PersonOutlined } from "@mui/icons-material"
-import { AVATAR_SIZES, type AvatarSize } from "../ui/avatar"
+import { AVATAR_SIZES, type AvatarSize } from "../../ui/avatar"
 
 type Props = {
 	firstName: string,

@@ -5,9 +5,9 @@ import { SidebarContent } from "./SidebarContent"
 import { useSession } from "../session/useSession"
 import { MenuOutlined, MenuOpenOutlined, CloseOutlined } from "@mui/icons-material"
 import { iconButton } from "../ui/buttons"
-import { Brand } from "../components/Brand"
-import { ErrorBoundary } from "../components/ErrorBoundary"
-import { PageCrash } from "../components/PageCrash"
+import { Brand } from "../components/common/Brand"
+import { ErrorBoundary } from "../components/errors/ErrorBoundary"
+import { PageCrash } from "../components/errors/PageCrash"
 
 const COLLAPSED_KEY = "portail_sidebar_collapsed"
 

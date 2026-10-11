@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Modal } from "./Modal"
-import { dangerButton, primaryButton, secondaryButton } from "../ui/buttons"
+import { dangerButton, primaryButton, secondaryButton } from "../../ui/buttons"
 
 type Props = {
 	open: boolean

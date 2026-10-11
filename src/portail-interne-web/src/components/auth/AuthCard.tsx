@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { Brand } from "./Brand"
+import { Brand } from "../common/Brand"
 
 type Props = {
 	title: string

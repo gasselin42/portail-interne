@@ -1,6 +1,6 @@
 import { Navigate, Outlet } from "react-router-dom"
-import { useSession } from "../session/useSession"
-import { FullPageStatus } from "./FullPageStatus"
+import { useSession } from "../../session/useSession"
+import { FullPageStatus } from "../feedback/FullPageStatus"
 
 type Props = {
 	/** Si true : autorise /change-password même avec le flag mdp */

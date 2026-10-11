@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { VisibilityOutlined, VisibilityOffOutlined } from "@mui/icons-material"
-import { fieldBase, labelClass } from "../ui/fields"
-import { focusRing } from "../ui/buttons"
+import { fieldBase, labelClass } from "../../ui/fields"
+import { focusRing } from "../../ui/buttons"
 
 type Props = {
 	id: string

@@ -2,11 +2,11 @@ import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { DEPARTEMENT_LABELS } from "../api/admin"
 import { listEmployees, type EmployeeListItem } from "../api/employees"
-import { ErrorBanner, type PageError } from "../components/Banner"
+import { ErrorBanner, type PageError } from "../components/feedback/Banner"
 import { ContactPage } from "@mui/icons-material"
 import { rowIconButton } from "../ui/buttons"
-import { PageHeader } from "../components/PageHeader"
-import { SearchBar } from "../components/SearchBar"
+import { PageHeader } from "../components/common/PageHeader"
+import { SearchBar } from "../components/common/SearchBar"
 
 export function AnnuairePage() {
 	const [search, setSearch] = useState("")

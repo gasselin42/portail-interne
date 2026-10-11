@@ -1,5 +1,5 @@
-import { primaryButton } from "../ui/buttons"
-import { inputClass } from "../ui/fields"
+import { primaryButton } from "../../ui/buttons"
+import { inputClass } from "../../ui/fields"
 
 type Props = {
 	value: string

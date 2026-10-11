@@ -3,8 +3,8 @@ import { useSession } from "../session/useSession"
 import { isNavItemActive, NAV_ITEMS } from "./navItems"
 import { ROLE_LABELS } from "../api/admin"
 import { KeyOutlined, LogoutOutlined } from "@mui/icons-material"
-import { Avatar } from "../components/Avatar"
-import { Brand } from "../components/Brand"
+import { Avatar } from "../components/employees/Avatar"
+import { Brand } from "../components/common/Brand"
 
 type Props = {
 	collapsed: boolean

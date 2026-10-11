@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"
-import { primaryButton, secondaryButton } from "../ui/buttons"
+import { primaryButton, secondaryButton } from "../../ui/buttons"
 
 export function PageCrash({ onRetry }: { onRetry: () => void}) {
 	return (

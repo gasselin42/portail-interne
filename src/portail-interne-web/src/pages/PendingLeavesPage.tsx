@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
-import { ErrorBanner, type PageError } from "../components/Banner"
+import { ErrorBanner, type PageError } from "../components/feedback/Banner"
 import {
 	listLeavesPending,
 	type LeaveRequestResponse,
@@ -8,11 +8,11 @@ import {
 	LeaveStatus,
 } from "../api/leaves"
 import { CheckCircleOutlineOutlined, HighlightOff } from "@mui/icons-material"
-import { DateText } from "../components/DateText"
+import { DateText } from "../components/common/DateText"
 import { formatRange } from "../utils/date"
-import { ConfirmDialog } from "../components/ConfirmDialog"
+import { ConfirmDialog } from "../components/dialogs/ConfirmDialog"
 import { rowIconDangerButton, rowIconSuccessButton } from "../ui/buttons"
-import { PageHeader } from "../components/PageHeader"
+import { PageHeader } from "../components/common/PageHeader"
 
 export function PendingLeavesPage() {
 	const [leaves, setLeaves] = useState<LeaveRequestResponse[]>([])

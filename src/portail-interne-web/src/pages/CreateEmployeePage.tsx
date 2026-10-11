@@ -10,15 +10,15 @@ import {
 	getAdminEmployee,
 	updateEmployee,
 } from "../api/admin"
-import { ErrorBanner } from "../components/Banner"
-import { TemporaryPasswordDialog } from "../components/TemporaryPasswordDialog"
-import { EmployeeCombobox } from "../components/EmployeeCombobox"
+import { ErrorBanner } from "../components/feedback/Banner"
+import { TemporaryPasswordDialog } from "../components/dialogs/TemporaryPasswordDialog"
+import { EmployeeCombobox } from "../components/employees/EmployeeCombobox"
 import { focusRing, primaryButton, secondaryButton } from "../ui/buttons"
 import type { EmployeeOption } from "../api/employees"
 import { inputClass, labelClass } from "../ui/fields"
-import { PageHeader } from "../components/PageHeader"
+import { PageHeader } from "../components/common/PageHeader"
 import { AVATAR_SIZES } from "../ui/avatar"
-import { EmployeePhoto } from "../components/EmployeePhoto"
+import { EmployeePhoto } from "../components/employees/EmployeePhoto"
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 

@@ -1,6 +1,6 @@
 import { useState } from "react"
-import { primaryButton } from "../ui/buttons"
-import { AuthCard } from "./AuthCard"
+import { primaryButton } from "../../ui/buttons"
+import { AuthCard } from "../auth/AuthCard"
 
 type Props = {
 	title: string

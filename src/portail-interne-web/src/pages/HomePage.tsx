@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom"
 import { useSession } from "../session/useSession"
-import { PageHeader } from "../components/PageHeader"
+import { PageHeader } from "../components/common/PageHeader"
 import { primaryButton } from "../ui/buttons"
 
 export function HomePage() {

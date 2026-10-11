@@ -10,12 +10,12 @@ import {
 	LEAVE_TYPE_LABELS,
 	type LeaveStatusId,
 } from "../api/leaves"
-import { ErrorBanner, type PageError } from "../components/Banner"
-import { DateText } from "../components/DateText"
-import { ConfirmDialog } from "../components/ConfirmDialog"
+import { ErrorBanner, type PageError } from "../components/feedback/Banner"
+import { DateText } from "../components/common/DateText"
+import { ConfirmDialog } from "../components/dialogs/ConfirmDialog"
 import { formatRange } from "../utils/date"
 import { primaryButton, rowIconDangerButton } from "../ui/buttons"
-import { PageHeader } from "../components/PageHeader"
+import { PageHeader } from "../components/common/PageHeader"
 
 const STATUS_STYLES: Record<LeaveStatusId, { label: string; className: string }> = {
 	[LeaveStatus.EnAttente]: {

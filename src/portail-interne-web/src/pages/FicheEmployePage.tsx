@@ -2,8 +2,8 @@ import { useEffect, useState } from "react"
 import { Link, useParams } from "react-router-dom"
 import { DEPARTEMENT_LABELS } from "../api/admin"
 import { getEmployee, type EmployeeDetail } from "../api/employees"
-import { ErrorBanner } from "../components/Banner"
-import { EmployeePhoto } from "../components/EmployeePhoto"
+import { ErrorBanner } from "../components/feedback/Banner"
+import { EmployeePhoto } from "../components/employees/EmployeePhoto"
 
 export function FicheEmployePage() {
 	const { id } = useParams()

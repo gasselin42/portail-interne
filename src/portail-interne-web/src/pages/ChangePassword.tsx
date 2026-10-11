@@ -1,12 +1,12 @@
 import { useState, type SubmitEvent } from "react"
 import { useNavigate } from "react-router-dom"
 import { changePassword } from "../api/password"
-import { ErrorBanner, SuccessBanner } from "../components/Banner"
+import { ErrorBanner, SuccessBanner } from "../components/feedback/Banner"
 import { useSession } from "../session/useSession"
 import { focusRing, primaryButton } from "../ui/buttons"
-import { PasswordInput } from "../components/PasswordInput"
-import { AuthCard } from "../components/AuthCard"
-import { PageHeader } from "../components/PageHeader"
+import { PasswordInput } from "../components/auth/PasswordInput"
+import { AuthCard } from "../components/auth/AuthCard"
+import { PageHeader } from "../components/common/PageHeader"
 
 export function ChangePassword() {
 	const { me, logout, refresh } = useSession()

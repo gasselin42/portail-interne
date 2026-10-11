@@ -12,12 +12,12 @@ import {
 	type RoleId,
 	Role,
 } from "../api/admin"
-import { ErrorBanner, type PageError } from "../components/Banner"
-import { ConfirmDialog } from "../components/ConfirmDialog"
-import { TemporaryPasswordDialog } from "../components/TemporaryPasswordDialog"
+import { ErrorBanner, type PageError } from "../components/feedback/Banner"
+import { ConfirmDialog } from "../components/dialogs/ConfirmDialog"
+import { TemporaryPasswordDialog } from "../components/dialogs/TemporaryPasswordDialog"
 import { primaryButton, rowIconButton, smallSecondaryButton } from "../ui/buttons"
-import { PageHeader } from "../components/PageHeader"
-import { SearchBar } from "../components/SearchBar"
+import { PageHeader } from "../components/common/PageHeader"
+import { SearchBar } from "../components/common/SearchBar"
 
 function AccountActiveToggle({
 	checked,

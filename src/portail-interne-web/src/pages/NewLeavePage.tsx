@@ -1,11 +1,11 @@
 import { useState, type SubmitEvent } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { createLeave, LEAVE_TYPE_LABELS, LeaveType, type LeaveTypeId } from "../api/leaves"
-import { ErrorBanner } from "../components/Banner"
+import { ErrorBanner } from "../components/feedback/Banner"
 import { daysFromToday } from "../utils/date"
 import { primaryButton, secondaryButton } from "../ui/buttons"
 import { inputClass, labelClass } from "../ui/fields"
-import { PageHeader } from "../components/PageHeader"
+import { PageHeader } from "../components/common/PageHeader"
 
 const MAX_SICK_BACKDATE_DAYS = 14
 

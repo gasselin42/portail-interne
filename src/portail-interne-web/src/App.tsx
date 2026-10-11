@@ -1,7 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom"
-import { RequireAuth } from "./components/RequireAuth"
-import { RequireAdmin } from "./components/RequireAdmin"
-import { RequireApprover } from "./components/RequireApprover"
+import { RequireAuth } from "./components/auth/RequireAuth"
+import { RequireAdmin } from "./components/auth/RequireAdmin"
+import { RequireApprover } from "./components/auth/RequireApprover"
 import { SessionProvider } from "./session/SessionProvider"
 
 import { LoginPage } from "./pages/LoginPage"
@@ -16,8 +16,8 @@ import { LeavesPage } from "./pages/LeavesPage"
 import { NewLeavePage } from "./pages/NewLeavePage"
 import { PendingLeavesPage } from "./pages/PendingLeavesPage"
 import { NotFoundPage } from "./pages/NotFoundPage"
-import { ErrorBoundary } from "./components/ErrorBoundary"
-import { AppCrash } from "./components/AppCrash"
+import { ErrorBoundary } from "./components/errors/ErrorBoundary"
+import { AppCrash } from "./components/errors/AppCrash"
 
 export default function App() {
 	return (
