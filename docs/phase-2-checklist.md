@@ -35,7 +35,17 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [x] 14. Écran **Nouvelle demande** (+ validation dates)
 - [x] 15. Écran **File d’approbation** (Manager/Admin uniquement)
 - [x] 16. Calendrier personnel (vue jour / semaine simple)
-- [ ] 17. Distinction visuelle : EnAttente vs Approuve vs Refuse (R5)
+- [ ] 17. Distinction visuelle R5 dans une rangée **« toute la journée »** (réutilisée telle quelle par la grille horaire de la phase 2.5)
+  - [ ] Approuvé : bandeau plein ; en attente : bandeau hachuré — distincts sans dépendre de la couleur seule
+  - [ ] Type et statut toujours lisibles en texte (lecteurs d’écran)
+  - [ ] Légende des styles
+- [ ] 17b. **Vue jour sur mobile** : les flèches changent de jour ; vue et date dans l’URL (`?vue=jour&date=…`) ; bascule automatique selon la largeur (`matchMedia`)
+- [ ] 17c. **Vue mois** (grille 6 semaines × 7 jours)
+  - [ ] Jours des mois voisins pâlis ; aujourd’hui en évidence
+  - [ ] Congé en bandeau qui traverse les jours, coupé en segments à chaque changement de semaine
+  - [ ] Clic sur un jour → vue jour de cette date
+  - [ ] Mobile : grille compacte avec pastilles, liste du jour touché en dessous
+  - [ ] Sélecteur de vue (Jour / Semaine / Mois), gardé dans l’URL
 - [ ] 18. Accueil : premiers composants utiles (ex. prochaines absences / résumé calendrier de la semaine)
 
 ## Validation manuelle
@@ -43,6 +53,8 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [ ] Demande créée → statut EnAttente visible au calendrier
 - [ ] Approbation → affichage « congé » distinct
 - [ ] Refus → plus d’affichage bloquant / statut clair
+- [ ] Congé du jeudi au mardi → deux segments dans la vue mois, sur les bons jours
+- [ ] Mobile : les flèches avancent d’un jour ; grand écran : d’une semaine
 - [ ] Annulation côté demandeur (cas autorisé)
 - [ ] Un employé ne voit pas les demandes des autres
 - [ ] Un Manager ne voit que son équipe (si règle choisie)

@@ -11,7 +11,7 @@ Construire un **portail interne d’entreprise** qui centralise :
 
 - l’**annuaire** des employés ;
 - la **gestion des congés / absences** ;
-- un **calendrier / planning** (vue jour, meetings individuels et de groupe) ;
+- un **calendrier / planning** (grille horaire en vues jour, semaine et mois ; meetings individuels, de groupe et récurrents) ;
 - la **réservation de salles et d’équipements** ;
 - un **portail de demandes IT** (helpdesk) ;
 - les **notifications** liées aux conflits, validations et assignations ;
@@ -101,9 +101,20 @@ Les rôles Manager / Agent IT seront introduits aux phases concernées.
 
 ### 5.3 Calendrier / planning
 
-- Vue **jour par jour** du planning personnel.
+Le calendrier est l’élément central du portail.
+
+- **Grille horaire** (axe des heures) : les événements sont placés et dimensionnés selon leur durée, comme dans Outlook ou Google Calendar.
+  - **Vue semaine** sur grand écran (lundi → dimanche).
+  - **Vue jour** sur mobile : les flèches changent de jour au lieu de semaine.
+  - **Vue mois** : grille de 6 semaines × 7 jours ; congés en bandeaux qui traversent les jours, meetings en lignes courtes (« 10h Réunion », 3 au maximum puis « + N autres ») ; un clic sur un jour ouvre la vue jour.
+  - Rangée **« toute la journée »** en haut de chaque jour : congés, fériés.
+  - **Passé grisé** : jours passés entièrement, aujourd’hui jusqu’à l’heure exacte, avec une **ligne « maintenant »** mise à jour chaque minute (fuseau du site).
+  - À l’ouverture, la grille défile jusqu’à l’heure actuelle.
+  - La vue et la date affichées sont gardées dans l’URL (F5, Retour, lien partagé).
 - Ajout d’événements / meetings dans l’horaire.
 - Meeting **de groupe** avec plusieurs employés.
+- Meetings **récurrents** (quotidiens, hebdomadaires, mensuels) avec exceptions : modifier ou annuler une occurrence, les suivantes ou toute la série.
+- **Libre / occupé** : à la création d’un meeting, on voit si les participants sont disponibles, sans jamais voir le détail de leurs événements.
 - Règles :
   - on **ne peut pas** planifier un meeting avec une personne **en congé approuvé** ;
   - si conflit d’horaire pour un ou plusieurs participants à un meeting d’équipe : le **meeting d’équipe a priorité** → les personnes en conflit reçoivent une **notification** ;
@@ -186,7 +197,8 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
 **Inclus :**
 - CRUD demandes de congé (côté employé)
 - Workflow d’approbation (Manager ou Admin selon choix)
-- Calendrier perso : jours avec congé approuvé vs en attente (distinction visuelle)
+- Calendrier perso : vue semaine (grand écran), vue jour (mobile) et vue mois
+- Congés dans une rangée « toute la journée » : approuvé (plein) vs en attente (hachuré), distincts sans dépendre de la couleur seule
 - Soldes simples (optionnel si trop lourd : reporter)
 
 **Exclu :** meetings de groupe, salles, tickets IT
@@ -207,6 +219,7 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
 - Sites avec fuseau horaire + jours fériés par site
 - Horaire type hebdomadaire versionné par date d’entrée en vigueur
 - Ajustements d’horaire ponctuels (demande employé + approbation, ou création directe par le manager)
+- **Grille horaire** du calendrier : axe des heures, heures de travail mises en évidence, passé grisé et ligne « maintenant »
 - Calendrier perso et vue équipe semaine avec l’horaire effectif
 - Congés : seuls les jours travaillés sont comptés
 
@@ -230,9 +243,11 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
 - Interdiction si un participant est en **congé approuvé**
 - Détection de conflits d’horaire
 - Priorité du meeting d’équipe + notification aux personnes en conflit
-- Affichage des meetings dans le calendrier
+- Affichage des meetings dans la grille horaire (chevauchements côte à côte) et dans la vue mois
+- **Libre / occupé** des participants à la création d’un meeting
+- Endpoint calendrier : réponse par jour (horaire effectif, congés) + liste des meetings
 
-**Exclu :** réservation salle/équipement obligatoire, tickets IT
+**Exclu :** meetings récurrents (phase 3.5), réservation salle/équipement obligatoire, tickets IT
 
 **Critères de done :**
 - [ ] Meeting solo OK
@@ -240,6 +255,29 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
 - [ ] Blocage si participant en congé
 - [ ] Conflit → notification(s)
 - [ ] Calendrier à jour pour tous les participants
+- [ ] Un employé voit le libre / occupé d’un collègue, jamais le titre de ses événements
+
+---
+
+### Phase 3.5 — Meetings récurrents
+
+**Objectif :** planifier une fois une réunion qui revient (ex. réunion d’équipe chaque lundi).
+
+**Inclus :**
+- Règle de récurrence : quotidienne, hebdomadaire (jours choisis), mensuelle ; intervalle (« toutes les 2 semaines ») ; fin par date ou par nombre d’occurrences
+- Occurrences calculées à la volée sur `[from, to]` (pas de copie en base), exceptions stockées
+- Modifier / annuler : cette occurrence, cette occurrence et les suivantes, ou toute la série
+- Règles R6–R8 et horaire effectif vérifiés pour chaque occurrence
+- Récurrence en heure locale : une réunion à 10h reste à 10h après un changement d’heure
+
+**Exclu :** invitations externes (iCal / email), salles récurrentes (phase 4)
+
+**Critères de done :**
+- [ ] Réunion chaque lundi à 10h visible toutes les semaines, sans saisie répétée
+- [ ] Une occurrence déplacée ou annulée n’affecte pas les autres
+- [ ] « Cette occurrence et les suivantes » coupe la série proprement
+- [ ] Une occurrence en conflit avec un congé approuvé est signalée
+- [ ] 10h reste 10h avant et après le passage à l’heure normale
 
 ---
 
@@ -319,6 +357,11 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
 - **CalendarEvent / Meeting** : Id, Title, Description?, StartAt, EndAt, OrganizerId, IsTeamMeeting, CreatedAt
 - **MeetingParticipant** : MeetingId, EmployeeId, ResponseStatus?
 
+### Phase 3.5
+- **MeetingSeries** : Id, OrganizerId, Title, Description?, IsTeamMeeting, TimeZoneId, FirstStartLocal, DurationMinutes, Frequency (Daily/Weekly/Monthly), Interval, DaysOfWeek?, Until? / Count?, CreatedAt
+- **MeetingSeriesParticipant** : SeriesId, EmployeeId
+- **MeetingOccurrenceException** : SeriesId, OriginalStartLocal, IsCancelled, StartAt?, EndAt?, Title? (occurrence déplacée ou modifiée)
+
 ### Phase 4
 - **Room** : Id, Name, Capacity?, IsActive
 - **Equipment** : Id, Name, Type?, IsActive
@@ -361,18 +404,23 @@ Les écrans sont côté **React**. L’API expose les routes `/api/...` correspo
 7. Mes demandes de congé
 8. Nouvelle demande
 9. (Manager) File d’approbation
-10. Calendrier personnel (vue jour / semaine simple)
+10. Calendrier personnel : vue semaine (grand écran), vue jour (mobile), vue mois
 
 ### Phase 2.5
 10a. (Manager/Admin) Horaire d’un employé
 10b. Demander un ajustement + mes ajustements
 10c. (Manager) Vue équipe semaine
 10d. (Admin) Sites et jours fériés
+10e. Calendrier en grille horaire (heures de travail, passé grisé, ligne « maintenant »)
 
 ### Phase 3
 11. Créer un meeting
 12. Détail meeting
-13. Calendrier enrichi (meetings + congés)
+13. Calendrier enrichi (meetings + congés) + libre / occupé à la création
+
+### Phase 3.5
+13a. Créer un meeting récurrent (règle + aperçu en clair : « Chaque lundi à 10h, jusqu’au 31 déc. »)
+13b. Modifier / annuler : cette occurrence, les suivantes ou toute la série
 
 ### Phase 4
 14. Catalogue salles / équipements
@@ -406,6 +454,8 @@ Les écrans sont côté **React**. L’API expose les routes `/api/...` correspo
 | R14 | Un congé ne compte que les jours travaillés ; une demande sans aucun jour travaillé est refusée |
 | R15 | Horaires, fériés et ajustements en heure locale du site ; instants (meetings, horodatages) en UTC |
 | R16 | Disponibilité = horaire type → férié → ajustement approuvé → congé approuvé (la couche suivante l’emporte) |
+| R17 | Libre / occupé : un employé voit les créneaux occupés de ses collègues, jamais le titre, le motif ni les participants |
+| R18 | Meeting récurrent : chaque occurrence respecte R6–R8 ; une modification vise une occurrence, les suivantes ou toute la série ; la série suit l’heure locale du fuseau de l’organisateur |
 
 ---
 
@@ -420,6 +470,7 @@ portail-interne/
 │   ├── phase-2-checklist.md
 │   ├── phase-2.5-checklist.md
 │   ├── phase-3-checklist.md
+│   ├── phase-3.5-checklist.md
 │   ├── phase-4-checklist.md
 │   └── phase-5-checklist.md
 ├── src/
@@ -481,6 +532,10 @@ portail-interne/
 | 2026-09-30 | Ajout de la phase 2.5 — Horaires de travail, avant les meetings (les conflits s'appuieront sur l'horaire effectif)
 | 2026-09-30 | Départ anticipé = ajustement d'horaire approuvé par le manager, pas un congé ; aucune banque d'heures, paie hors périmètre
 | 2026-09-30 | Fuseaux horaires dès la phase 2.5 via `Site` (modèle de données) ; temps supplémentaire constaté reporté à plus tard
+| 2026-10-12 | Calendrier = grille horaire (vues jour, semaine, mois) ; vue jour sur mobile ; passé grisé + ligne « maintenant » ; grille construite en phase 2.5 (premier contenu à l’heure)
+| 2026-10-12 | Phase 2 : congés dans une rangée « toute la journée » (R5), vue jour mobile et vue mois
+| 2026-10-12 | Libre / occupé des collègues à la création de meeting (phase 3, R17) ; endpoint calendrier = réponse par jour + meetings
+| 2026-10-12 | Ajout de la phase 3.5 — Meetings récurrents (occurrences calculées, exceptions stockées, R18)
 
 ---
 
@@ -492,9 +547,10 @@ portail-interne/
 | Phase 2 — Congés + calendrier | 🔨 En cours |
 | Phase 2.5 — Horaires de travail | ⏳ |
 | Phase 3 — Meetings | ⏳ |
+| Phase 3.5 — Meetings récurrents | ⏳ |
 | Phase 4 — Ressources | ⏳ |
 | Phase 5 — Helpdesk IT | ⏳ |
 
 ---
 
-*Dernière mise à jour : 2026-09-11*
+*Dernière mise à jour : 2026-10-12*

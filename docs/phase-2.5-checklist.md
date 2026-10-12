@@ -63,7 +63,12 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [ ] Grille 7 jours : coché / non coché, début, fin, pause
   - [ ] Date d’entrée en vigueur ; historique des horaires passés en lecture seule
   - [ ] Total d’heures par semaine affiché en direct
-- [ ] 16. Calendrier personnel : jours travaillés, non travaillés, fériés et ajustements visuellement distincts
+- [ ] 16. Calendrier en **grille horaire** (vues jour et semaine ; la vue mois reste en journées)
+  - [ ] Axe des heures ; la rangée « toute la journée » de la phase 2 reste en haut (congés, fériés)
+  - [ ] Heures de travail mises en évidence ; jours non travaillés, fériés et ajustements visuellement distincts
+  - [ ] **Passé grisé** : jours passés entièrement, aujourd’hui jusqu’à l’heure exacte
+  - [ ] **Ligne « maintenant »**, mise à jour chaque minute, dans le fuseau du site
+  - [ ] Défilement automatique vers l’heure actuelle à l’ouverture
 - [ ] 17. **Demander un ajustement** (employé) + liste de mes ajustements avec statut
 - [ ] 18. File d’approbation : ajustements à côté des congés (type clairement indiqué)
 - [ ] 19. Vue **équipe semaine** (Manager) : qui travaille quand, d’un coup d’œil
@@ -73,6 +78,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 ## Validation manuelle
 
 - [ ] Horaire lundi–jeudi → vendredi, samedi, dimanche non travaillés au calendrier
+- [ ] La ligne « maintenant » avance seule, page laissée ouverte ; à minuit, le grisé passe au jour suivant
 - [ ] Nouvel horaire avec date future → l’ancien s’applique jusqu’à la veille, le nouveau ensuite
 - [ ] Noël → non travaillé pour tout le site, sans aucune action
 - [ ] Manager ajoute un ajustement le jour de Noël → l’employé travaille ce jour-là, les autres non
