@@ -7,8 +7,14 @@ const dateFormatter = new Intl.DateTimeFormat("fr-CA", {
 	timeZone: "UTC",
 })
 
-const weekdayFormatter = Intl.DateTimeFormat("fr-CA", {
+const weekdayFormatter = new Intl.DateTimeFormat("fr-CA", {
 	weekday: "long",
+	timeZone: "UTC"
+})
+
+const headerFormatter = new Intl.DateTimeFormat("fr-CA", {
+	weekday: "short",
+	day: "numeric",
 	timeZone: "UTC"
 })
 
@@ -34,12 +40,32 @@ export function formatRange(start: string, end: string): string {
 	return dateFormatter.formatRange(startDate, endDate)
 }
 
-export function daysFromToday(offset: number): string {
-	// 1. La date du jour dans le fuseau de l'entreprise, ex. "2026-10-02"
-	const today = new Date().toLocaleDateString("en-CA", { timeZone: APP_TIME_ZONE })
-	const [year, month, day] = today.split("-").map(Number)
+export function formatDayHeader(value: string): string {
+	const date = toUtcDate(value)
+	return headerFormatter.format(date)
+}
 
-	// 2. Le calcul se fait en UTC : aucun changement d'heure ne peut le fausser
-	const shifted = new Date(Date.UTC(year, month - 1, day + offset))
-	return shifted.toISOString().slice(0, 10)
+export function daysFromToday(offset: number): string {
+	return addDays(todayIso(), offset)
+}
+
+export function addDays(iso: string, offset: number): string {
+	const date = toUtcDate(iso)
+	date.setUTCDate(date.getUTCDate() + offset)
+	return date.toISOString().slice(0, 10)
+}
+
+export function startOfWeek(iso: string): string {
+	const weekday = toUtcDate(iso).getUTCDay()
+	return addDays(iso, -((weekday + 6) % 7))
+}
+
+export function todayIso(): string {
+	return new Date().toLocaleDateString("en-CA", { timeZone: APP_TIME_ZONE })
+}
+
+export function isIsoDate(value: string): boolean {
+	const date = toUtcDate(value)
+	if (Number.isNaN(date.getTime())) return false
+	return date.toISOString().slice(0, 10) === value
 }

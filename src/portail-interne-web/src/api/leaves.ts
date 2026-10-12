@@ -86,3 +86,18 @@ export async function reviewLeave(id: number, status: ReviewStatus): Promise<voi
 		throw new Error(await readApiError(res, "Impossible de traiter la demande"))
 	}
 }
+
+export async function listCalendar(from: string, to: string, signal?: AbortSignal): Promise<LeaveRequestResponse[]> {
+	const query = new URLSearchParams()
+
+	query.set("from", from)
+	query.set("to", to)
+	
+	const res = await apiFetch(`/api/leaves/calendar?${query}`, { signal })
+
+	if (!res.ok) {
+		throw new Error(await readApiError(res, "Impossible de charger le calendrier"))
+	}
+
+	return (await res.json()) as LeaveRequestResponse[]
+}

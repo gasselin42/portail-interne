@@ -19,10 +19,13 @@ type BannerProps = {
 	message: string
 	/** Si true : bouton × pour fermer. Si false : erreur bloquante, non fermable. */
 	dismissible?: boolean
+	/** Appelé au clic sur ×. Nécessaire, avec dismissible, pour afficher le bouton. */
 	onDismiss?: () => void
+	/** Si fourni : bouton « Réessayer » pour relancer l'action qui a échoué. */
+	onRetry?: () => void
 }
 
-function Banner({ tone, message, dismissible = false, onDismiss }: BannerProps & { tone: Tone }) {
+function Banner({ tone, message, dismissible = false, onDismiss, onRetry }: BannerProps & { tone: Tone }) {
 	const style = TONES[tone]
 	
 	return (
@@ -31,6 +34,15 @@ function Banner({ tone, message, dismissible = false, onDismiss }: BannerProps &
 			className={`mb-4 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm ${style.box}`}
 		>
 			<p className="flex-1 text-center">{message}</p>
+			{onRetry && (
+				<button
+					type="button"
+					className={`shrink-0 rounded px-2 py-0.5 font-semibold underline-offset-2 hover:underline transition ${style.button}`}
+					onClick={onRetry}
+				>
+					Réessayer
+				</button>
+			)}
 			{dismissible && onDismiss && (
 				<button
 					type="button"

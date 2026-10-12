@@ -18,6 +18,7 @@ import { PendingLeavesPage } from "./pages/PendingLeavesPage"
 import { NotFoundPage } from "./pages/NotFoundPage"
 import { ErrorBoundary } from "./components/errors/ErrorBoundary"
 import { AppCrash } from "./components/errors/AppCrash"
+import { CalendarPage } from "./pages/CalendarPage"
 
 export default function App() {
 	return (
@@ -43,7 +44,7 @@ export default function App() {
 								<Route path="/employees/:id" element={<FicheEmployePage />} />
 								<Route path="/leaves" element={<LeavesPage />} />
 								<Route path="/leaves/new" element={<NewLeavePage />} />
-								<Route path="/calendar" element={<h1>Calendrier</h1>} />
+								<Route path="/calendar" element={<CalendarPage />} />
 
 								<Route element={<RequireApprover />}>
 									<Route path="/approvals" element={<PendingLeavesPage />} />

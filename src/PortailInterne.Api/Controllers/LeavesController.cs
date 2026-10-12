@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Security.Claims;
 
 using PortailInterne.Api.Data;
@@ -229,21 +230,24 @@ public class LeavesController : ControllerBase
 
     [HttpGet("calendar")]
     public async Task<ActionResult<List<LeaveRequestResponse>>> Calendar(
-        [FromQuery] DateTime from,
-        [FromQuery] DateTime to)
+        [FromQuery, BindRequired] DateOnly from,
+        [FromQuery, BindRequired] DateOnly to)
     {
         var employeeIdClaim = User.FindFirstValue("employeeId");
 
         if (employeeIdClaim is null || !int.TryParse(employeeIdClaim, out var employeeId))
             return Unauthorized();
 
-        if (to.Date < from.Date)
+		if (to < from)
             return BadRequest(new { message = "La date de fin doit être après la date de début." });
+			
+		if (to.DayNumber - from.DayNumber >= 62)
+			return BadRequest(new { message = "Sélectionne une plage de 62 jours au maximum."});
 
         List<LeaveRequestResponse> leaves = await _db.LeaveRequests
             .AsNoTracking()
             .Where(l => l.EmployeeId == employeeId)
-            .Where(l => l.StartDate.Date <= to.Date && l.EndDate.Date >= from.Date)
+            .Where(l => DateOnly.FromDateTime(l.StartDate) <= to && DateOnly.FromDateTime(l.EndDate) >= from)
             .Where(l => l.Status == LeaveStatus.EnAttente || l.Status == LeaveStatus.Approuve)
             .OrderBy(l => l.StartDate)
             .ThenBy(l => l.EndDate)

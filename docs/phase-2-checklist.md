@@ -34,7 +34,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [x] 13. Écran **Mes demandes** (liste + statuts)
 - [x] 14. Écran **Nouvelle demande** (+ validation dates)
 - [x] 15. Écran **File d’approbation** (Manager/Admin uniquement)
-- [ ] 16. Calendrier personnel (vue jour / semaine simple)
+- [x] 16. Calendrier personnel (vue jour / semaine simple)
 - [ ] 17. Distinction visuelle : EnAttente vs Approuve vs Refuse (R5)
 - [ ] 18. Accueil : premiers composants utiles (ex. prochaines absences / résumé calendrier de la semaine)
 
