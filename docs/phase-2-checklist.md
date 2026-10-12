@@ -35,10 +35,10 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [x] 14. Écran **Nouvelle demande** (+ validation dates)
 - [x] 15. Écran **File d’approbation** (Manager/Admin uniquement)
 - [x] 16. Calendrier personnel (vue jour / semaine simple)
-- [ ] 17. Distinction visuelle R5 dans une rangée **« toute la journée »** (réutilisée telle quelle par la grille horaire de la phase 2.5)
-  - [ ] Approuvé : bandeau plein ; en attente : bandeau hachuré — distincts sans dépendre de la couleur seule
-  - [ ] Type et statut toujours lisibles en texte (lecteurs d’écran)
-  - [ ] Légende des styles
+- [x] 17. Distinction visuelle R5 dans une rangée **« toute la journée »** (réutilisée telle quelle par la grille horaire de la phase 2.5)
+  - [x] Approuvé : bandeau plein ; en attente : bandeau hachuré — distincts sans dépendre de la couleur seule
+  - [x] Type et statut toujours lisibles en texte (lecteurs d’écran)
+  - [x] Légende des styles
 - [ ] 17b. **Vue jour sur mobile** : les flèches changent de jour ; vue et date dans l’URL (`?vue=jour&date=…`) ; bascule automatique selon la largeur (`matchMedia`)
 - [ ] 17c. **Vue mois** (grille 6 semaines × 7 jours)
   - [ ] Jours des mois voisins pâlis ; aujourd’hui en évidence
@@ -155,6 +155,10 @@ Objectif : aucun cas limite connu laissé de côté. Ordre recommandé ci-dessou
   - [x] Servies par un endpoint protégé (`[Authorize]`), avec le bon type de contenu, jamais gardées dans le cache du navigateur (`no-store`)
   - [x] Frontend : affichage d’images qui demandent le token (les `<img src>` ne l’envoient pas)
   - [x] Photos existantes déplacées vers le nouvel emplacement
+- [ ] Q16. **Aucune demande de congé qui en chevauche une autre**
+  - [ ] API : création refusée (409, message clair avec les dates en conflit) si une demande en attente ou approuvée du même employé chevauche la période
+  - [ ] Une demande refusée ou annulée ne bloque rien
+  - [ ] Frontend : message affiché dans Nouvelle demande
 
 ## Notes / blocages
 

@@ -21,6 +21,13 @@ export const LeaveStatus = {
 
 export type LeaveStatusId = (typeof LeaveStatus)[keyof typeof LeaveStatus]
 
+export const LEAVE_STATUS_LABELS: Record<LeaveStatusId, string> = {
+	[LeaveStatus.EnAttente]: "En attente",
+	[LeaveStatus.Approuve]: "Approuvé",
+	[LeaveStatus.Refuse]: "Refusé",
+	[LeaveStatus.Annule]: "Annulé",
+}
+
 export type LeaveRequestResponse = {
 	id: number
 	employeeId: number
