@@ -18,6 +18,14 @@ const headerFormatter = new Intl.DateTimeFormat("fr-CA", {
 	timeZone: "UTC"
 })
 
+const longDateFormatter = new Intl.DateTimeFormat("fr-CA", {
+	weekday: "long",
+	day: "numeric",
+	month: "long",
+	year: "numeric",
+	timeZone: "UTC"
+})
+
 function toUtcDate(value: string): Date {
 	const isoDate = value.slice(0, 10)
 	const [year, month, day] = isoDate.split("-").map(Number)
@@ -43,6 +51,11 @@ export function formatRange(start: string, end: string): string {
 export function formatDayHeader(value: string): string {
 	const date = toUtcDate(value)
 	return headerFormatter.format(date)
+}
+
+export function formatLongDate(value: string): string {
+	const date = toUtcDate(value)
+	return longDateFormatter.format(date)
 }
 
 export function daysFromToday(offset: number): string {

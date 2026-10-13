@@ -9,7 +9,7 @@ import {
 	type LeaveRequestResponse,
 	LEAVE_TYPE_LABELS,
 } from "../api/leaves"
-import { StatusBadge } from "../components/StatusBadge"
+import { StatusBadge } from "../components/leaves/StatusBadge"
 import { ErrorBanner, type PageError } from "../components/feedback/Banner"
 import { DateText } from "../components/common/DateText"
 import { ConfirmDialog } from "../components/dialogs/ConfirmDialog"

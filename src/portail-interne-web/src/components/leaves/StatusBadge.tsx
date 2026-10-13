@@ -1,4 +1,4 @@
-import { LEAVE_STATUS_LABELS, LeaveStatus, type LeaveStatusId } from "../api/leaves"
+import { LEAVE_STATUS_LABELS, LeaveStatus, type LeaveStatusId } from "../../api/leaves"
 
 const STATUS_STYLES: Record<LeaveStatusId, string> = {
 	[LeaveStatus.EnAttente]: "bg-amber-50 text-amber-700 ring-amber-600/20",

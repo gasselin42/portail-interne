@@ -9,11 +9,13 @@ export type LeaveSegment = {
 }
 
 export function toSegment(leave: LeaveRequestResponse, days: string[]): LeaveSegment {
+	const firstDay = days[0]
+	const lastDay = days[days.length - 1]
 	const leaveStart = leave.startDate.slice(0, 10)
 	const leaveEnd = leave.endDate.slice(0, 10)
 
-	const start = leaveStart > days[0] ? leaveStart : days[0]
-	const end = leaveEnd < days[6] ? leaveEnd : days[6]
+	const start = leaveStart > firstDay ? leaveStart : firstDay
+	const end = leaveEnd < lastDay ? leaveEnd : lastDay
 	const column = days.indexOf(start) + 1
 	const span = days.indexOf(end) - days.indexOf(start) + 1
 	const continuesBefore = start > leaveStart

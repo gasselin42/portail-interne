@@ -1,7 +1,7 @@
 import { LeaveStatus, type LeaveStatusId } from "../api/leaves";
 
 /** Commun à tous les bandeaux de congé du calendrier. */
-export const leaveBandBase = "truncate px-2 py-0.5 text-xs font-medium"
+export const leaveBandBase = "truncate px-2 font-medium"
 
 /**
  * Style d'un bandeau selon le statut (R5).

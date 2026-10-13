@@ -39,7 +39,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [x] Approuvé : bandeau plein ; en attente : bandeau hachuré — distincts sans dépendre de la couleur seule
   - [x] Type et statut toujours lisibles en texte (lecteurs d’écran)
   - [x] Légende des styles
-- [ ] 17b. **Vue jour sur mobile** : les flèches changent de jour ; vue et date dans l’URL (`?vue=jour&date=…`) ; bascule automatique selon la largeur (`matchMedia`)
+- [x] 17b. **Vue jour sur mobile** : les flèches changent de jour ; vue et date dans l’URL (`?vue=jour&date=…`) ; bascule automatique selon la largeur (`matchMedia`)
 - [ ] 17c. **Vue mois** (grille 6 semaines × 7 jours)
   - [ ] Jours des mois voisins pâlis ; aujourd’hui en évidence
   - [ ] Congé en bandeau qui traverse les jours, coupé en segments à chaque changement de semaine
