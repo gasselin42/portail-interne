@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Security.Claims;
+using System.Globalization;
 
 using PortailInterne.Api.Data;
 using PortailInterne.Api.Dtos;
@@ -20,6 +21,8 @@ public class LeavesController : ControllerBase
     private readonly IAppClock _clock;
 
     private const int MaxSickLeaveBackdateDays = 14;
+
+	private static readonly CultureInfo FrenchCanada = new("fr-CA");
 
     public LeavesController(AppDbContext db, IAppClock clock)
     {
@@ -47,6 +50,11 @@ public class LeavesController : ControllerBase
 			else
             	return BadRequest(new { message = "Un congé ne peut pas commencer dans le passé." });
 		}
+
+		var overlap = await FindOverlapAsync(employeeId, request.StartDate, request.EndDate, [LeaveStatus.EnAttente, LeaveStatus.Approuve]);
+
+		if (overlap is not null)
+			return Conflict(new { message = $"Tu as déjà une demande {DescribePeriod(overlap.StartDate, overlap.EndDate)} qui chevauche cette période." });
 
         var leave = new LeaveRequest
         {
@@ -220,6 +228,14 @@ public class LeavesController : ControllerBase
         if (leave.Status != LeaveStatus.EnAttente)
             return BadRequest(new { message = "Seule une demande en attente peut être traitée." });
 
+		if (request.Status == LeaveStatus.Approuve)
+		{
+			var overlap = await FindOverlapAsync(leave.EmployeeId, leave.StartDate, leave.EndDate, [LeaveStatus.Approuve], leave.Id);
+
+			if (overlap is not null)
+				return Conflict(new { message = $"Cet employé a déjà un congé approuvé {DescribePeriod(overlap.StartDate, overlap.EndDate)} qui chevauche cette demande." });
+		}
+
         leave.Status = request.Status;
         leave.ReviewedById = employeeId;
         leave.ReviewedAt = DateTime.UtcNow;
@@ -266,5 +282,33 @@ public class LeavesController : ControllerBase
 
         return Ok(leaves);
     }
+
+	/// <summary>
+	/// Première demande de l'employé, parmi les statuts donnés, qui chevauche [start, end].
+	/// excludeId : la demande elle-même (à l'approbation), pour qu'elle ne se trouve pas.
+	/// </summary>
+	private Task<LeaveRequest?> FindOverlapAsync(int employeeId, DateTime start, DateTime end, LeaveStatus[] statuses, int? excludeId = null)
+	{
+		return _db.LeaveRequests
+			.AsNoTracking()
+			.Where(l => l.EmployeeId == employeeId
+				&& statuses.Contains(l.Status)
+				&& l.Id != excludeId
+				&& l.StartDate <= end.Date && l.EndDate >= start.Date)
+			.OrderBy(l => l.StartDate)
+			.ThenBy(l => l.EndDate)
+			.ThenBy(l => l.Id)
+			.FirstOrDefaultAsync();
+	}
+
+	/// <summary>« le 14 oct. 2026 » ou « du 14 oct. 2026 au 16 oct. 2026 ».</summary>
+	private static string DescribePeriod(DateTime start, DateTime end)
+	{
+		string Format(DateTime d) => d.ToString("d MMM yyyy", FrenchCanada);
+
+		return start.Date == end.Date
+			? $"le {Format(start)}"
+			: $"du {Format(start)} au {Format(end)}";
+	}
 }
 

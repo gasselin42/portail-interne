@@ -155,10 +155,11 @@ Objectif : aucun cas limite connu laissé de côté. Ordre recommandé ci-dessou
   - [x] Servies par un endpoint protégé (`[Authorize]`), avec le bon type de contenu, jamais gardées dans le cache du navigateur (`no-store`)
   - [x] Frontend : affichage d’images qui demandent le token (les `<img src>` ne l’envoient pas)
   - [x] Photos existantes déplacées vers le nouvel emplacement
-- [ ] Q16. **Aucune demande de congé qui en chevauche une autre**
-  - [ ] API : création refusée (409, message clair avec les dates en conflit) si une demande en attente ou approuvée du même employé chevauche la période
-  - [ ] Une demande refusée ou annulée ne bloque rien
-  - [ ] Frontend : message affiché dans Nouvelle demande
+- [x] Q16. **Aucune demande de congé qui en chevauche une autre**
+  - [x] API : création refusée (409, message clair avec les dates en conflit) si une demande en attente ou approuvée du même employé chevauche la période
+  - [x] Une demande refusée ou annulée ne bloque rien
+  - [x] Frontend : message affiché dans Nouvelle demande
+  - [x] Approbation refusée si un congé déjà approuvé chevauche la demande
 
 ## Notes / blocages
 
