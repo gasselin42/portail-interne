@@ -3,10 +3,14 @@ import { useSearchParams, Link } from "react-router-dom"
 import { PageHeader } from "../components/common/PageHeader"
 import {
 	addDays,
-	formatDayHeader,
+	addMonths,
 	formatLongDate,
+	formatMonthYear,
 	formatRange,
+	getWeekDay,
 	isIsoDate,
+	iterateDays,
+	startOfMonth,
 	startOfWeek,
 	todayIso,
 } from "../utils/date"
@@ -22,11 +26,56 @@ import { ErrorBanner, type PageError } from "../components/feedback/Banner"
 import { toSegment } from "../utils/calendar"
 import { LEAVE_BAND_STYLES } from "../ui/leaveBands"
 import { useMediaQuery } from "../hooks/useMediaQuery"
-import { LeaveBand } from "../components/leaves/LeaveBand"
+import { WeekView } from "../components/calendar/WeekView"
+import { DayView } from "../components/calendar/DayView"
 
 type CalendarResult =
 	| { from: string; to: string; leaves: LeaveRequestResponse[] }
 	| { from: string; to: string; error: PageError }
+
+type View = "jour" | "semaine" | "mois"
+
+type CalendarRange = {
+	from: string
+	to: string
+	days: string[]
+	shift: (direction: number) => string
+}
+
+function getRange(view: View, date: string): CalendarRange {
+	switch (view) {
+		case "jour":
+			return {
+				from: date,
+				to: date,
+				days: [date],
+				shift: (direction) => addDays(date, direction),
+			}
+
+		case "semaine": {
+			const monday = startOfWeek(date)
+			return {
+				from: monday,
+				to: addDays(monday, 6),
+				days: iterateDays(monday, 7),
+				shift: (direction) => addDays(date, 7 * direction),
+			}
+		}
+
+		case "mois": {
+			const monthFirst = startOfMonth(date)
+			const weekDay = getWeekDay(monthFirst)
+			const weekStart = startOfWeek(monthFirst)
+			const firstDay = weekDay >= 1 && weekDay <= 3 ? addDays(weekStart, -7) : weekStart
+			return {
+				from: firstDay,
+				to: addDays(firstDay, 41),
+				days: iterateDays(firstDay, 42),
+				shift: (direction) => addMonths(date, direction),
+			}
+		}
+	}
+}
 
 export function CalendarPage() {
 	const [searchParams, setSearchParams] = useSearchParams()
@@ -36,21 +85,42 @@ export function CalendarPage() {
 	const isDesktop = useMediaQuery("(min-width: 48rem)")
 
 	const today = todayIso()
-	const param = searchParams.get("date")
-	const date = param && isIsoDate(param) ? param : today
+	const dateParam = searchParams.get("date")
+	const vueParam = searchParams.get("vue")
+	const date = dateParam && isIsoDate(dateParam) ? dateParam : today
 
-	const view = isDesktop ? "semaine" : "jour"
-	const from = view === "semaine" ? startOfWeek(date) : date
-	const to = view === "semaine" ? addDays(from, 6) : date
-	const days = Array.from({ length: view === "semaine" ? 7 : 1 }, (_, i) => addDays(from, i))
-	const step = view === "jour" ? 1 : 7
+	const view: View =
+		vueParam === "mois" || vueParam === "jour"
+			? vueParam
+			: vueParam === "semaine" && isDesktop
+				? "semaine"
+				: isDesktop
+					? "semaine"
+					: "jour"
 
-	const containsToday = from <= today && today <= to
+	const { from, to, days, shift } = getRange(view, date)
+
+	const containsToday =
+		view === "mois" ? startOfMonth(date) === startOfMonth(today) : from <= today && today <= to
 
 	const current = result?.from === from && result.to === to ? result : null
 	const leaves = current && "leaves" in current ? current.leaves : null
 	const segments = leaves?.map((leave) => toSegment(leave, days)) ?? []
 	const error = current && "error" in current ? current.error : null
+
+	const title =
+		view === "mois"
+			? formatMonthYear(date)
+			: view === "semaine"
+				? formatRange(from, to)
+				: formatLongDate(date)
+
+	const noLeaves =
+		view === "mois"
+			? "Aucune absence ce mois-là"
+			: view === "semaine"
+				? "Aucune absence cette semaine."
+				: "Aucune absence ce jour-là."
 
 	useEffect(() => {
 		const controller = new AbortController()
@@ -92,12 +162,12 @@ export function CalendarPage() {
 
 			<div className="mb-4 flex flex-wrap items-center justify-between gap-3">
 				<h2 aria-live="polite" className="text-lg font-semibold text-slate-900">
-					{view === "jour" ? formatLongDate(date) : formatRange(from, to)}
+					{title}
 				</h2>
 				<div className="flex items-center gap-1">
 					<button
 						type="button"
-						onClick={() => setSearchParams({ date: addDays(date, -step) })}
+						onClick={() => setSearchParams({ vue: view, date: shift(-1) })}
 						aria-label={view === "jour" ? "Jour précédent" : "Semaine précédente"}
 						className={iconButton}
 					>
@@ -105,7 +175,7 @@ export function CalendarPage() {
 					</button>
 					<button
 						type="button"
-						onClick={() => setSearchParams({ date: addDays(date, step) })}
+						onClick={() => setSearchParams({ vue: view, date: shift(1) })}
 						aria-label={view === "jour" ? "Jour suivant" : "Semaine suivante"}
 						className={iconButton}
 					>
@@ -114,7 +184,7 @@ export function CalendarPage() {
 					<button
 						type="button"
 						disabled={containsToday}
-						onClick={() => setSearchParams({})}
+						onClick={() => setSearchParams({ vue: view })}
 						className={secondaryButton}
 					>
 						Aujourd'hui
@@ -131,55 +201,13 @@ export function CalendarPage() {
 					</p>
 				) : leaves?.length === 0 ? (
 					<p role="status" className="text-center text-sm text-slate-500">
-						{view === "jour" ? "Aucune absence ce jour-là." : "Aucune absence cette semaine."}
+						{noLeaves}
 					</p>
 				) : null}
 			</div>
 
-			{/* Mobile : vue jour */}
-			<div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/50 md:hidden">
-				<ul aria-label="Absences du jour" className="min-h-12 space-y-1.5 py-2">
-					{segments.map((segment) => (
-						<LeaveBand key={segment.leave.id} segment={segment} />
-					))}
-				</ul>
-			</div>
-
-			{/* Grand écran : en-têtes + rangée « toute la journée » */}
-			<div className="hidden overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/50 md:block">
-				{/* 1. En-têtes : 7 colonnes, un par jour */}
-				<ol className="grid grid-cols-7 border-b border-slate-200/80">
-					{days.map((day) => (
-						<li
-							key={day}
-							aria-current={day === today ? "date" : undefined}
-							className="group px-3 py-2"
-						>
-							<time
-								dateTime={day}
-								className="text-sm font-medium text-slate-700 group-aria-[current=date]:font-semibold group-aria-[current=date]:text-sky-700"
-							>
-								{formatDayHeader(day)}
-							</time>
-						</li>
-					))}
-				</ol>
-
-				{/* 2. Rangée « toute la journée » : un <li> par segment */}
-				<ul
-					aria-label="Absences de la semaine"
-					className="grid min-h-12 grid-flow-row-dense grid-cols-7 gap-y-1 py-1"
-				>
-					{segments.map((segment) => (
-						<LeaveBand
-							key={segment.leave.id}
-							segment={segment}
-							compact
-							style={{ gridColumn: `${segment.column} / span ${segment.span}` }}
-						/>
-					))}
-				</ul>
-			</div>
+			{view === "jour" && <DayView segments={segments} />}
+			{view === "semaine" && <WeekView days={days} segments={segments} today={today} />}
 
 			<ul aria-label="Légende" className="mt-3 flex gap-4 text-xs text-slate-600">
 				{[LeaveStatus.Approuve, LeaveStatus.EnAttente].map((status) => (

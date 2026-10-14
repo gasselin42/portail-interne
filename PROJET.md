@@ -106,7 +106,7 @@ Le calendrier est l’élément central du portail.
 - **Grille horaire** (axe des heures) : les événements sont placés et dimensionnés selon leur durée, comme dans Outlook ou Google Calendar.
   - **Vue semaine** sur grand écran (lundi → dimanche).
   - **Vue jour** sur mobile : les flèches changent de jour au lieu de semaine.
-  - **Vue mois** : grille de 6 semaines × 7 jours ; congés en bandeaux qui traversent les jours, meetings en lignes courtes (« 10h Réunion », 3 au maximum puis « + N autres ») ; un clic sur un jour ouvre la vue jour.
+  - **Vue mois** : grille de 6 semaines × 7 jours, avec des jours avant et après chaque mois (si le 1er tombe du lundi au mercredi, la grille commence le lundi de la semaine précédente) ; congés en bandeaux qui traversent les jours, meetings en lignes courtes (« 10h Réunion », 3 au maximum puis « + N autres ») ; un clic sur un jour ouvre la vue jour.
   - Rangée **« toute la journée »** en haut de chaque jour : congés, fériés.
   - **Passé grisé** : jours passés entièrement, aujourd’hui jusqu’à l’heure exacte, avec une **ligne « maintenant »** mise à jour chaque minute (fuseau du site).
   - À l’ouverture, la grille défile jusqu’à l’heure actuelle.

@@ -40,7 +40,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [x] Type et statut toujours lisibles en texte (lecteurs d’écran)
   - [x] Légende des styles
 - [x] 17b. **Vue jour sur mobile** : les flèches changent de jour ; vue et date dans l’URL (`?vue=jour&date=…`) ; bascule automatique selon la largeur (`matchMedia`)
-- [ ] 17c. **Vue mois** (grille 6 semaines × 7 jours)
+- [ ] 17c. **Vue mois** (grille 6 semaines × 7 jours, toujours des jours du mois précédent : si le 1er tombe du lundi au mercredi, la grille commence le lundi de la semaine précédente)
   - [ ] Jours des mois voisins pâlis ; aujourd’hui en évidence
   - [ ] Congé en bandeau qui traverse les jours, coupé en segments à chaque changement de semaine
   - [ ] Clic sur un jour → vue jour de cette date
@@ -50,15 +50,15 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 
 ## Validation manuelle
 
-- [ ] Demande créée → statut EnAttente visible au calendrier
-- [ ] Approbation → affichage « congé » distinct
-- [ ] Refus → plus d’affichage bloquant / statut clair
-- [ ] Congé du jeudi au mardi → deux segments dans la vue mois, sur les bons jours
-- [ ] Mobile : les flèches avancent d’un jour ; grand écran : d’une semaine
-- [ ] Annulation côté demandeur (cas autorisé)
-- [ ] Un employé ne voit pas les demandes des autres
-- [ ] Un Manager ne voit que son équipe (si règle choisie)
-- [ ] Admin peut approuver (si prévu)
+- [x] Demande créée → statut EnAttente visible au calendrier
+- [x] Approbation → affichage « congé » distinct
+- [x] Refus → plus d’affichage bloquant / statut clair
+- [x] Congé du jeudi au mardi → deux segments dans la vue mois, sur les bons jours
+- [x] Mobile : les flèches avancent d’un jour ; grand écran : d’une semaine
+- [x] Annulation côté demandeur (cas autorisé)
+- [x] Un employé ne voit pas les demandes des autres
+- [x] Un Manager ne voit que son équipe (si règle choisie)
+- [x] Admin peut approuver (si prévu)
 
 ## Bonus
 

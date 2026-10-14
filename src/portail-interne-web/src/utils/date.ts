@@ -26,6 +26,12 @@ const longDateFormatter = new Intl.DateTimeFormat("fr-CA", {
 	timeZone: "UTC"
 })
 
+const monthFormatter = new Intl.DateTimeFormat("fr-CA", {
+	month: "long",
+	year: "numeric",
+	timeZone: "UTC"
+})
+
 function toUtcDate(value: string): Date {
 	const isoDate = value.slice(0, 10)
 	const [year, month, day] = isoDate.split("-").map(Number)
@@ -58,6 +64,11 @@ export function formatLongDate(value: string): string {
 	return longDateFormatter.format(date)
 }
 
+export function formatMonthYear(iso: string): string {
+	const date = toUtcDate(iso)
+	return monthFormatter.format(date)
+}
+
 export function daysFromToday(offset: number): string {
 	return addDays(todayIso(), offset)
 }
@@ -81,4 +92,22 @@ export function isIsoDate(value: string): boolean {
 	const date = toUtcDate(value)
 	if (Number.isNaN(date.getTime())) return false
 	return date.toISOString().slice(0, 10) === value
+}
+
+export function startOfMonth(iso: string): string {
+	return iso.slice(0, 8) + "01"
+}
+
+export function addMonths(iso: string, n: number): string {
+	const monthStart = startOfMonth(iso)
+	const [year, month, day] = monthStart.split("-").map(Number)
+	return new Date(Date.UTC(year, month - 1 + n, day)).toISOString().slice(0, 10)
+}
+
+export function getWeekDay(iso: string): number {
+	return toUtcDate(iso).getUTCDay()
+}
+
+export function iterateDays(value: string, length: number) {
+	return Array.from({ length: length }, (_, i) => addDays(value, i))
 }
