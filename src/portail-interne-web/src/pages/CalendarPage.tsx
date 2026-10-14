@@ -23,17 +23,27 @@ import {
 	type LeaveRequestResponse,
 } from "../api/leaves"
 import { ErrorBanner, type PageError } from "../components/feedback/Banner"
-import { toSegment } from "../utils/calendar"
+import { segmentsFor } from "../utils/calendar"
 import { LEAVE_BAND_STYLES } from "../ui/leaveBands"
 import { useMediaQuery } from "../hooks/useMediaQuery"
 import { WeekView } from "../components/calendar/WeekView"
 import { DayView } from "../components/calendar/DayView"
+import { SegmentedControl } from "../components/common/SegmentedControl"
+import { MonthView } from "../components/calendar/MonthView"
 
 type CalendarResult =
 	| { from: string; to: string; leaves: LeaveRequestResponse[] }
 	| { from: string; to: string; error: PageError }
 
 type View = "jour" | "semaine" | "mois"
+
+const DESKTOP_VIEWS: { value: View, label: string }[] = [
+	{ value: "jour", label: "Jour" },
+	{ value: "semaine", label: "Semaine" },
+	{ value: "mois", label: "Mois" },
+]
+
+const MOBILE_VIEWS = DESKTOP_VIEWS.filter((option) => option.value !== "semaine")
 
 type CalendarRange = {
 	from: string
@@ -105,7 +115,7 @@ export function CalendarPage() {
 
 	const current = result?.from === from && result.to === to ? result : null
 	const leaves = current && "leaves" in current ? current.leaves : null
-	const segments = leaves?.map((leave) => toSegment(leave, days)) ?? []
+	const segments = view === "mois" ? segmentsFor(leaves ?? [], [date]) : segmentsFor(leaves ?? [], days)
 	const error = current && "error" in current ? current.error : null
 
 	const title =
@@ -165,6 +175,12 @@ export function CalendarPage() {
 					{title}
 				</h2>
 				<div className="flex items-center gap-1">
+					<SegmentedControl
+						label="Vue"
+						options={isDesktop ? DESKTOP_VIEWS : MOBILE_VIEWS}
+						value={view}
+						onChange={(v) => setSearchParams(dateParam ? { vue: v, date } : { vue: v })}
+					/>
 					<button
 						type="button"
 						onClick={() => setSearchParams({ vue: view, date: shift(-1) })}
@@ -208,6 +224,19 @@ export function CalendarPage() {
 
 			{view === "jour" && <DayView segments={segments} />}
 			{view === "semaine" && <WeekView days={days} segments={segments} today={today} />}
+			{view === "mois" && (
+				<MonthView
+					days={days}
+					leaves={leaves ?? []}
+					today={today}
+					date={date}
+					compact={!isDesktop}
+					onSelectDay={(day) =>
+						setSearchParams(isDesktop ? { vue: "jour", date: day } : { vue: "mois", date: day })
+					}
+				/>
+			)}
+			{view === "mois" && !isDesktop && <DayView segments={segments} />}
 
 			<ul aria-label="Légende" className="mt-3 flex gap-4 text-xs text-slate-600">
 				{[LeaveStatus.Approuve, LeaveStatus.EnAttente].map((status) => (

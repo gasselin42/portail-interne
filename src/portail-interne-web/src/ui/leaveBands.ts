@@ -14,3 +14,11 @@ export const LEAVE_BAND_STYLES: Record<LeaveStatusId, string> = {
 	[LeaveStatus.Refuse]: "bg-slate-100 text-slate-500 line-through",
 	[LeaveStatus.Annule]: "bg-slate-100 text-slate-500 line-through",
 }
+
+/** Pastille d'un congé dans la vue mois mobile : pleine si approuvé, en anneau si en attente. */
+export const LEAVE_DOT_STYLES: Record<LeaveStatusId, string> = {
+	[LeaveStatus.Approuve]: "bg-emerald-600",
+	[LeaveStatus.EnAttente]: "ring-1 ring-inset ring-amber-500 bg-white",
+	[LeaveStatus.Refuse]: "bg-slate-300",
+	[LeaveStatus.Annule]: "bg-slate-300",
+}

@@ -32,6 +32,11 @@ const monthFormatter = new Intl.DateTimeFormat("fr-CA", {
 	timeZone: "UTC"
 })
 
+const shortWeekdayFormatter = new Intl.DateTimeFormat("fr-CA", {
+	weekday: "short",
+	timeZone: "UTC"
+})
+
 function toUtcDate(value: string): Date {
 	const isoDate = value.slice(0, 10)
 	const [year, month, day] = isoDate.split("-").map(Number)
@@ -67,6 +72,11 @@ export function formatLongDate(value: string): string {
 export function formatMonthYear(iso: string): string {
 	const date = toUtcDate(iso)
 	return monthFormatter.format(date)
+}
+
+export function formatShortWeekday(iso: string): string {
+	const date = toUtcDate(iso)
+	return shortWeekdayFormatter.format(date)
 }
 
 export function daysFromToday(offset: number): string {

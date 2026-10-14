@@ -1,6 +1,6 @@
 import type { LeaveSegment } from "../../utils/calendar"
 import { formatDayHeader } from "../../utils/date"
-import { LeaveBand } from "../leaves/LeaveBand"
+ import { LeaveRow } from "./LeaveRow"
 
 type Props = {
 	days: string[]
@@ -30,19 +30,7 @@ export function WeekView({ days, segments, today }: Props) {
 			</ol>
 
 			{/* 2. Rangée « toute la journée » : un <li> par segment */}
-			<ul
-				aria-label="Absences de la semaine"
-				className="grid min-h-12 grid-flow-row-dense grid-cols-7 gap-y-1 py-1"
-			>
-				{segments.map((segment) => (
-					<LeaveBand
-						key={segment.leave.id}
-						segment={segment}
-						compact
-						style={{ gridColumn: `${segment.column} / span ${segment.span}` }}
-					/>
-				))}
-			</ul>
+			<LeaveRow segments={segments} />
 		</div>
 	)
 }

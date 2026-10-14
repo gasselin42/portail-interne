@@ -40,12 +40,12 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [x] Type et statut toujours lisibles en texte (lecteurs d’écran)
   - [x] Légende des styles
 - [x] 17b. **Vue jour sur mobile** : les flèches changent de jour ; vue et date dans l’URL (`?vue=jour&date=…`) ; bascule automatique selon la largeur (`matchMedia`)
-- [ ] 17c. **Vue mois** (grille 6 semaines × 7 jours, toujours des jours du mois précédent : si le 1er tombe du lundi au mercredi, la grille commence le lundi de la semaine précédente)
-  - [ ] Jours des mois voisins pâlis ; aujourd’hui en évidence
-  - [ ] Congé en bandeau qui traverse les jours, coupé en segments à chaque changement de semaine
-  - [ ] Clic sur un jour → vue jour de cette date
-  - [ ] Mobile : grille compacte avec pastilles, liste du jour touché en dessous
-  - [ ] Sélecteur de vue (Jour / Semaine / Mois), gardé dans l’URL
+- [x] 17c. **Vue mois** (grille 6 semaines × 7 jours, toujours des jours du mois précédent : si le 1er tombe du lundi au mercredi, la grille commence le lundi de la semaine précédente)
+  - [x] Jours des mois voisins pâlis ; aujourd’hui en évidence
+  - [x] Congé en `LeaveBand` qui traverse les jours, coupé en segments à chaque changement de semaine
+  - [x] Clic sur un jour → vue jour de cette date
+  - [x] Mobile : grille compacte avec pastilles, liste du jour touché en dessous
+  - [x] Sélecteur de vue (Jour / Semaine / Mois), gardé dans l’URL
 - [ ] 18. Accueil : premiers composants utiles (ex. prochaines absences / résumé calendrier de la semaine)
 
 ## Validation manuelle
