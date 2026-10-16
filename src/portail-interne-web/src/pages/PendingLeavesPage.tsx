@@ -1,92 +1,24 @@
-import { useState, useEffect, useCallback } from "react"
-import { ErrorBanner, type PageError } from "../components/feedback/Banner"
-import {
-	listLeavesPending,
-	type LeaveRequestResponse,
-	LEAVE_TYPE_LABELS,
-	reviewLeave,
-	LeaveStatus,
-} from "../api/leaves"
-import { CheckCircleOutlineOutlined, HighlightOff } from "@mui/icons-material"
+import { useState, useRef } from "react"
+import { ErrorBanner } from "../components/feedback/Banner"
+import { listLeavesPending, LEAVE_TYPE_LABELS } from "../api/leaves"
 import { DateText } from "../components/common/DateText"
-import { formatRange } from "../utils/date"
 import { ConfirmDialog } from "../components/dialogs/ConfirmDialog"
-import { rowIconDangerButton, rowIconSuccessButton } from "../ui/buttons"
 import { PageHeader } from "../components/common/PageHeader"
+import { useAsync } from "../hooks/useAsync"
+import { useLeaveReview } from "../hooks/useLeaveReview"
+import { LeaveReviewButtons } from "../components/leaves/LeaveReviewButtons"
 
 export function PendingLeavesPage() {
-	const [leaves, setLeaves] = useState<LeaveRequestResponse[]>([])
-	const [error, setError] = useState<PageError | null>(null)
-	const [loading, setLoading] = useState(true)
-	const [reviewingId, setReviewingId] = useState<number | null>(null)
-	const [confirmOpen, setConfirmOpen] = useState(false)
-	const [selectedLeave, setSelectedLeave] = useState<LeaveRequestResponse | null>(null)
-
-	const declineMessage = selectedLeave
-		? `Cette demande (${LEAVE_TYPE_LABELS[selectedLeave.type]}) de ${selectedLeave.employeeFirstName} ${selectedLeave.employeeLastName} du ${formatRange(selectedLeave.startDate, selectedLeave.endDate)} sera refusée. ${selectedLeave.employeeFirstName} verra le statut Refusé.`
-		: ""
-
-	const loadLeaves = useCallback(() => {
-		return listLeavesPending()
-			.then(setLeaves)
-			.catch((e) =>
-				setError({
-					message: e instanceof Error ? e.message : "Erreur",
-					dismissible: false,
-				}),
-			)
-			.finally(() => setLoading(false))
-	}, [])
-
-	useEffect(() => {
-		loadLeaves()
-	}, [loadLeaves])
-
-	async function handleValidation(id: number) {
-		setError(null)
-		setReviewingId(id)
-		try {
-			await reviewLeave(id, LeaveStatus.Approuve)
-			setLeaves((prev) => prev.filter((l) => l.id !== id))
-		} catch (e) {
-			setError({
-				message: e instanceof Error ? e.message : "Erreur",
-				dismissible: true,
-			})
-			loadLeaves()
-		} finally {
-			setReviewingId(null)
-		}
-	}
-
-	async function handleDecline(leave: LeaveRequestResponse) {
-		setError(null)
-		setReviewingId(leave.id)
-		try {
-			await reviewLeave(leave.id, LeaveStatus.Refuse)
-			setLeaves((prev) => prev.filter((l) => l.id !== leave.id))
-		} catch (e) {
-			setError({
-				message: e instanceof Error ? e.message : "Erreur",
-				dismissible: true,
-			})
-			loadLeaves()
-		} finally {
-			setReviewingId(null)
-		}
-	}
-
-	async function handleConfirmDecline() {
-		if (!selectedLeave) return
-
-		await handleDecline(selectedLeave)
-		setConfirmOpen(false)
-	}
-
-	function openDeclineConfirm(leave: LeaveRequestResponse) {
-		setSelectedLeave(leave)
-		setConfirmOpen(true)
-	}
+	const { data, loading, error, retry } = useAsync((signal) => listLeavesPending(signal), [])
+	const [reviewingIds, setReviewingIds] = useState<number[]>([])
+	const leaves = (data ?? []).filter((l) => !reviewingIds.includes(l.id))
+	const contentRef = useRef<HTMLElement>(null)
+	
+	const review = useLeaveReview({
+		onReviewed: (leave) => setReviewingIds((ids) => [...ids, leave.id]),
+		onFailed: retry,
+		focusAfterReview: () => contentRef.current?.focus()
+	})
 
 	return (
 		<div className="mx-auto max-w-6xl px-6 py-10">
@@ -96,23 +28,23 @@ export function PendingLeavesPage() {
 				description="Vois et accepte ou refuse les demandes de congés."
 			/>
 
-			{error && (
+			{review.error && (
 				<ErrorBanner
-					message={error.message}
-					dismissible={error.dismissible}
-					onDismiss={() => setError(null)}
+					message={review.error}
+					dismissible
+					onDismiss={review.dismissError}
 				/>
 			)}
 
-			<section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/50">
-				{loading ? (
+			<section ref={contentRef} tabIndex={-1} className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/50 outline-none">
+				{error ? (
+					<div className="p-4">
+						<ErrorBanner message={error} onRetry={retry} />
+					</div>
+				) : loading ? (
 					<p className="px-6 py-12 text-center text-sm text-slate-500">Chargement des congés...</p>
 				) : leaves.length === 0 ? (
-					!(error && !error.dismissible) && (
-						<p className="px-6 py-12 text-center text-sm text-slate-500">
-							Aucune demande en attente
-						</p>
-					)
+					<p className="px-6 py-12 text-center text-sm text-slate-500">Aucune demande en attente</p>
 				) : (
 					<div className="overflow-x-auto">
 						<table className="w-full min-w-200 table-fixed border-collapse text-left">
@@ -160,28 +92,12 @@ export function PendingLeavesPage() {
 											{leave.reason || "-"}
 										</td>
 										<td className="px-3 py-3.5 text-center">
-											<div className="inline-flex gap-1">
-												<button
-													type="button"
-													onClick={() => handleValidation(leave.id)}
-													disabled={reviewingId === leave.id}
-													title="Accepter"
-													aria-label={`Accepter la demande de ${leave.employeeFirstName} ${leave.employeeLastName}`}
-													className={rowIconSuccessButton}
-												>
-													<CheckCircleOutlineOutlined fontSize="small" />
-												</button>
-												<button
-													type="button"
-													onClick={() => openDeclineConfirm(leave)}
-													disabled={reviewingId === leave.id}
-													title="Refuser"
-													aria-label={`Refuser la demande de ${leave.employeeFirstName} ${leave.employeeLastName}`}
-													className={rowIconDangerButton}
-												>
-													<HighlightOff fontSize="small" />
-												</button>
-											</div>
+											<LeaveReviewButtons
+												leave={leave}
+												disabled={review.reviewingId === leave.id}
+												onApprove={() => review.approve(leave)}
+												onDecline={() => review.requestDecline(leave)}
+											/>
 										</td>
 									</tr>
 								))}
@@ -190,16 +106,8 @@ export function PendingLeavesPage() {
 					</div>
 				)}
 			</section>
-			<ConfirmDialog
-				open={confirmOpen}
-				title="Refuser cette demande ?"
-				message={declineMessage}
-				confirmLabel="Refuser"
-				busyLabel="Refus…"
-				destructive
-				onClose={() => setConfirmOpen(false)}
-				onConfirm={handleConfirmDecline}
-			/>
+			<p role="status" className="sr-only">{review.announcement}</p>
+			<ConfirmDialog {...review.declineDialog} />
 		</div>
 	)
 }

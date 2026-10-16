@@ -50,16 +50,16 @@ export type CreateLeaveRequest = {
 
 export type ReviewStatus = typeof LeaveStatus.Approuve | typeof LeaveStatus.Refuse
 
-export async function listLeaves(): Promise<LeaveRequestResponse[]> {
-	const res = await apiFetch("/api/leaves")
+export async function listLeaves(signal?: AbortSignal): Promise<LeaveRequestResponse[]> {
+	const res = await apiFetch("/api/leaves", { signal })
 	if (!res.ok) {
 		throw new Error(await readApiError(res, "Impossible de charger les congés"))
 	}
 	return (await res.json()) as LeaveRequestResponse[]
 }
 
-export async function listLeavesPending(): Promise<LeaveRequestResponse[]> {
-	const res = await apiFetch("/api/leaves/pending")
+export async function listLeavesPending(signal?: AbortSignal): Promise<LeaveRequestResponse[]> {
+	const res = await apiFetch("/api/leaves/pending", { signal })
 	if (!res.ok) {
 		throw new Error(await readApiError(res, "Impossible de charger les congés"))
 	}

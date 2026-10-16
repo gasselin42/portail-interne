@@ -46,7 +46,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [x] Clic sur un jour → vue jour de cette date
   - [x] Mobile : grille compacte avec pastilles, liste du jour touché en dessous
   - [x] Sélecteur de vue (Jour / Semaine / Mois), gardé dans l’URL
-- [ ] 18. Accueil : premiers composants utiles (ex. prochaines absences / résumé calendrier de la semaine)
+- [x] 18. Accueil : premiers composants utiles (ex. prochaines absences / résumé calendrier de la semaine)
 
 ## Validation manuelle
 

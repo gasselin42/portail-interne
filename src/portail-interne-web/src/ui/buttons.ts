@@ -35,3 +35,6 @@ export const rowIconSuccessButton = `${rowIconBase} hover:bg-emerald-50 hover:te
 
 /** Icône d'action dans une ligne de tableau : destructive (annuler, refuser). */
 export const rowIconDangerButton = `${rowIconBase} hover:bg-red-50 hover:text-red-600`
+
+export const textLink = `rounded text-sm font-medium text-sky-700 hover:text-sky-800 hover:underline ${focusRing}`
+

@@ -2,6 +2,10 @@ import { Link } from "react-router-dom"
 import { useSession } from "../session/useSession"
 import { PageHeader } from "../components/common/PageHeader"
 import { primaryButton } from "../ui/buttons"
+import { canApprove } from "../session/permission"
+import { UpcomingLeavesWidget } from "../components/home/UpcomingLeavesWidget"
+import { PendingApprovalsWidget } from "../components/home/PendingApprovalsWidget"
+import { WeekWidget } from "../components/home/WeekWidget"
 
 export function HomePage() {
 	const { me } = useSession()
@@ -18,7 +22,14 @@ export function HomePage() {
 					</Link>
 				}
 			/>
-			
+
+			<div className="grid gap-4 md:grid-cols-2">
+				<WeekWidget />
+				<UpcomingLeavesWidget />
+				{canApprove(me) && (
+					<PendingApprovalsWidget />
+				)}
+			</div>
 		</div>
 	)
 }
