@@ -55,6 +55,11 @@ public class AppDbContext : DbContext
                 .HasForeignKey(l => l.EmployeeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+			 entity.HasOne(l => l.CreatedBy)
+                .WithMany()
+                .HasForeignKey(l => l.CreatedById)
+                .OnDelete(DeleteBehavior.Restrict);
+
             entity.HasOne(l => l.ReviewedBy)
                 .WithMany()
                 .HasForeignKey(l => l.ReviewedById)

@@ -39,12 +39,21 @@ export type LeaveRequestResponse = {
 	status: LeaveStatusId
 	reason: string
 	createdAt: string
+	createdByFirstName: string | null
+	createdByLastName: string | null
 }
 
 export type CreateLeaveRequest = {
 	startDate: string
 	endDate: string
 	type: LeaveTypeId
+	reason?: string
+}
+
+export type DeclareSickLeaveRequest = {
+	employeeId: number
+	startDate: string
+	endDate: string
 	reason?: string
 }
 
@@ -80,6 +89,17 @@ export async function createLeave(request: CreateLeaveRequest): Promise<LeaveReq
 	})
 	if (!res.ok) {
 		throw new Error(await readApiError(res, "Impossible de créer le congé"))
+	}
+	return (await res.json()) as LeaveRequestResponse
+}
+
+export async function declareSickLeave(request: DeclareSickLeaveRequest): Promise<LeaveRequestResponse> {
+	const res = await apiFetch("/api/leaves/declare", {
+		method: "POST",
+		body: JSON.stringify(request),
+	})
+	if (!res.ok) {
+		throw new Error(await readApiError(res, "Impossible de déclarer le congé"))
 	}
 	return (await res.json()) as LeaveRequestResponse
 }

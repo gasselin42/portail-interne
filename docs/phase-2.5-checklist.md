@@ -40,6 +40,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [ ] 7. Modèle `ScheduleAdjustment` + migration
   - [ ] Champs : employé, date, `StartTime?`, `EndTime?`, `BreakMinutes`, motif, statut, `CreatedById`, `ReviewedById?`, `ReviewedAt?`
   - [ ] Heures nulles = « ne travaille pas ce jour-là » (Manager/Admin seulement)
+  - [ ] Plage d’absence optionnelle dans la journée (ex. rendez-vous de 10h à 12h), comprise dans les heures du jour, sans toucher au solde
   - [ ] Un seul ajustement actif (EnAttente ou Approuve) par employé et par date
 - [ ] 8. Créer un ajustement
   - [ ] Employé : seulement pour lui, date ≥ aujourd’hui, statut `EnAttente`, heures obligatoires (jamais une journée à 0 h)
@@ -55,6 +56,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [ ] 13. Congés : ne compter que les jours travaillés (R14)
   - [ ] Demande qui ne couvre aucun jour travaillé → refusée avec un message clair
   - [ ] Nombre de jours travaillés affiché dans la demande et la file d’approbation
+  - [ ] Solde et jours sans solde (R19) recalculés sur les jours travaillés au lieu de lun.–ven.
 - [ ] 14. Autorisation : employé = lecture de son horaire ; manager = son équipe ; admin = tout
 
 ## Frontend (React)

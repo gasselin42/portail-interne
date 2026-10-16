@@ -142,6 +142,11 @@ export function LeavesPage() {
 										</td>
 										<td className="px-5 py-3.5 text-sm text-slate-600">
 											{LEAVE_TYPE_LABELS[leave.type]}
+											{leave.createdByFirstName && 
+												<span className="block text-xs text-slate-500">
+													Déclaré par {leave.createdByFirstName} {leave.createdByLastName}
+												</span>
+											}
 										</td>
 										<td className="px-5 py-3.5 text-sm wrap-break-word whitespace-normal text-slate-700">
 											{leave.reason || "-"}

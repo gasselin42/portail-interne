@@ -93,6 +93,9 @@ namespace PortailInterne.Api.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("EmployeeId")
                         .HasColumnType("INTEGER");
 
@@ -118,6 +121,8 @@ namespace PortailInterne.Api.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
 
                     b.HasIndex("EmployeeId");
 
@@ -170,6 +175,11 @@ namespace PortailInterne.Api.Migrations
 
             modelBuilder.Entity("PortailInterne.Api.Models.LeaveRequest", b =>
                 {
+                    b.HasOne("PortailInterne.Api.Models.Employee", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("PortailInterne.Api.Models.Employee", "Employee")
                         .WithMany()
                         .HasForeignKey("EmployeeId")
@@ -180,6 +190,8 @@ namespace PortailInterne.Api.Migrations
                         .WithMany()
                         .HasForeignKey("ReviewedById")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedBy");
 
                     b.Navigation("Employee");
 

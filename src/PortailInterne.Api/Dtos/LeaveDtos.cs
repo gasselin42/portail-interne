@@ -29,10 +29,26 @@ public class LeaveRequestResponse
     public LeaveStatus Status { get; set; }
     public string? Reason { get; set; }
     public DateTime CreatedAt { get; set; }
+	public string? CreatedByFirstName { get; set; }
+	public string? CreatedByLastName { get; set; }
 }
 
 public class ReviewLeaveRequest
 {
     [Required]
     public LeaveStatus Status { get; set; }
+}
+
+public class DeclareSickLeaveRequest
+{
+	[Required]
+	public int EmployeeId { get; set; }
+
+	[Required]
+    public DateTime StartDate { get; set; }
+
+    [Required]
+    public DateTime EndDate { get; set; }
+
+    public string? Reason { get; set; }
 }

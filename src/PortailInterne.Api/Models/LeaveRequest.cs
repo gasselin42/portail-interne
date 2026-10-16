@@ -29,6 +29,9 @@ public class LeaveRequest
 
 	public string? Reason { get; set; } = string.Empty;
 
+	public int? CreatedById { get; set; }
+	public Employee? CreatedBy { get; set; }
+
 	public int? ReviewedById { get; set; }
 	public Employee? ReviewedBy { get; set; }
 

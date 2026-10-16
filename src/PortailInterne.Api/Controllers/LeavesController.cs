@@ -38,18 +38,10 @@ public class LeavesController : ControllerBase
         if (employeeIdClaim is null || !int.TryParse(employeeIdClaim, out var employeeId))
             return Unauthorized();
 
-        if (request.EndDate.Date < request.StartDate.Date)
-            return BadRequest(new { message = "La date de fin ne peut pas être avant la date de début." });
+		var validate = ValidateDates(request.StartDate, request.EndDate, request.Type);
 
-		var minStartDate = (request.Type == LeaveType.Maladie) ? _clock.Today.AddDays(-MaxSickLeaveBackdateDays) : _clock.Today;
-
-		if (request.StartDate.Date < minStartDate)
-		{
-			if (request.Type == LeaveType.Maladie)
-            	return BadRequest(new { message = $"Un congé maladie peut être rétroactif de {MaxSickLeaveBackdateDays} jours au maximum." });
-			else
-            	return BadRequest(new { message = "Un congé ne peut pas commencer dans le passé." });
-		}
+		if (validate is not null)
+			return BadRequest(new { message = validate });
 
 		var overlap = await FindOverlapAsync(employeeId, request.StartDate, request.EndDate, [LeaveStatus.EnAttente, LeaveStatus.Approuve]);
 
@@ -83,6 +75,69 @@ public class LeavesController : ControllerBase
         });
     }
 
+	[HttpPost("declare")]
+	public async Task<ActionResult<LeaveRequestResponse>> DeclareSickLeave(DeclareSickLeaveRequest request)
+	{
+		var employee = await _db.Employees.AsNoTracking().FirstOrDefaultAsync(e => e.Id == request.EmployeeId);
+
+        if (employee is null || !employee.IsActive)
+            return NotFound();
+
+		var employeeIdClaim = User.FindFirstValue("employeeId");
+
+		if (employeeIdClaim is null || !int.TryParse(employeeIdClaim, out var employeeId))
+            return Unauthorized();
+
+		var caller = await _db.Employees.FindAsync(employeeId);
+
+		if (employeeId == employee.Id)
+			return BadRequest(new { message = "Pour toi-même, utilise une demande normale." });
+
+		if (!User.IsInRole("Admin") && employee.ManagerId != employeeId)
+			return NotFound();
+
+		var validate = ValidateDates(request.StartDate, request.EndDate, LeaveType.Maladie);
+
+		if (validate is not null)
+			return BadRequest(new { message = validate });
+		
+		var overlap = await FindOverlapAsync(request.EmployeeId, request.StartDate, request.EndDate, [LeaveStatus.EnAttente, LeaveStatus.Approuve]);
+
+		if (overlap is not null)
+			return Conflict(new { message = $"{employee.FirstName} a déjà une demande {DescribePeriod(overlap.StartDate, overlap.EndDate)} qui chevauche cette période." });
+	
+		var leave = new LeaveRequest
+        {
+            EmployeeId = employee.Id,
+            StartDate = request.StartDate.Date,
+            EndDate = request.EndDate.Date,
+            Type = LeaveType.Maladie,
+            Status = LeaveStatus.Approuve,
+            Reason = string.IsNullOrWhiteSpace(request.Reason) ? null : request.Reason.Trim(),
+            CreatedAt = DateTime.UtcNow,
+			CreatedById = employeeId,
+			ReviewedById = employeeId,
+			ReviewedAt = DateTime.UtcNow
+        };
+
+        _db.LeaveRequests.Add(leave);
+        await _db.SaveChangesAsync();
+
+		return Created($"/api/leaves/{leave.Id}", new LeaveRequestResponse
+        {
+            Id = leave.Id,
+            EmployeeId = leave.EmployeeId,
+            StartDate = leave.StartDate,
+            EndDate = leave.EndDate,
+            Type = leave.Type,
+            Status = leave.Status,
+            Reason = leave.Reason,
+            CreatedAt = leave.CreatedAt,
+			CreatedByFirstName = caller!.FirstName,
+			CreatedByLastName = caller!.LastName
+        }); 
+	}
+
     [HttpGet]
     public async Task<ActionResult<List<LeaveRequestResponse>>> ListMine()
     {
@@ -105,7 +160,9 @@ public class LeavesController : ControllerBase
                 Type = l.Type,
                 Status = l.Status,
                 Reason = l.Reason,
-                CreatedAt = l.CreatedAt
+                CreatedAt = l.CreatedAt,
+				CreatedByFirstName = l.CreatedBy != null ? l.CreatedBy.FirstName : null,
+				CreatedByLastName = l.CreatedBy != null ? l.CreatedBy.LastName : null
             })
             .ToListAsync();
 
@@ -309,6 +366,24 @@ public class LeavesController : ControllerBase
 		return start.Date == end.Date
 			? $"le {Format(start)}"
 			: $"du {Format(start)} au {Format(end)}";
+	}
+
+	private string? ValidateDates(DateTime start, DateTime end, LeaveType type)
+	{
+		if (end.Date < start.Date)
+            return "La date de fin ne peut pas être avant la date de début.";
+
+		var minStartDate = (type == LeaveType.Maladie) ? _clock.Today.AddDays(-MaxSickLeaveBackdateDays) : _clock.Today;
+
+		if (start.Date < minStartDate)
+		{
+			if (type == LeaveType.Maladie)
+            	return $"Un congé maladie peut être rétroactif de {MaxSickLeaveBackdateDays} jours au maximum.";
+			else
+            	return "Un congé ne peut pas commencer dans le passé.";
+		}
+
+		return null;
 	}
 }
 

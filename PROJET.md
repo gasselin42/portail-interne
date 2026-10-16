@@ -156,6 +156,7 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
 - Chaque employé appartient à un **site** (fuseau horaire IANA + jours fériés propres).
 - Les **jours fériés** du site sont non travaillés par défaut ; un manager peut faire travailler quelqu’un ce jour-là.
 - Un **ajustement d’horaire** modifie une seule date (partir à 16h, venir un vendredi, travailler un férié) sans passer par Congés.
+  - Il peut contenir une **plage d’absence** dans la journée (ex. rendez-vous de 10h à 12h), sans toucher au solde de congés.
   - Demandé par l’employé → approbation du manager (même file que les congés).
   - Créé par le manager → approuvé directement.
   - Aucune banque d’heures : le portail enregistre les heures prévues, la paie reste hors périmètre.
@@ -199,7 +200,8 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
 - Workflow d’approbation (Manager ou Admin selon choix)
 - Calendrier perso : vue semaine (grand écran), vue jour (mobile) et vue mois
 - Congés dans une rangée « toute la journée » : approuvé (plein) vs en attente (hachuré), distincts sans dépendre de la couleur seule
-- Soldes simples (optionnel si trop lourd : reporter)
+- Soldes simples : jours ouvrables (lun.–ven.) en attendant les jours travaillés de la phase 2.5 ; au-delà du solde, les jours sont **sans solde** (calculés, jamais stockés)
+- Congé maladie déclaré par un Manager (son équipe) ou un Admin pour un autre employé, approuvé directement
 
 **Exclu :** meetings de groupe, salles, tickets IT
 
@@ -330,6 +332,7 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
 - Audit log admin
 - Import CSV d’employés
 - Temps supplémentaire constaté (déclaration + approbation), banque d’heures
+- Export des jours sans solde pour la paie
 - Quarts de nuit (horaire passant minuit) et plusieurs blocs par jour
 
 ---
@@ -450,12 +453,14 @@ Les écrans sont côté **React**. L’API expose les routes `/api/...` correspo
 | R10 | Assignation ticket → warning « prévoir un slot » pour l’assigné + notif demandeur |
 | R11 | Horaire type récurrent, versionné par `EffectiveFrom` ≥ aujourd’hui ; jours absents = non travaillés ; un bloc par jour, sans passer minuit |
 | R12 | Jour férié du site = non travaillé, sauf ajustement créé par un Manager/Admin |
-| R13 | Ajustement demandé par l’employé = EnAttente jusqu’à approbation ; créé par Manager/Admin = approuvé ; jamais de journée à 0 h demandée par l’employé ; aucune banque d’heures |
+| R13 | Ajustement demandé par l’employé = EnAttente jusqu’à approbation ; créé par Manager/Admin = approuvé ; jamais de journée à 0 h demandée par l’employé ; peut contenir une plage d’absence dans la journée ; aucune banque d’heures |
 | R14 | Un congé ne compte que les jours travaillés ; une demande sans aucun jour travaillé est refusée |
 | R15 | Horaires, fériés et ajustements en heure locale du site ; instants (meetings, horodatages) en UTC |
 | R16 | Disponibilité = horaire type → férié → ajustement approuvé → congé approuvé (la couche suivante l’emporte) |
 | R17 | Libre / occupé : un employé voit les créneaux occupés de ses collègues, jamais le titre, le motif ni les participants |
 | R18 | Meeting récurrent : chaque occurrence respecte R6–R8 ; une modification vise une occurrence, les suivantes ou toute la série ; la série suit l’heure locale du fuseau de l’organisateur |
+| R19 | Solde annuel de congés : les congés en attente et approuvés de l’année, triés par date de début, consomment le solde ; les jours au-delà sont sans solde (calculés à l’affichage, jamais stockés) ; la maladie ne consomme pas le solde |
+| R20 | Congé maladie pour autrui : Admin (tous) ou Manager (équipe directe), jamais pour soi ; approuvé directement ; `CreatedById` conservé |
 
 ---
 
@@ -535,6 +540,8 @@ portail-interne/
 | 2026-10-12 | Calendrier = grille horaire (vues jour, semaine, mois) ; vue jour sur mobile ; passé grisé + ligne « maintenant » ; grille construite en phase 2.5 (premier contenu à l’heure)
 | 2026-10-12 | Phase 2 : congés dans une rangée « toute la journée » (R5), vue jour mobile et vue mois
 | 2026-10-12 | Libre / occupé des collègues à la création de meeting (phase 3, R17) ; endpoint calendrier = réponse par jour + meetings
+| 2026-10-16 | Bonus phase 2 : congé maladie pour autrui (approuvé directement, R20) ; soldes en jours ouvrables, dépassement = jours sans solde calculés (R19), couleurs distinctes avec hachures continues
+| 2026-10-16 | Absence de quelques heures = ajustement d’horaire avec plage d’absence (phase 2.5), sans toucher au solde
 | 2026-10-12 | Ajout de la phase 3.5 — Meetings récurrents (occurrences calculées, exceptions stockées, R18)
 
 ---

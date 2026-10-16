@@ -2,17 +2,32 @@ import { useEffect, useState } from "react"
 import { Link, useParams } from "react-router-dom"
 import { DEPARTEMENT_LABELS } from "../api/admin"
 import { getEmployee, type EmployeeDetail } from "../api/employees"
-import { ErrorBanner } from "../components/feedback/Banner"
+import { ErrorBanner, SuccessBanner } from "../components/feedback/Banner"
 import { EmployeePhoto } from "../components/employees/EmployeePhoto"
+import { useSession } from "../session/useSession"
+import { isAdmin } from "../session/permission"
+import { secondaryButton } from "../ui/buttons"
+import { DeclareSickLeaveDialog } from "../components/leaves/DeclareSickLeaveDialog"
+import { formatRange } from "../utils/date"
 
 export function FicheEmployePage() {
 	const { id } = useParams()
+	const { me } = useSession()
 	const [employee, setEmployee] = useState<EmployeeDetail | null>(null)
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
+	const [success, setSuccess] = useState<string | null>(null)
+	const [declareLeaveOpen, setDeclareLeaveOpen] = useState(false)
+	const [formRun, setFormRun] = useState(0)
 
 	const employeeId = Number(id)
 	const idInvalide = !Number.isInteger(employeeId) || employeeId <= 0
+
+	const canDeclare =
+			employee !== null &&
+			me !== null &&
+			employee.id !== me.employeeId &&
+			(isAdmin(me) || employee.managerId === me.employeeId)
 
 	useEffect(() => {
 		if (idInvalide) return
@@ -29,6 +44,12 @@ export function FicheEmployePage() {
 				Retour à l'annuaire
 			</Link>
 
+			{success && (
+				<div className="mt-6">
+					<SuccessBanner message={success} dismissible onDismiss={() => setSuccess(null)} />
+				</div>
+			)}
+
 			{idInvalide ? (
 				<div className="mt-6">
 					<ErrorBanner message="Employé introuvable" />
@@ -42,46 +63,74 @@ export function FicheEmployePage() {
 			) : (
 				employee && (
 					<section className="mt-6 overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/50">
-						<div className="flex items-center gap-5">
+						{/* Rangée du haut : photo, nom, action */}
+						<div className="flex flex-wrap items-center gap-5">
 							<EmployeePhoto
 								photoUrl={employee.photoUrl}
 								firstName={employee.firstName}
 								lastName={employee.lastName}
 								size="xl"
 							/>
-							<div>
+							<div className="min-w-0">
 								<h1 className="text-3xl font-semibold tracking-tight text-slate-900">
 									{employee.firstName} {employee.lastName}
 								</h1>
 								<p className="mt-1 text-sm text-slate-500">{employee.jobTitle || "-"}</p>
 							</div>
-
-							<dl className="mt-8 space-y-4 text-sm">
-								<div>
-									<dt className="font-medium text-slate-500">Email</dt>
-									<dd className="text-slate-900">{employee.email}</dd>
+							{canDeclare && 
+								<div className="ml-auto">
+									<button
+										type="button"
+										className={secondaryButton}
+										onClick={() => {
+											setFormRun((n) => n + 1)
+											setDeclareLeaveOpen(true)
+										}}
+									>
+										Déclarer un congé maladie
+									</button>
 								</div>
-								<div>
-									<dt className="font-medium text-slate-500">Département</dt>
-									<dd className="text-slate-900">{DEPARTEMENT_LABELS[employee.departement]}</dd>
-								</div>
-								<div>
-									<dt className="font-medium text-slate-500">Téléphone</dt>
-									<dd className="text-slate-900">{employee.phoneNumber || "-"}</dd>
-								</div>
-								<div>
-									<dt className="font-medium text-slate-500">Manager</dt>
-									<dd className="text-slate-900">
-										{employee.managerFirstName && employee.managerLastName
-											? `${employee.managerFirstName} ${employee.managerLastName}`
-											: "-"}
-									</dd>
-								</div>
-							</dl>
+							}
 						</div>
+
+						{/* Informations, sous la rangée */}
+						<dl className="mt-8 grid gap-4 text-sm sm:grid-cols-2">
+							<div>
+								<dt className="font-medium text-slate-500">Email</dt>
+								<dd className="text-slate-900">{employee.email}</dd>
+							</div>
+							<div>
+								<dt className="font-medium text-slate-500">Département</dt>
+								<dd className="text-slate-900">{DEPARTEMENT_LABELS[employee.departement]}</dd>
+							</div>
+							<div>
+								<dt className="font-medium text-slate-500">Téléphone</dt>
+								<dd className="text-slate-900">{employee.phoneNumber || "-"}</dd>
+							</div>
+							<div>
+								<dt className="font-medium text-slate-500">Manager</dt>
+								<dd className="text-slate-900">
+									{employee.managerFirstName && employee.managerLastName
+										? `${employee.managerFirstName} ${employee.managerLastName}`
+										: "-"}
+								</dd>
+							</div>
+						</dl>
 					</section>
 				)
 			)}
+			{employee &&
+				<DeclareSickLeaveDialog
+					key={formRun}
+					open={declareLeaveOpen}
+					employee={employee}
+					onClose={() => setDeclareLeaveOpen(false)}
+					onDeclared={(leave) => {
+						setDeclareLeaveOpen(false)
+						setSuccess(`Congé maladie déclaré pour ${employee.firstName} ${employee.lastName}, ${formatRange(leave.startDate, leave.endDate)}.`)
+					}}
+				/>
+			}
 		</div>
 	)
 }
