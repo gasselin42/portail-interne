@@ -204,10 +204,10 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
 **Exclu :** meetings de groupe, salles, tickets IT
 
 **Critères de done :**
-- [ ] Demande créée → statut EnAttente visible au calendrier
-- [ ] Approbation → affichage « congé » distinct
-- [ ] Refus → plus d’affichage bloquant / statut clair
-- [ ] Un utilisateur ne voit/modifie que ce qui lui est permis
+- [x] Demande créée → statut EnAttente visible au calendrier
+- [x] Approbation → affichage « congé » distinct
+- [x] Refus → plus d’affichage bloquant / statut clair
+- [x] Un utilisateur ne voit/modifie que ce qui lui est permis
 
 ---
 

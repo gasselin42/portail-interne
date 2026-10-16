@@ -9,10 +9,10 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 
 ## Préparation
 
-- [ ] Relire le périmètre de la phase 2 dans `PROJET.md` (inclus / exclu)
-- [ ] Décider qui approuve : **Manager** (via `ManagerId`) et/ou **Admin**
-- [ ] Figer les statuts : `EnAttente`, `Approuve`, `Refuse`, `Annule`
-- [ ] Figer les types d’absence simples (ex. Congé, Maladie) — soldes avancés = optionnel / reporter
+- [x] Relire le périmètre de la phase 2 dans `PROJET.md` (inclus / exclu)
+- [x] Décider qui approuve : **Manager** (via `ManagerId`) et/ou **Admin**
+- [x] Figer les statuts : `EnAttente`, `Approuve`, `Refuse`, `Annule`
+- [x] Figer les types d’absence simples (ex. Congé, Maladie) — soldes avancés = optionnel / reporter
 
 ## Backend (API)
 
