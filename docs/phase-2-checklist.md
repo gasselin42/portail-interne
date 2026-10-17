@@ -67,7 +67,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [x] Dépassement : avertissement, jours au-delà du solde = sans solde (calculés, jamais stockés)
   - [x] Couleurs distinctes pour les jours sans solde (approuvé et en attente), hachures continues dans une même pill
   - [x] Solde et jours sans solde visibles dans la demande, Mes congés et la file d’approbation
-- [ ] Tests API (création, approbation, isolation des données)
+- [x] Tests API (création, approbation, isolation des données)
 - [x] Admin ou manager crée le congé maladie d'un autre employé (R20)
   - [x] `CreatedById` + migration ; approuvé directement
   - [x] Bouton « Déclarer un congé maladie » sur la fiche employé (Admin, ou Manager de l’employé)

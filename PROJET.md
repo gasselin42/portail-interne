@@ -552,7 +552,7 @@ portail-interne/
 | Phase | Statut |
 |-----|--------|
 | Phase 1 — Auth + annuaire | ✅ Terminée |
-| Phase 2 — Congés + calendrier | 🔨 En cours |
+| Phase 2 — Congés + calendrier | ✅ Terminée |
 | Phase 2.5 — Horaires de travail | ⏳ |
 | Phase 3 — Meetings | ⏳ |
 | Phase 3.5 — Meetings récurrents | ⏳ |
@@ -561,4 +561,4 @@ portail-interne/
 
 ---
 
-*Dernière mise à jour : 2026-10-12*
+*Dernière mise à jour : 2026-10-17*

@@ -36,7 +36,7 @@ L’IA m’a servi de mentor : elle propose les étapes et des pistes, puis rév
 | Phase | Contenu | Statut |
 |-------|---------|--------|
 | Phase 1 | Authentification, rôles, annuaire | ✅ Terminé |
-| Phase 2 | Congés, approbation, calendrier personnel (semaine, jour, mois) | 🔨 En cours |
+| Phase 2 | Congés, approbation, calendrier personnel (semaine, jour, mois), soldes | ✅ Terminé |
 | Phase 2.5 | Horaires de travail, jours fériés par site, calendrier en grille horaire | ⏳ À venir |
 | Phase 3 | Réunions individuelles et de groupe, détection de conflits, libre / occupé | ⏳ À venir |
 | Phase 3.5 | Réunions récurrentes | ⏳ À venir |
