@@ -4,6 +4,7 @@ export type LeaveSegment = {
 	leave: LeaveRequestResponse
 	column: number
 	span: number
+	start: string
 	continuesBefore: boolean
 	continuesAfter: boolean
 }
@@ -25,6 +26,7 @@ export function toSegment(leave: LeaveRequestResponse, days: string[]): LeaveSeg
 		leave,
 		column,
 		span,
+		start,
 		continuesAfter,
 		continuesBefore
 	}

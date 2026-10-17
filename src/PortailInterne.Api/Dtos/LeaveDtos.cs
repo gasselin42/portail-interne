@@ -28,6 +28,8 @@ public class LeaveRequestResponse
     public LeaveType Type { get; set; }
     public LeaveStatus Status { get; set; }
     public string? Reason { get; set; }
+	public int? WorkingDays { get; set; }
+	public List<DateOnly>? UnpaidDates { get; set; }
     public DateTime CreatedAt { get; set; }
 	public string? CreatedByFirstName { get; set; }
 	public string? CreatedByLastName { get; set; }
@@ -51,4 +53,20 @@ public class DeclareSickLeaveRequest
     public DateTime EndDate { get; set; }
 
     public string? Reason { get; set; }
+}
+
+public class LeaveBalanceResponse
+{
+	public int Year { get; set; }
+	public int AnnualDays { get; set; }
+	public int ApprovedDays { get; set; }
+	public int PendingDays { get; set; }
+	public int RemainingDays { get; set; }
+	public int UnpaidDays { get; set; }
+}
+
+public class LeavePreviewResponse
+{
+	public int WorkingDays { get; set; }
+	public List<DateOnly> UnpaidDates { get; set; } = [];
 }

@@ -17,7 +17,6 @@ import {
 import { iconButton, primaryButton, secondaryButton } from "../ui/buttons"
 import { ChevronLeft, ChevronRight } from "@mui/icons-material"
 import {
-	LEAVE_STATUS_LABELS,
 	LeaveStatus,
 	listCalendar,
 	type LeaveRequestResponse,
@@ -30,6 +29,7 @@ import { WeekView } from "../components/calendar/WeekView"
 import { DayView } from "../components/calendar/DayView"
 import { SegmentedControl } from "../components/common/SegmentedControl"
 import { MonthView } from "../components/calendar/MonthView"
+import { leaveSwatchBackground } from "../ui/leaveBandBackground"
 
 type CalendarResult =
 	| { from: string; to: string; leaves: LeaveRequestResponse[] }
@@ -44,6 +44,14 @@ const DESKTOP_VIEWS: { value: View, label: string }[] = [
 ]
 
 const MOBILE_VIEWS = DESKTOP_VIEWS.filter((option) => option.value !== "semaine")
+
+const LEGEND = [
+	{ status: LeaveStatus.Approuve, unpaid: false, label: "Approuvé" },
+	{ status: LeaveStatus.EnAttente, unpaid: false, label: "En attente" },
+	{ status: LeaveStatus.Approuve, unpaid: true, label: "Approuvé sans solde" },
+	{ status: LeaveStatus.EnAttente, unpaid: true, label: "En attente sans solde" },
+]
+
 
 type CalendarRange = {
 	from: string
@@ -238,14 +246,15 @@ export function CalendarPage() {
 			)}
 			{view === "mois" && !isDesktop && <DayView segments={segments} />}
 
-			<ul aria-label="Légende" className="mt-3 flex gap-4 text-xs text-slate-600">
-				{[LeaveStatus.Approuve, LeaveStatus.EnAttente].map((status) => (
-					<li key={status} className="flex items-center gap-1.5">
+			<ul aria-label="Légende" className="mt-3 flex gap-4 gap-y-1 text-xs text-slate-600">
+				{LEGEND.map(({ status, unpaid, label }) => (
+					<li key={label} className="flex items-center gap-1.5">
 						<span
 							aria-hidden="true"
 							className={`inline-block h-3 w-6 rounded-sm ${LEAVE_BAND_STYLES[status]}`}
+							style={{ background: leaveSwatchBackground(status === LeaveStatus.Approuve, unpaid) }}
 						/>
-						{LEAVE_STATUS_LABELS[status]}
+						{label}
 					</li>
 				))}
 			</ul>

@@ -1,11 +1,12 @@
 import { useState, type SubmitEvent } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { createLeave, LEAVE_TYPE_LABELS, LeaveType, type LeaveTypeId } from "../api/leaves"
+import { createLeave, LEAVE_TYPE_LABELS, LeaveType, previewLeave, type LeaveTypeId } from "../api/leaves"
 import { ErrorBanner } from "../components/feedback/Banner"
-import { daysFromToday } from "../utils/date"
+import { daysFromToday, formatDate } from "../utils/date"
 import { primaryButton, secondaryButton } from "../ui/buttons"
 import { inputClass, labelClass } from "../ui/fields"
 import { PageHeader } from "../components/common/PageHeader"
+import { useAsync } from "../hooks/useAsync"
 
 const MAX_SICK_BACKDATE_DAYS = 14
 
@@ -21,6 +22,13 @@ export function NewLeavePage() {
 
 	const minStartDate =
 		leaveType === LeaveType.Maladie ? daysFromToday(-MAX_SICK_BACKDATE_DAYS) : daysFromToday(0)
+
+	const canPreview = leaveType === LeaveType.Conge && startDate !== "" && endDate !== "" && endDate >= startDate
+
+	const preview = useAsync(
+		(signal) => (canPreview ? previewLeave(startDate, endDate, signal) : Promise.resolve(null)),
+		[canPreview, startDate, endDate]
+	)
 
 	async function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
 		e.preventDefault()
@@ -139,6 +147,32 @@ export function NewLeavePage() {
 							/>
 						</div>
 					</div>
+					{canPreview && (
+						<div className="min-h-5 text-sm">
+							{preview.error ? (
+								<p className="text-slate-500">Impossible de calculer le solde pour l'instant.</p>
+							) : preview.data ? (
+								preview.data.workingDays === 0 ? (
+									<p className="text-slate-500">Cette période ne contient aucun jour ouvrable.</p>
+								) : (
+									<>
+										<p className="text-slate-500">
+											{preview.data.workingDays} jour{preview.data.workingDays > 1 ? "s" : ""} ouvrable{preview.data.workingDays > 1 ? "s" : ""}
+										</p>
+										{preview.data.unpaidDates.length > 0 && (
+											<p role="status" className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
+												Cette demande dépasse ton solde :{" "}
+												<strong>
+													{preview.data.unpaidDates.length} jour{preview.data.unpaidDates.length > 1 ? "s" : ""}
+												</strong>{" "}
+												{preview.data.unpaidDates.length > 1 ? "seront" : "sera"} sans solde ({formatDateList(preview.data.unpaidDates)}).
+											</p>
+										)}
+									</>
+								)
+							) : null}
+						</div>
+					)}
 					<div>
 						<label htmlFor="reason" className={labelClass}>
 							Motif
@@ -159,4 +193,11 @@ export function NewLeavePage() {
 			</section>
 		</div>
 	)
+}
+
+const listFormatter = new Intl.ListFormat("fr-CA", { type: "conjunction" })
+
+/** « 18 nov. 2026, 19 nov. 2026 et 20 nov. 2026 » */
+function formatDateList(dates: string[]): string {
+	return listFormatter.format(dates.map(formatDate))
 }

@@ -7,6 +7,7 @@ import { PageHeader } from "../components/common/PageHeader"
 import { useAsync } from "../hooks/useAsync"
 import { useLeaveReview } from "../hooks/useLeaveReview"
 import { LeaveReviewButtons } from "../components/leaves/LeaveReviewButtons"
+import { LeaveDaysNote } from "../components/leaves/LeaveDaysNote"
 
 export function PendingLeavesPage() {
 	const { data, loading, error, retry } = useAsync((signal) => listLeavesPending(signal), [])
@@ -87,6 +88,7 @@ export function PendingLeavesPage() {
 										</td>
 										<td className="px-5 py-3.5 text-sm text-slate-600">
 											{LEAVE_TYPE_LABELS[leave.type]}
+											<LeaveDaysNote workingDays={leave.workingDays} unpaidDates={leave.unpaidDates} />
 										</td>
 										<td className="px-5 py-3.5 text-sm wrap-break-word whitespace-normal text-slate-700">
 											{leave.reason || "-"}

@@ -29,6 +29,7 @@ export function CreateEmployeePage() {
 	const [departement, setDepartement] = useState<DepartementId | null>(null)
 	const [role, setRole] = useState<RoleId | null>(null)
 	const [jobTitle, setJobTitle] = useState<string>("")
+	const [leaveDays, setLeaveDays] = useState(20)
 	const [phoneNumber, setPhoneNumber] = useState<string>("")
 	const [manager, setManager] = useState<EmployeeOption | null>(null)
 	const [photo, setPhoto] = useState<File | null>(null)
@@ -61,6 +62,7 @@ export function CreateEmployeePage() {
 				setRole(employee.role as RoleId)
 				setJobTitle(employee.jobTitle)
 				setPhoneNumber(employee.phoneNumber)
+				setLeaveDays(employee.annualLeaveDays)
 				setManager(
 					employee.managerId !== null
 						? {
@@ -95,6 +97,9 @@ export function CreateEmployeePage() {
 			} else if (role === null) {
 				setErreur("Veuillez choisir un rôle")
 				return
+			} else if (leaveDays < 0 || leaveDays > 60) {
+				setErreur("Veuillez choisir entre 0 et 60 jours de congé")
+				return
 			}
 
 			setEnCours(true)
@@ -110,6 +115,7 @@ export function CreateEmployeePage() {
 						jobTitle,
 						phoneNumber,
 						managerId: manager?.id,
+						leaveDays
 					},
 					photo,
 				)
@@ -127,6 +133,7 @@ export function CreateEmployeePage() {
 					jobTitle,
 					phoneNumber,
 					managerId: manager?.id,
+					leaveDays
 				},
 				photo,
 			)
@@ -381,17 +388,30 @@ export function CreateEmployeePage() {
 						</div>
 					</div>
 
-					<div>
-						<label htmlFor="jobTitle" className={labelClass}>
-							Titre de poste
-						</label>
-						<input
-							id="jobTitle"
-							type="text"
-							value={jobTitle}
-							onChange={(e) => setJobTitle(e.target.value)}
-							className={inputClass}
-						/>
+					<div className="grid gap-5 sm:grid-cols-[1fr_10rem]">
+						<div>
+							<label htmlFor="jobTitle" className={labelClass}>
+								Titre de poste
+							</label>
+							<input
+								id="jobTitle"
+								type="text"
+								value={jobTitle}
+								onChange={(e) => setJobTitle(e.target.value)}
+								className={inputClass}
+							/>
+						</div>
+						<div>
+							<label htmlFor="annualLeaveDays" className={labelClass}>Congés par année</label>
+							<input
+								id="annualLeaveDays"
+								type="number"
+								min={0} max={60}
+								value={leaveDays}
+								onChange={(e) => setLeaveDays(Number(e.target.value))}
+								className={inputClass}
+							/>
+						</div>
 					</div>
 
 					<div className="grid gap-5 sm:grid-cols-2">

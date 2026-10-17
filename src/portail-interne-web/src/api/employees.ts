@@ -10,6 +10,7 @@ export type EmployeeListItem = {
 	departement: DepartementId
 	phoneNumber: string
 	photoUrl: string | null
+	annualLeaveDays: number
 }
 
 export type EmployeeDetail = EmployeeListItem & {

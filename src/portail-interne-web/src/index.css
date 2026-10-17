@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* Couleurs des congés (LeaveBand, légendes, solde) : une seule source de vérité */
+:root {
+	--leave-approved: var(--color-emerald-600);
+	--leave-approved-unpaid: var(--color-violet-600);
+	--leave-pending: var(--color-amber-200);
+	--leave-pending-unpaid: var(--color-violet-200);
+}
+
 @layer base {
 	button:not(:disabled),
 	[role="button"]:not(:disabled) {

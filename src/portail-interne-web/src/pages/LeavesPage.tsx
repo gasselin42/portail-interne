@@ -16,6 +16,8 @@ import { ConfirmDialog } from "../components/dialogs/ConfirmDialog"
 import { formatRange } from "../utils/date"
 import { primaryButton, rowIconDangerButton } from "../ui/buttons"
 import { PageHeader } from "../components/common/PageHeader"
+import { LeaveBalanceCard } from "../components/leaves/LeaveBalanceCard"
+import { LeaveDaysNote } from "../components/leaves/LeaveDaysNote"
 
 export function LeavesPage() {
 	const [leaves, setLeaves] = useState<LeaveRequestResponse[]>([])
@@ -24,6 +26,7 @@ export function LeavesPage() {
 	const [cancellingId, setCancellingId] = useState<number | null>(null)
 	const [confirmOpen, setConfirmOpen] = useState(false)
 	const [selectedLeave, setSelectedLeave] = useState<LeaveRequestResponse | null>(null)
+	const [balanceKey, setBalanceKey] = useState(0)
 
 	const cancelMessage = selectedLeave
 		? `Ta demande (${LEAVE_TYPE_LABELS[selectedLeave.type]}) du ${formatRange(selectedLeave.startDate, selectedLeave.endDate)} sera annulée. Cette action est définitive.`
@@ -51,6 +54,7 @@ export function LeavesPage() {
 		try {
 			await cancelLeave(id)
 			await loadLeaves()
+			setBalanceKey((k) => k + 1)
 		} catch (e) {
 			setError({
 				message: e instanceof Error ? e.message : "Erreur",
@@ -93,6 +97,8 @@ export function LeavesPage() {
 					onDismiss={() => setError(null)}
 				/>
 			)}
+
+			<LeaveBalanceCard refreshKey={balanceKey} />
 
 			<section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/50">
 				{loading ? (
@@ -147,6 +153,7 @@ export function LeavesPage() {
 													Déclaré par {leave.createdByFirstName} {leave.createdByLastName}
 												</span>
 											}
+											<LeaveDaysNote workingDays={leave.workingDays} unpaidDates={leave.unpaidDates} />
 										</td>
 										<td className="px-5 py-3.5 text-sm wrap-break-word whitespace-normal text-slate-700">
 											{leave.reason || "-"}

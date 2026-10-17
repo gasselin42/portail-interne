@@ -23,6 +23,11 @@ namespace PortailInterne.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("AnnualLeaveDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(20);
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 

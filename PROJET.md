@@ -459,7 +459,7 @@ Les écrans sont côté **React**. L’API expose les routes `/api/...` correspo
 | R16 | Disponibilité = horaire type → férié → ajustement approuvé → congé approuvé (la couche suivante l’emporte) |
 | R17 | Libre / occupé : un employé voit les créneaux occupés de ses collègues, jamais le titre, le motif ni les participants |
 | R18 | Meeting récurrent : chaque occurrence respecte R6–R8 ; une modification vise une occurrence, les suivantes ou toute la série ; la série suit l’heure locale du fuseau de l’organisateur |
-| R19 | Solde annuel de congés : les congés en attente et approuvés de l’année, triés par date de début, consomment le solde ; les jours au-delà sont sans solde (calculés à l’affichage, jamais stockés) ; la maladie ne consomme pas le solde |
+| R19 | Solde annuel de congés (20 jours par défaut, modifiable par l’Admin par employé, année civile) : les congés en attente et approuvés de l’année consomment le solde dans l’**ordre de création** des demandes ; les jours au-delà sont sans solde (calculés à l’affichage, jamais stockés) ; la maladie ne consomme pas le solde |
 | R20 | Congé maladie pour autrui : Admin (tous) ou Manager (équipe directe), jamais pour soi ; approuvé directement ; `CreatedById` conservé |
 
 ---
@@ -541,6 +541,7 @@ portail-interne/
 | 2026-10-12 | Phase 2 : congés dans une rangée « toute la journée » (R5), vue jour mobile et vue mois
 | 2026-10-12 | Libre / occupé des collègues à la création de meeting (phase 3, R17) ; endpoint calendrier = réponse par jour + meetings
 | 2026-10-16 | Bonus phase 2 : congé maladie pour autrui (approuvé directement, R20) ; soldes en jours ouvrables, dépassement = jours sans solde calculés (R19), couleurs distinctes avec hachures continues
+| 2026-10-16 | Solde : 20 jours par défaut ; consommé dans l’ordre de création (la demande qui dépasse porte les jours sans solde)
 | 2026-10-16 | Absence de quelques heures = ajustement d’horaire avec plage d’absence (phase 2.5), sans toucher au solde
 | 2026-10-12 | Ajout de la phase 3.5 — Meetings récurrents (occurrences calculées, exceptions stockées, R18)
 

@@ -29,8 +29,16 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
 
 export async function readApiError(res: Response, fallback: string): Promise<string> {
 	const data = await res.json().catch(() => null)
+	
 	if (data && typeof data.message === "string") {
 		return data.message
 	}
+
+	// Format de validation d'ASP.NET : { errors: { Champ: ["message", …] } }
+	if (data && typeof data.errors === "object" && data.errors !== null) {
+		const first = Object.values(data.errors).flat()[0]
+		if (typeof first === "string") return first
+	}
+
 	return fallback
 }

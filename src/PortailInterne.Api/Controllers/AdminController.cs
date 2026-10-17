@@ -67,6 +67,7 @@ public class AdminController : ControllerBase
 			JobTitle = request.JobTitle?.Trim() ?? string.Empty,
             PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber,
 			ManagerId = request.ManagerId,
+			AnnualLeaveDays = request.AnnualLeaveDays!.Value,
 			IsActive = true,
 			CreatedAt = DateTime.UtcNow,
 			UserAccount = new UserAccount
@@ -141,6 +142,7 @@ public class AdminController : ControllerBase
             PhotoUrl = employee.PhotoFileName == null
                 ? null
                 : PhotoStorage.UrlFor(employee.PhotoFileName),
+			AnnualLeaveDays = employee.AnnualLeaveDays
         };
 
         return Ok(employeeDetails);
@@ -183,6 +185,7 @@ public class AdminController : ControllerBase
 		employee.PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber;
 		employee.ManagerId = request.ManagerId;
 		employee.UserAccount.Role = request.Role;
+		employee.AnnualLeaveDays = request.AnnualLeaveDays!.Value;
 
 		var photoChanged = ancienNom != employee.PhotoFileName;
 

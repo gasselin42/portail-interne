@@ -62,7 +62,7 @@ public class LeavesController : ControllerBase
         _db.LeaveRequests.Add(leave);
         await _db.SaveChangesAsync();
 
-        return Created($"/api/leaves/{leave.Id}", new LeaveRequestResponse
+		var response = new LeaveRequestResponse
         {
             Id = leave.Id,
             EmployeeId = leave.EmployeeId,
@@ -72,7 +72,11 @@ public class LeavesController : ControllerBase
             Status = leave.Status,
             Reason = leave.Reason,
             CreatedAt = leave.CreatedAt
-        });
+        };
+
+		await AddUsageAsync([response]);
+
+        return Created($"/api/leaves/{leave.Id}", response);
     }
 
 	[HttpPost("declare")]
@@ -123,7 +127,7 @@ public class LeavesController : ControllerBase
         _db.LeaveRequests.Add(leave);
         await _db.SaveChangesAsync();
 
-		return Created($"/api/leaves/{leave.Id}", new LeaveRequestResponse
+		var response = new LeaveRequestResponse
         {
             Id = leave.Id,
             EmployeeId = leave.EmployeeId,
@@ -135,7 +139,11 @@ public class LeavesController : ControllerBase
             CreatedAt = leave.CreatedAt,
 			CreatedByFirstName = caller!.FirstName,
 			CreatedByLastName = caller!.LastName
-        }); 
+        };
+
+		await AddUsageAsync([response]);
+
+		return Created($"/api/leaves/{leave.Id}", response); 
 	}
 
     [HttpGet]
@@ -165,6 +173,8 @@ public class LeavesController : ControllerBase
 				CreatedByLastName = l.CreatedBy != null ? l.CreatedBy.LastName : null
             })
             .ToListAsync();
+
+		await AddUsageAsync(leaves);
 
         return Ok(leaves);
     }
@@ -228,6 +238,8 @@ public class LeavesController : ControllerBase
                 CreatedAt = l.CreatedAt
             })
             .ToListAsync();
+
+		await AddUsageAsync(leaves);
 
         return Ok(leaves);
     }
@@ -337,8 +349,111 @@ public class LeavesController : ControllerBase
             })
             .ToListAsync();
 
+		await AddUsageAsync(leaves);
+
         return Ok(leaves);
     }
+
+	[HttpGet("balance")]
+	public async Task<ActionResult<LeaveBalanceResponse>> Balance([FromQuery] int? year)
+	{
+		var employeeIdClaim = User.FindFirstValue("employeeId");
+
+		if (employeeIdClaim is null || !int.TryParse(employeeIdClaim, out var employeeId))
+            return Unauthorized();
+
+		var y = year ?? _clock.Today.Year;
+
+		if (y < 2000 || y > 2100)
+			return BadRequest(new { message = "Année invalide." });
+
+		var annualDays = await _db.Employees
+			.Where(e => e.Id == employeeId)
+			.Select(e => e.AnnualLeaveDays)
+			.FirstAsync();
+		
+		// Congés qui consomment le solde et touchent l'année demandée
+		var leaves = await _db.LeaveRequests
+			.AsNoTracking()
+			.Where(l => l.EmployeeId == employeeId
+					&& l.Type == LeaveType.Conge
+					&& (l.Status == LeaveStatus.EnAttente || l.Status == LeaveStatus.Approuve)
+					&& l.StartDate.Year <= y && l.EndDate.Year >= y)
+			.Select(l => new { l.Id, l.StartDate, l.EndDate, l.Status })
+			.ToListAsync();
+		
+		var usage = await UsageForAsync([employeeId]);
+
+		int approved = 0, pending = 0, unpaid = 0;
+
+		foreach (var leave in leaves)
+		{
+			if (!usage.TryGetValue(leave.Id, out var u))
+				continue;
+
+			// Partie du congé dans l'année (un congé peut chevaucher deux années)
+			var start = DateOnly.FromDateTime(leave.StartDate);
+			var end = DateOnly.FromDateTime(leave.EndDate);
+
+			var unpaidInYear = u.UnpaidDates.Count(d => d.Year == y);
+			var paidInYear = LeaveBalance.CountWorkingDays(start, end, y) - unpaidInYear;
+
+			if (leave.Status == LeaveStatus.Approuve)
+				approved += paidInYear;
+			else
+				pending += paidInYear;
+
+			unpaid += unpaidInYear;
+		}
+
+		return Ok(new LeaveBalanceResponse
+		{
+			Year = y,
+			AnnualDays = annualDays,
+			ApprovedDays = approved,
+			PendingDays = pending,
+			RemainingDays = Math.Max(0, annualDays - approved - pending),
+			UnpaidDays = unpaid,
+		});
+	}
+
+	[HttpGet("balance/preview")]
+	public async Task<ActionResult<LeavePreviewResponse>> BalancePreview(
+		[FromQuery, BindRequired] DateOnly startDate,
+		[FromQuery, BindRequired] DateOnly endDate)
+	{
+		var employeeIdClaim = User.FindFirstValue("employeeId");
+
+		if (employeeIdClaim is null || !int.TryParse(employeeIdClaim, out var employeeId))
+			return Unauthorized();
+
+		if (endDate < startDate)
+			return BadRequest(new { message = "La date de fin ne peut pas être avant la date de début." });
+
+		var annualDays = await _db.Employees
+			.Where(e => e.Id == employeeId)
+			.Select(e => e.AnnualLeaveDays)
+			.FirstAsync();
+		
+		var leaves = (await LoadBalanceLeavesAsync([employeeId])).GetValueOrDefault(employeeId, []);
+
+		// La demande envisagée, traitée en dernier comme si elle était créée maintenant
+		const int PreviewId = 0;
+		leaves.Add(new LeaveBalance.BalanceLeave(
+			PreviewId,
+			startDate.ToDateTime(TimeOnly.MinValue),
+			endDate.ToDateTime(TimeOnly.MinValue),
+			DateTime.MaxValue
+		));
+
+		var usage = LeaveBalance.ComputeUsage(annualDays, leaves)[PreviewId];
+
+		return Ok(new LeavePreviewResponse
+		{
+			WorkingDays = usage.WorkingDays,
+			UnpaidDates = usage.UnpaidDates,
+		});
+	}
 
 	/// <summary>
 	/// Première demande de l'employé, parmi les statuts donnés, qui chevauche [start, end].
@@ -384,6 +499,51 @@ public class LeavesController : ControllerBase
 		}
 
 		return null;
+	}
+
+	private async Task<Dictionary<int, LeaveBalance.LeaveUsage>> UsageForAsync(IEnumerable<int> employeeIds)
+	{
+		var annualDays = await _db.Employees
+			.Where(e => employeeIds.Contains(e.Id))
+			.ToDictionaryAsync(e => e.Id, e => e.AnnualLeaveDays);
+
+		var balanceLeaves = await LoadBalanceLeavesAsync(employeeIds);
+
+		return annualDays
+			.SelectMany(p => LeaveBalance.ComputeUsage(p.Value, balanceLeaves.GetValueOrDefault(p.Key, [])))
+			.ToDictionary(p => p.Key, p => p.Value);
+	}
+
+	/// <summary>Complète WorkingDays et UnpaidDates des congés qui consomment le solde.</summary>
+	private async Task AddUsageAsync(List<LeaveRequestResponse> leaves)
+	{
+		var employeeIds = leaves.Select(l => l.EmployeeId).Distinct();
+		var usage = await UsageForAsync(employeeIds);
+
+		foreach (var leave in leaves)
+		{
+			if (usage.TryGetValue(leave.Id, out var u))
+			{
+				leave.WorkingDays = u.WorkingDays;
+				leave.UnpaidDates = u.UnpaidDates;
+			}
+		}
+	}
+
+	/// <summary>Congés qui consomment le solde (Congé, en attente ou approuvé), regroupés par employé.</summary>
+	private async Task<Dictionary<int, List<LeaveBalance.BalanceLeave>>> LoadBalanceLeavesAsync(IEnumerable<int> employeeIds)
+	{
+		return (await _db.LeaveRequests
+				.AsNoTracking()
+				.Where(l => employeeIds.Contains(l.EmployeeId)
+						&& l.Type == LeaveType.Conge
+						&& (l.Status == LeaveStatus.EnAttente || l.Status == LeaveStatus.Approuve))
+				.ToListAsync())
+			.GroupBy(l => l.EmployeeId)
+			.ToDictionary(
+				g => g.Key,
+				g => g.Select(l => new LeaveBalance.BalanceLeave(l.Id, l.StartDate, l.EndDate, l.CreatedAt)).ToList()
+			);
 	}
 }
 

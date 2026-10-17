@@ -62,11 +62,11 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 
 ## Bonus
 
-- [ ] Soldes simples (jours restants, R19)
-  - [ ] Solde annuel par employé ; jours ouvrables lun.–ven. (jours travaillés en phase 2.5)
-  - [ ] Dépassement : avertissement, jours au-delà du solde = sans solde (calculés, jamais stockés)
-  - [ ] Couleurs distinctes pour les jours sans solde (approuvé et en attente), hachures continues dans une même pill
-  - [ ] Solde et jours sans solde visibles dans la demande, Mes congés et la file d’approbation
+- [x] Soldes simples (jours restants, R19)
+  - [x] Solde annuel par employé ; jours ouvrables lun.–ven. (jours travaillés en phase 2.5)
+  - [x] Dépassement : avertissement, jours au-delà du solde = sans solde (calculés, jamais stockés)
+  - [x] Couleurs distinctes pour les jours sans solde (approuvé et en attente), hachures continues dans une même pill
+  - [x] Solde et jours sans solde visibles dans la demande, Mes congés et la file d’approbation
 - [ ] Tests API (création, approbation, isolation des données)
 - [x] Admin ou manager crée le congé maladie d'un autre employé (R20)
   - [x] `CreatedById` + migration ; approuvé directement

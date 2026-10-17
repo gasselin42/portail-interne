@@ -3,6 +3,7 @@ import { LEAVE_STATUS_LABELS, LEAVE_TYPE_LABELS } from "../../api/leaves"
 import { LEAVE_BAND_STYLES, leaveBandBase } from "../../ui/leaveBands"
 import type { LeaveSegment } from "../../utils/calendar"
 import { formatRange } from "../../utils/date"
+import { leaveBandBackground } from "../../ui/leaveBandBackground"
 
 type Props = {
 	segment: LeaveSegment
@@ -18,12 +19,12 @@ export function LeaveBand({ segment, compact = false, style}: Props) {
 	const type = LEAVE_TYPE_LABELS[leave.type]
 	const status = LEAVE_STATUS_LABELS[leave.status]
 	const label = `${type} · ${status}`
-	const fullLabel = `${type} (${status}), ${formatRange(leave.startDate, leave.endDate)}`
+	const fullLabel = `${type} (${status}), ${formatRange(leave.startDate, leave.endDate)}${leave.unpaidDates !== null && leave.unpaidDates.length > 0 ? ", dont 3 jours sans solde" : ""}`
 
 	return (
 		<li
 			title={fullLabel}
-			style={style}
+			style={{ ...style, background: leaveBandBackground(segment) }}
 			className={[
 				leaveBandBase,
 				LEAVE_BAND_STYLES[leave.status],

@@ -25,6 +25,10 @@ public class CreateEmployeeRequest
     public string? PhoneNumber { get; set; }
 
     public int? ManagerId { get; set; }
+
+	[Required(ErrorMessage = "Le nombre de jours de congé est obligatoire.")]
+	[Range(0, 60, ErrorMessage = "Le nombre de jours de congé doit être entre 0 et 60.")]
+	public int? AnnualLeaveDays { get; set; }
 }
 
 public class UpdateEmployeeRequest
@@ -46,6 +50,10 @@ public class UpdateEmployeeRequest
     public string? PhoneNumber { get; set; }
 
     public int? ManagerId { get; set; }
+
+	[Required(ErrorMessage = "Le nombre de jours de congé est obligatoire.")]
+	[Range(0, 60, ErrorMessage = "Le nombre de jours de congé doit être entre 0 et 60.")]
+	public int? AnnualLeaveDays { get; set; }
 }
 
 public class CreateEmployeeResponse

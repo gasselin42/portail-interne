@@ -43,6 +43,8 @@ public class Employee
 
     public int? ManagerId { get; set; }
 
+	public int AnnualLeaveDays { get; set; }
+
     public bool IsActive { get; set; } = true;
 
     public DateTime CreatedAt { get; set; }

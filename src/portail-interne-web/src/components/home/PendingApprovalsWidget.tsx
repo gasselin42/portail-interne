@@ -10,6 +10,7 @@ import { useLeaveReview } from "../../hooks/useLeaveReview"
 import { LeaveReviewButtons } from "../leaves/LeaveReviewButtons"
 import { ConfirmDialog } from "../dialogs/ConfirmDialog"
 import { useMediaQuery } from "../../hooks/useMediaQuery"
+import { LeaveDaysNote } from "../leaves/LeaveDaysNote"
 
 export function PendingApprovalsWidget() {
 	const { data, error, loading, retry} = useAsync((signal) => listLeavesPending(signal), [])
@@ -79,6 +80,7 @@ export function PendingApprovalsWidget() {
 												<div className="min-w-0">
 													<p className="text-sm font-medium text-slate-900 truncate">{leave.employeeFirstName} {leave.employeeLastName}</p>
 													<p className="text-xs text-slate-500 truncate">{LEAVE_TYPE_LABELS[leave.type]} · {formatRange(leave.startDate, leave.endDate)}</p>
+													<p className="truncate"><LeaveDaysNote workingDays={leave.workingDays} unpaidDates={leave.unpaidDates} compact /></p>
 												</div>
 												<LeaveReviewButtons
 													leave={leave}

@@ -38,6 +38,8 @@ export type LeaveRequestResponse = {
 	type: LeaveTypeId
 	status: LeaveStatusId
 	reason: string
+	workingDays: number | null
+	unpaidDates: string[] | null
 	createdAt: string
 	createdByFirstName: string | null
 	createdByLastName: string | null
@@ -55,6 +57,20 @@ export type DeclareSickLeaveRequest = {
 	startDate: string
 	endDate: string
 	reason?: string
+}
+
+export type LeaveBalance = {
+	year: number
+	annualDays: number
+	approvedDays: number
+	pendingDays: number
+	remainingDays: number
+	unpaidDays: number	
+}
+
+export type LeavePreview = {
+	workingDays: number
+	unpaidDates: string[]
 }
 
 export type ReviewStatus = typeof LeaveStatus.Approuve | typeof LeaveStatus.Refuse
@@ -127,4 +143,33 @@ export async function listCalendar(from: string, to: string, signal?: AbortSigna
 	}
 
 	return (await res.json()) as LeaveRequestResponse[]
+}
+
+export async function getLeaveBalance(year: number, signal?: AbortSignal): Promise<LeaveBalance> {
+	const query = new URLSearchParams()
+
+	query.set("year", year.toString())
+	
+	const res = await apiFetch(`/api/leaves/balance?${query}`, { signal })
+
+	if (!res.ok) {
+		throw new Error(await readApiError(res, "Impossible de traiter la demande"))
+	}
+
+	return (await res.json()) as LeaveBalance
+}
+
+export async function previewLeave(startDate: string, endDate: string, signal?: AbortSignal): Promise<LeavePreview> {
+	const query = new URLSearchParams()
+
+	query.set("startDate", startDate)
+	query.set("endDate", endDate)
+	
+	const res = await apiFetch(`/api/leaves/balance/preview?${query}`, { signal })
+
+	if (!res.ok) {
+		throw new Error(await readApiError(res, "Impossible de traiter la demande"))
+	}
+
+	return (await res.json()) as LeavePreview
 }

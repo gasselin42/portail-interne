@@ -24,6 +24,7 @@ public class EmployeeDetailResponse : EmployeeListItemResponse
 public class AdminEmployeeResponse : EmployeeDetailResponse
 {
     public Role Role { get; set; }
+	public int AnnualLeaveDays { get; set; }
 }
 
 public class EmployeeLookupItem

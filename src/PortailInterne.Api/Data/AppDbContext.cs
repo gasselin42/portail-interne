@@ -30,6 +30,7 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Email).HasMaxLength(256);
             entity.Property(e => e.JobTitle).HasMaxLength(150);
             entity.Property(e => e.PhoneNumber).HasMaxLength(30);
+			entity.Property(e => e.AnnualLeaveDays).HasDefaultValue(20);
 
             // Relation 1-1 : un employé a 0 ou 1 compte
             entity.HasOne(e => e.UserAccount) // <Employee> a un UserAccount

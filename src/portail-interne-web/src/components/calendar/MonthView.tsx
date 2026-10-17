@@ -1,6 +1,7 @@
 import { LEAVE_STATUS_LABELS, LEAVE_TYPE_LABELS, type LeaveRequestResponse } from "../../api/leaves"
 import { focusRing } from "../../ui/buttons"
-import { LEAVE_DOT_STYLES } from "../../ui/leaveBands"
+import { LEAVE_DOT_STYLES, LEAVE_UNPAID_DOT_STYLES } from "../../ui/leaveBands"
+import { isUnpaidDay } from "../../ui/leaveBandBackground"
 import { segmentsFor } from "../../utils/calendar"
 import { formatLongDate, formatShortWeekday } from "../../utils/date"
 import { LeaveRow } from "./LeaveRow"
@@ -41,6 +42,7 @@ export function MonthView({ days, leaves, today, date, compact, onSelectDay }: P
 				<div className="grid grid-cols-7">
 					{days.map((day) => {
 						const leave = leaveOn(day)
+						const unpaid = leave !== undefined && isUnpaidDay(leave, day)
 
 						return (
 							<button
@@ -49,7 +51,7 @@ export function MonthView({ days, leaves, today, date, compact, onSelectDay }: P
 								aria-pressed={day === date}
 								aria-current={day === today ? "date" : undefined}
 								aria-label={leave
-									? `${formatLongDate(day)}, ${LEAVE_TYPE_LABELS[leave.type]} (${LEAVE_STATUS_LABELS[leave.status]})`
+									? `${formatLongDate(day)}, ${LEAVE_TYPE_LABELS[leave.type]} (${LEAVE_STATUS_LABELS[leave.status]})${unpaid ? ", sans solde" : ""}`
 									: formatLongDate(day)}
 								onClick={() => onSelectDay(day)}
 								className={`group flex flex-col items-center gap-1 py-1.5 ${focusRing}`}
@@ -59,7 +61,7 @@ export function MonthView({ days, leaves, today, date, compact, onSelectDay }: P
 								</span>
 								<span
 									aria-hidden="true"
-									className={`size-1.5 rounded-full ${leave ? LEAVE_DOT_STYLES[leave.status] : ""}`}
+									className={`size-1.5 rounded-full ${leave ? (unpaid ? LEAVE_UNPAID_DOT_STYLES : LEAVE_DOT_STYLES)[leave.status] : ""}`}
 								/>
 							</button>
 						)
