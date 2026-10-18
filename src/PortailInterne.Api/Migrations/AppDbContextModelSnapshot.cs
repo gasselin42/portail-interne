@@ -96,6 +96,158 @@ namespace PortailInterne.Api.Migrations
                     b.ToTable("Employees");
                 });
 
+            modelBuilder.Entity("PortailInterne.Api.Models.Holiday", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SiteId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SiteId", "Date")
+                        .IsUnique();
+
+                    b.ToTable("Holidays");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Date = new DateOnly(2026, 1, 1),
+                            Name = "Jour de l'An",
+                            SiteId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Date = new DateOnly(2026, 4, 3),
+                            Name = "Vendredi saint",
+                            SiteId = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Date = new DateOnly(2026, 4, 6),
+                            Name = "Lundi de Pâques",
+                            SiteId = 1
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Date = new DateOnly(2026, 5, 18),
+                            Name = "Journée nationale des patriotes",
+                            SiteId = 1
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Date = new DateOnly(2026, 6, 24),
+                            Name = "Fête nationale",
+                            SiteId = 1
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Date = new DateOnly(2026, 7, 1),
+                            Name = "Fête du Canada",
+                            SiteId = 1
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Date = new DateOnly(2026, 9, 7),
+                            Name = "Fête du Travail",
+                            SiteId = 1
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Date = new DateOnly(2026, 10, 12),
+                            Name = "Action de grâce",
+                            SiteId = 1
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Date = new DateOnly(2026, 12, 25),
+                            Name = "Noël",
+                            SiteId = 1
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Date = new DateOnly(2027, 1, 1),
+                            Name = "Jour de l'An",
+                            SiteId = 1
+                        },
+                        new
+                        {
+                            Id = 11,
+                            Date = new DateOnly(2027, 3, 26),
+                            Name = "Vendredi saint",
+                            SiteId = 1
+                        },
+                        new
+                        {
+                            Id = 12,
+                            Date = new DateOnly(2027, 3, 29),
+                            Name = "Lundi de Pâques",
+                            SiteId = 1
+                        },
+                        new
+                        {
+                            Id = 13,
+                            Date = new DateOnly(2027, 5, 24),
+                            Name = "Journée nationale des patriotes",
+                            SiteId = 1
+                        },
+                        new
+                        {
+                            Id = 14,
+                            Date = new DateOnly(2027, 6, 24),
+                            Name = "Fête nationale",
+                            SiteId = 1
+                        },
+                        new
+                        {
+                            Id = 15,
+                            Date = new DateOnly(2027, 7, 1),
+                            Name = "Fête du Canada",
+                            SiteId = 1
+                        },
+                        new
+                        {
+                            Id = 16,
+                            Date = new DateOnly(2027, 9, 6),
+                            Name = "Fête du Travail",
+                            SiteId = 1
+                        },
+                        new
+                        {
+                            Id = 17,
+                            Date = new DateOnly(2027, 10, 11),
+                            Name = "Action de grâce",
+                            SiteId = 1
+                        },
+                        new
+                        {
+                            Id = 18,
+                            Date = new DateOnly(2027, 12, 25),
+                            Name = "Noël",
+                            SiteId = 1
+                        });
+                });
+
             modelBuilder.Entity("PortailInterne.Api.Models.LeaveRequest", b =>
                 {
                     b.Property<int>("Id")
@@ -263,6 +415,17 @@ namespace PortailInterne.Api.Migrations
                 });
 
             modelBuilder.Entity("PortailInterne.Api.Models.Employee", b =>
+                {
+                    b.HasOne("PortailInterne.Api.Models.Site", "Site")
+                        .WithMany()
+                        .HasForeignKey("SiteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Site");
+                });
+
+            modelBuilder.Entity("PortailInterne.Api.Models.Holiday", b =>
                 {
                     b.HasOne("PortailInterne.Api.Models.Site", "Site")
                         .WithMany()

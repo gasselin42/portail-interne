@@ -1,6 +1,6 @@
 # Checklist de la phase 2.5 — Horaires de travail
 
-Référence produit : [PROJET.md](../PROJET.md) §5.7, §6, §7, §8, §9 (R11–R16).
+Référence produit : [PROJET.md](../PROJET.md) §5.7, §6, §7, §8, §9 (R11–R16, R23).
 
 Stack figée : **ASP.NET Core Web API + React + SQLite**.  
 Coche au fur et à mesure. Le code n’est fourni que sur demande.
@@ -23,20 +23,28 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [x] Migration : site par défaut « Montréal » (`America/Toronto`), tous les employés existants y sont rattachés
   - [x] `Employee.SiteId` obligatoire
   - [ ] Validation : fuseau IANA reconnu, sinon 400 (avec la création de sites, item 20)
+- [ ] 1b. Rôle **Admin global** et portée par site (R23)
+  - [ ] Nouveau rôle `GlobalAdmin` (libellé « Admin global ») ; l’admin de démo devient Admin global
+  - [ ] Seul un Admin global peut attribuer le rôle Admin global
+  - [ ] Endpoints admin (comptes, fiche, création) : un Admin ne voit et ne modifie que les employés de son site ; création = son site imposé
+  - [ ] Approbations de congés et congé maladie pour autrui (R20) : un Admin seulement pour son site
+  - [ ] Manager : doit être du même site (validation du manager + recherche d’employés filtrée par site)
+  - [ ] Changement de site : Admin global seulement ; refusé avec un message clair (ce qu’il faut corriger) si l’employé a un manager ou des subordonnés
+  - [ ] Tests API : Admin d’un autre site → 404 ; changement de site refusé / accepté
 - [x] 2. « Aujourd’hui » calculé dans le fuseau du site de l’employé (remplace le fuseau fixe de Q3)
 - [x] 3. Modèles `WorkSchedule` + `WorkScheduleDay` + migration
   - [x] Un horaire = une date d’entrée en vigueur (`EffectiveFrom`) + 0 à 7 jours
   - [x] Un jour = `DayOfWeek`, `StartTime`, `EndTime`, `BreakMinutes`
   - [x] Validation : `StartTime < EndTime` (pas de quart de nuit, voir R11), un seul bloc par jour, pause < durée du bloc
   - [x] Un horaire sans jour travaillé est refusé (ce serait une désactivation, pas un horaire)
-- [x] 4. CRUD horaires (Admin : tous ; Manager : son équipe)
+- [x] 4. CRUD horaires (Admin : tous ; Manager : son équipe — Admin limité à son site avec 1b)
   - [x] `EffectiveFrom` ≥ aujourd’hui (le passé n’est jamais réécrit)
   - [x] Un horaire futur peut être modifié ou supprimé ; un horaire déjà en vigueur, non (on en crée un nouveau)
   - [x] Deux horaires d’un même employé ne peuvent pas avoir le même `EffectiveFrom`
-- [ ] 5. Modèle `Holiday` (site, date, nom) + migration
-  - [ ] Unicité (site, date)
-  - [ ] Seed : fériés du Québec 2026 et 2027
-- [ ] 6. CRUD fériés (Admin uniquement)
+- [x] 5. Modèle `Holiday` (site, date, nom) + migration
+  - [x] Unicité (site, date)
+  - [x] Seed : fériés du Québec 2026 et 2027
+- [x] 6. CRUD fériés (Admin du site ; l’Admin global s’ajoute avec 1b)
 - [ ] 7. Modèle `ScheduleAdjustment` + migration
   - [ ] Champs : employé, date, `StartTime?`, `EndTime?`, `BreakMinutes`, motif, statut, `CreatedById`, `ReviewedById?`, `ReviewedAt?`
   - [ ] Heures nulles = « ne travaille pas ce jour-là » (Manager/Admin seulement)
@@ -57,7 +65,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [ ] Demande qui ne couvre aucun jour travaillé → refusée avec un message clair
   - [ ] Nombre de jours travaillés affiché dans la demande et la file d’approbation
   - [ ] Solde et jours sans solde (R19) recalculés sur les jours travaillés au lieu de lun.–ven.
-- [ ] 14. Autorisation : employé = lecture de son horaire ; manager = son équipe ; admin = tout
+- [ ] 14. Autorisation : employé = lecture de son horaire ; manager = son équipe ; admin = son site ; Admin global = tout
 
 ## Frontend (React)
 
@@ -74,7 +82,11 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [ ] 17. **Demander un ajustement** (employé) + liste de mes ajustements avec statut
 - [ ] 18. File d’approbation : ajustements à côté des congés (type clairement indiqué)
 - [ ] 19. Vue **équipe semaine** (Manager) : qui travaille quand, d’un coup d’œil
-- [ ] 20. Écran Admin **Sites et fériés** (créer un site avec fuseau, gérer les fériés par année)
+- [ ] 20. Écran **Sites et fériés** (Admin global : créer un site avec fuseau ; Admin du site : gérer ses fériés par année)
+- [ ] 20b. Portée par site dans l’UI (R23)
+  - [ ] Rôle « Admin global » dans la page Comptes ; menu Sites visible pour lui seulement
+  - [ ] Champ site de la fiche : modifiable par l’Admin global seulement ; erreur de changement de site affichée clairement
+  - [ ] Annuaire : filtre par site (« Tous les sites » par défaut), gardé dans l’URL ; site affiché sur chaque carte
 - [ ] 21. État « Horaire non défini » visible partout où il s’applique (fiche employé, calendrier, vue équipe)
 
 ## Validation manuelle
@@ -89,6 +101,8 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [ ] Congé uniquement sur des jours non travaillés → refusé
 - [ ] Employé d’un site à Paris : « aujourd’hui » change à minuit heure de Paris, pas de Montréal
 - [ ] Un employé ne voit pas l’horaire des autres ; un manager seulement celui de son équipe
+- [ ] Admin de Montréal : ne voit pas les comptes de Paris ; l’annuaire, oui
+- [ ] Changer le site d’un employé qui a des subordonnés → refusé, message clair
 
 ## Bonus
 

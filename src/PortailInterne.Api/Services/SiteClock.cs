@@ -19,4 +19,10 @@ public class SiteClock
 		var timeZoneId = await _db.Employees.AsNoTracking().Where(e => e.Id == employeeId).Select(e => e.Site.TimeZoneId).FirstAsync();
 		return DateOnly.FromDateTime(_clock.TodayIn(timeZoneId));
 	}
+
+	public async Task<DateOnly> TodayForSiteAsync(int siteId)
+	{
+		var timeZoneId = await _db.Sites.Where(s => s.Id == siteId).Select(s => s.TimeZoneId).FirstAsync();
+		return DateOnly.FromDateTime(_clock.TodayIn(timeZoneId));
+	}
 }

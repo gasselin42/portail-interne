@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
 	public DbSet<Site> Sites => Set<Site>();
 	public DbSet<WorkSchedule> WorkSchedules => Set<WorkSchedule>();
 	public DbSet<WorkScheduleDay> WorkScheduleDays => Set<WorkScheduleDay>();
+	public DbSet<Holiday> Holidays => Set<Holiday>();
 
 	public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
 	{
@@ -107,6 +108,38 @@ public class AppDbContext : DbContext
 		modelBuilder.Entity<WorkScheduleDay>(entity =>
 		{
 			entity.HasKey(d => new { d.WorkScheduleId, d.DayOfWeek });
+		});
+
+		// --- Holidays ---
+		modelBuilder.Entity<Holiday>(entity =>
+		{
+			entity.HasOne(h => h.Site)
+				.WithMany()
+				.HasForeignKey(h => h.SiteId)
+				.OnDelete(DeleteBehavior.Restrict);
+			
+			entity.HasIndex(h => new { h.SiteId, h.Date }).IsUnique();
+
+			entity.HasData([
+				new Holiday { Id = 1, SiteId = 1, Date = new DateOnly(2026, 01, 01), Name = "Jour de l'An" },
+				new Holiday { Id = 2, SiteId = 1, Date = new DateOnly(2026, 04, 03), Name = "Vendredi saint" },
+				new Holiday { Id = 3, SiteId = 1, Date = new DateOnly(2026, 04, 06), Name = "Lundi de Pâques" },
+				new Holiday { Id = 4, SiteId = 1, Date = new DateOnly(2026, 05, 18), Name = "Journée nationale des patriotes" },
+				new Holiday { Id = 5, SiteId = 1, Date = new DateOnly(2026, 06, 24), Name = "Fête nationale" },
+				new Holiday { Id = 6, SiteId = 1, Date = new DateOnly(2026, 07, 01), Name = "Fête du Canada" },
+				new Holiday { Id = 7, SiteId = 1, Date = new DateOnly(2026, 09, 07), Name = "Fête du Travail" },
+				new Holiday { Id = 8, SiteId = 1, Date = new DateOnly(2026, 10, 12), Name = "Action de grâce" },
+				new Holiday { Id = 9, SiteId = 1, Date = new DateOnly(2026, 12, 25), Name = "Noël" },
+				new Holiday { Id = 10, SiteId = 1, Date = new DateOnly(2027, 01, 01), Name = "Jour de l'An" },
+				new Holiday { Id = 11, SiteId = 1, Date = new DateOnly(2027, 03, 26), Name = "Vendredi saint" },
+				new Holiday { Id = 12, SiteId = 1, Date = new DateOnly(2027, 03, 29), Name = "Lundi de Pâques" },
+				new Holiday { Id = 13, SiteId = 1, Date = new DateOnly(2027, 05, 24), Name = "Journée nationale des patriotes" },
+				new Holiday { Id = 14, SiteId = 1, Date = new DateOnly(2027, 06, 24), Name = "Fête nationale" },
+				new Holiday { Id = 15, SiteId = 1, Date = new DateOnly(2027, 07, 01), Name = "Fête du Canada" },
+				new Holiday { Id = 16, SiteId = 1, Date = new DateOnly(2027, 09, 06), Name = "Fête du Travail" },
+				new Holiday { Id = 17, SiteId = 1, Date = new DateOnly(2027, 10, 11), Name = "Action de grâce" },
+				new Holiday { Id = 18, SiteId = 1, Date = new DateOnly(2027, 12, 25), Name = "Noël" },
+			]);
 		});
     }
 
