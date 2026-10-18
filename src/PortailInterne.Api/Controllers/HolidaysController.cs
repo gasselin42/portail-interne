@@ -16,11 +16,13 @@ public class HolidaysController : ControllerBase
 {
 	private readonly AppDbContext _db;
 	private readonly SiteClock _siteClock;
+	private readonly AccessScope _scope;
 
-    public HolidaysController(AppDbContext db, SiteClock siteClock)
+    public HolidaysController(AppDbContext db, SiteClock siteClock, AccessScope scope)
     {
         _db = db;
 		_siteClock = siteClock;
+		_scope = scope;
     }
 
 	[HttpGet]
@@ -55,7 +57,7 @@ public class HolidaysController : ControllerBase
 	}
 
 	[HttpPost]
-	[Authorize(Roles = "Admin")]
+	[Authorize(Roles = Roles.Admins)]
 	public async Task<ActionResult<HolidayResponse>> Create(int siteId, SaveHolidayRequest request)
 	{
 		var site = await _db.Sites.AsNoTracking().FirstOrDefaultAsync(e => e.Id == siteId);
@@ -63,7 +65,7 @@ public class HolidaysController : ControllerBase
 		if (site is null)
 			return NotFound();
 
-		if (!await CanManageSiteAsync(siteId))
+		if (!await _scope.CanAdministerSiteAsync(siteId))
 			return NotFound();
 
 		var today = await _siteClock.TodayForSiteAsync(siteId);
@@ -98,7 +100,7 @@ public class HolidaysController : ControllerBase
 	}
 
 	[HttpPut("{id:int}")]
-	[Authorize(Roles = "Admin")]
+	[Authorize(Roles = Roles.Admins)]
 	public async Task<IActionResult> Put(int siteId, int id, SaveHolidayRequest request)
 	{
 		var site = await _db.Sites.AsNoTracking().FirstOrDefaultAsync(e => e.Id == siteId);
@@ -106,7 +108,7 @@ public class HolidaysController : ControllerBase
 		if (site is null)
 			return NotFound();
 
-		if (!await CanManageSiteAsync(siteId))
+		if (!await _scope.CanAdministerSiteAsync(siteId))
 			return NotFound();
 
 		var holiday = await _db.Holidays
@@ -138,7 +140,7 @@ public class HolidaysController : ControllerBase
 	}
 
 	[HttpDelete("{id:int}")]
-	[Authorize(Roles = "Admin")]
+	[Authorize(Roles = Roles.Admins)]
 	public async Task<IActionResult> Delete(int siteId, int id)
 	{
 		var site = await _db.Sites.AsNoTracking().FirstOrDefaultAsync(e => e.Id == siteId);
@@ -146,7 +148,7 @@ public class HolidaysController : ControllerBase
 		if (site is null)
 			return NotFound();
 
-		if (!await CanManageSiteAsync(siteId))
+		if (!await _scope.CanAdministerSiteAsync(siteId))
 			return NotFound();
 
 		var holiday = await _db.Holidays
@@ -164,13 +166,5 @@ public class HolidaysController : ControllerBase
 		await _db.SaveChangesAsync();
 
 		return NoContent();
-	}
-
-	/// <summary>Un Admin ne gère que les fériés de son propre site (R23).</summary>
-	private async Task<bool> CanManageSiteAsync(int siteId)
-	{
-		var employeeId = int.Parse(User.FindFirstValue("employeeId")!);
-		var callerSiteId = await _db.Employees.Where(e => e.Id == employeeId).Select(e => e.SiteId).FirstAsync();
-		return callerSiteId == siteId;
 	}
 }

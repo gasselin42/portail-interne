@@ -21,6 +21,8 @@ import { AVATAR_SIZES } from "../ui/avatar"
 import { EmployeePhoto } from "../components/employees/EmployeePhoto"
 import { useAsync } from "../hooks/useAsync"
 import { listSites } from "../api/sites"
+import { useSession } from "../session/useSession"
+import { isGlobalAdmin } from "../session/permission"
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -32,19 +34,22 @@ export function CreateEmployeePage() {
 	const [role, setRole] = useState<RoleId | null>(null)
 	const [jobTitle, setJobTitle] = useState<string>("")
 	const [leaveDays, setLeaveDays] = useState(20)
-	const [siteId, setSiteId] = useState<number | null>(null)
 	const [phoneNumber, setPhoneNumber] = useState<string>("")
 	const [manager, setManager] = useState<EmployeeOption | null>(null)
 	const [photo, setPhoto] = useState<File | null>(null)
 	const [photoPreview, setPhotoPreview] = useState<string | null>(null)
 	const [existingPhotoUrl, setExistingPhotoUrl] = useState<string | null>(null)
 	const [photoError, setPhotoError] = useState<string | null>(null)
-
+	
 	const [enCours, setEnCours] = useState<boolean>(false)
 	const [erreur, setErreur] = useState<string | null>(null)
-
+	
 	const [temporaryPassword, setTemporaryPassword] = useState<string>("")
 	const [passwordDialogOpen, setPasswordDialogOpen] = useState(false)
+	
+	const { me } = useSession()
+	const canChooseSite = isGlobalAdmin(me)
+	const [siteId, setSiteId] = useState<number | null>(() => (isGlobalAdmin(me) ? null : (me?.siteId ?? null)))
 
 	const { id } = useParams()
 	const employeId = id ? Number(id) : null
@@ -341,7 +346,7 @@ export function CreateEmployeePage() {
 								value={email}
 								readOnly={enEdition}
 								onChange={(e) => setEmail(e.target.value)}
-								className={`${inputClass} read-only:cursor-default read-only:border-slate-200 read-only:bg-slate-100 read-only:text-slate-500 read-only:shadow-none read-only:focus:ring-0`}
+								className={`${inputClass}`}
 							/>
 						</div>
 						<div>
@@ -354,21 +359,28 @@ export function CreateEmployeePage() {
 							<select
 								id="site"
 								required
-								disabled={sites.loading}
+								disabled={sites.loading || !canChooseSite}
 								value={siteId ?? ""}
-								onChange={(e) =>
+								onChange={(e) => {
 									setSiteId(e.target.value === "" ? null : Number(e.target.value))
-								}
+									setManager(null)
+								}}
+								aria-describedby={canChooseSite ? undefined : "site-help"}
 								className={inputClass}
 							>
-								<option value="">sites.loading ? "Chargement…" : "Choisir…"</option>
-								{(sites.data ?? []).map((site) => (
-									<option key={site.id} value={site.id}>
-										{site.name}
-									</option>
-								))}
-							</select>
-							{sites.error && <p className="mt-1 text-xs text-red-600">{sites.error}</p>}
+								<option value="">{sites.loading ? "Chargement…" : "Choisir…"}</option>
+									{(sites.data ?? []).map((site) => (
+										<option key={site.id} value={site.id}>
+											{site.name}
+										</option>
+									))}
+								</select>
+								{!canChooseSite && (
+									<p id="site-help" className="mt-1 text-xs text-slate-500">
+										Seul un Admin global peut choisir un autre site.
+									</p>
+								)}
+								{sites.error && <p className="mt-1 text-xs text-red-600">{sites.error}</p>}
 						</div>
 					</div>
 
@@ -479,6 +491,7 @@ export function CreateEmployeePage() {
 								value={manager}
 								onChange={setManager}
 								excludeTeamOf={employeId ?? undefined}
+								siteId={siteId ?? undefined}
 								clearLabel="Retirer le manager"
 							/>
 						</div>

@@ -11,19 +11,21 @@ using System.Security.Claims;
 namespace PortailInterne.Api.Controllers;
 
 [ApiController]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = Roles.Admins)]
 [Route("api/admin")]
 public class AdminController : ControllerBase
 {
 	private readonly AppDbContext _db;
 	private readonly PasswordService _passwords;
 	private readonly PhotoStorage _photos;
+	private readonly AccessScope _scope;
 
-	public AdminController(AppDbContext db, PasswordService passwords, PhotoStorage photos)
+	public AdminController(AppDbContext db, PasswordService passwords, PhotoStorage photos, AccessScope scope)
 	{
 		_db = db;
 		_passwords = passwords;
 		_photos = photos;
+		_scope = scope;
 	}
 
 	[HttpGet("ping")]
@@ -37,9 +39,17 @@ public class AdminController : ControllerBase
 		[FromForm] CreateEmployeeRequest request,
 		IFormFile? photo)
 	{
-		var managerError = await ValidateManagerAsync(request.ManagerId, null);
+		var siteId = _scope.IsGlobalAdmin ? request.SiteId!.Value : await _scope.CallerSiteIdAsync();
+
+		if (!await _db.Sites.AnyAsync(s => s.Id == siteId))
+			return BadRequest(new { message = "Le site choisi n'existe pas." });
+	
+		var managerError = await ValidateManagerAsync(request.ManagerId, null, siteId);
 		if (managerError is not null)
 			return BadRequest(new { message = managerError });
+
+		if (request.Role == Role.GlobalAdmin && !_scope.IsGlobalAdmin)
+			return BadRequest(new { message = "Seul un Admin global peut attribuer ce rôle." });
 
 		if (await _db.Sites.AnyAsync(s => s.Id == request.SiteId) == false)
 			return BadRequest(new { message = "Le site choisi n'existe pas." });
@@ -70,7 +80,7 @@ public class AdminController : ControllerBase
             PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber,
 			ManagerId = request.ManagerId,
 			AnnualLeaveDays = request.AnnualLeaveDays!.Value,
-			SiteId = request.SiteId!.Value,
+			SiteId = siteId,
 			IsActive = true,
 			CreatedAt = DateTime.UtcNow,
 			UserAccount = new UserAccount
@@ -124,6 +134,9 @@ public class AdminController : ControllerBase
         if (employee is null || employee.UserAccount is null || employee.UserAccount.Role is null)
             return NotFound();
 
+		if (!await CanAdministerAsync(employee, employee.UserAccount.Role))
+			return NotFound();
+
 		Employee? manager = null;
 
 		if (employee.ManagerId is not null)
@@ -162,13 +175,34 @@ public class AdminController : ControllerBase
 			.Include(e => e.UserAccount)
 			.FirstOrDefaultAsync(e => e.Id == id);
 
-		if (employee is null)
+		if (employee is null || employee.UserAccount is null)
 			return NotFound();
 
-		if (await _db.Sites.AnyAsync(s => s.Id == request.SiteId) == false)
-			return BadRequest(new { message = "Le site choisi n'existe pas." });
+		if (!await CanAdministerAsync(employee, employee.UserAccount.Role))
+			return NotFound();
 
-        var managerError = await ValidateManagerAsync(request.ManagerId, id);
+		if (request.Role == Role.GlobalAdmin && !_scope.IsGlobalAdmin)
+			return BadRequest(new { message = "Seul un Admin global peut attribuer ce rôle." });
+
+		if (request.SiteId != employee.SiteId)
+		{
+			if (!_scope.IsGlobalAdmin)
+				return BadRequest(new { message = "Seul un Admin global peut changer le site d'un employé." });
+			
+			if (request.ManagerId is not null)
+				return BadRequest(new { message = "Retire d'abord le manager de cet employé, puis change son site." });
+			
+			var hasSubordinates = await _db.Employees.AnyAsync(e => e.ManagerId == employee.Id);
+			if (hasSubordinates)
+				return BadRequest(new { message = "Cet employé est le manager d'autres employés : réassigne-les avant de changer son site." });
+		}
+
+		var siteId = _scope.IsGlobalAdmin ? request.SiteId!.Value : await _scope.CallerSiteIdAsync();
+
+		if (!await _db.Sites.AnyAsync(s => s.Id == siteId))
+			return BadRequest(new { message = "Le site choisi n'existe pas." });
+		
+        var managerError = await ValidateManagerAsync(request.ManagerId, id, siteId);
 
         if (managerError is not null)
             return BadRequest(new { message = managerError });
@@ -193,7 +227,7 @@ public class AdminController : ControllerBase
 		employee.ManagerId = request.ManagerId;
 		employee.UserAccount.Role = request.Role;
 		employee.AnnualLeaveDays = request.AnnualLeaveDays!.Value;
-		employee.SiteId = request.SiteId!.Value;
+		employee.SiteId = siteId;
 
 		var photoChanged = ancienNom != employee.PhotoFileName;
 
@@ -219,6 +253,12 @@ public class AdminController : ControllerBase
 	public async Task<ActionResult<List<AccountListItemResponse>>> ListAccounts([FromQuery] string? search)
 	{
 		var query = _db.UserAccounts.AsNoTracking();
+
+		if (!_scope.IsGlobalAdmin)
+		{
+			var callerSiteId = await _scope.CallerSiteIdAsync();
+			query = query.Where(u => u.Employee.SiteId == callerSiteId);
+		}
 
 		if (!string.IsNullOrWhiteSpace(search))
 		{
@@ -262,7 +302,10 @@ public class AdminController : ControllerBase
 	{
 		var account = await _db.UserAccounts.Include(u => u.Employee).FirstOrDefaultAsync(u => u.Id == id);
 
-		if (account is null)
+		if (account is null || account.Employee is null)
+			return NotFound();
+
+		if (!await CanAdministerAsync(account.Employee, account.Role))
 			return NotFound();
 
         var userAccountIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -284,9 +327,12 @@ public class AdminController : ControllerBase
 	[HttpPost("accounts/{id:int}/reset-password")]
 	public async Task<ActionResult<object>> ResetPassword(int id)
 	{
-		var account = await _db.UserAccounts.FirstOrDefaultAsync(u => u.Id == id);
+		var account = await _db.UserAccounts.Include(u => u.Employee).FirstOrDefaultAsync(u => u.Id == id);
 
-		if (account is null)
+		if (account is null || account.Employee is null)
+			return NotFound();
+
+		if (!await CanAdministerAsync(account.Employee, account.Role))
 			return NotFound();
 
         var userAccountIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -306,7 +352,7 @@ public class AdminController : ControllerBase
 		return Ok(new { temporaryPassword = temp });
     }
 
-	private async Task<string?> ValidateManagerAsync(int? managerId, int? employeeId)
+	private async Task<string?> ValidateManagerAsync(int? managerId, int? employeeId, int siteId)
 	{
 		if (managerId is null)
 			return null;
@@ -323,6 +369,9 @@ public class AdminController : ControllerBase
 
 		if (!manager.IsActive)
 			return "Le manager choisi est désactivé.";
+
+		if (manager.SiteId != siteId)
+			return "Le manager choisi doit être du même site que l'employé.";
 
 		if (employeeId is not null)
 		{
@@ -346,5 +395,10 @@ public class AdminController : ControllerBase
 
 		return null;
     }
+
+	/// <summary>L'appelant peut-il gérer ce compte ? Son site, et jamais un Admin global s'il ne l'est pas lui-même.</summary>
+	private async Task<bool> CanAdministerAsync(Employee employee, Role? role) =>
+		await _scope.CanAdministerSiteAsync(employee.SiteId)
+		&& (_scope.IsGlobalAdmin || role != Role.GlobalAdmin);
 }
 

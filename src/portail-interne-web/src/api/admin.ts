@@ -58,6 +58,7 @@ export const DEPARTEMENT_LABELS: Record<DepartementId, string> = {
 export const Role = {
 	Admin: 0,
 	Employé: 1,
+	GlobalAdmin: 2
 } as const
 
 export type RoleId = (typeof Role)[keyof typeof Role]
@@ -66,6 +67,7 @@ export type RoleId = (typeof Role)[keyof typeof Role]
 export const ROLE_LABELS: Record<RoleId, string> = {
 	[Role.Admin]: "Admin",
 	[Role.Employé]: "Employé",
+	[Role.GlobalAdmin]: "Admin global"
 }
 
 export async function createEmployee(

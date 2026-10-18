@@ -91,7 +91,9 @@ public class EmployeesController : ControllerBase
     public async Task<ActionResult<EmployeeLookupResponse>> Lookup(
         [FromQuery] string? search,
         [FromQuery] int limit = 10,
-        [FromQuery] int? excludeTeamOf = null)
+        [FromQuery] int? excludeTeamOf = null,
+		[FromQuery] int? siteId = null
+		)
     {
         limit = Math.Clamp(limit, 1, 50);
 
@@ -100,6 +102,9 @@ public class EmployeesController : ControllerBase
             .Where(e => e.IsActive);
 
         query = EmployeeSearch.Apply(query, search);
+
+		if (siteId != null)
+			query = query.Where(e => e.SiteId == siteId);
 
         if (excludeTeamOf is > 0)
         {

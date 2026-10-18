@@ -37,21 +37,20 @@ function AccountActiveToggle({
 				disabled={disabled}
 				onChange={(e) => onChange(e.target.checked)}
 			/>
-			<span className="peer-focus-visible::ring-2 peer-focus-visible::ring-sky-300 absolute inset-0 cursor-pointer rounded-full bg-zinc-300 transition peer-checked:bg-sky-500 peer-disabled:cursor-not-allowed before:absolute before:bottom-1 before:left-1 before:h-[26px] before:w-[26px] before:rounded-full before:bg-white before:shadow-sm before:transition before:content-[''] peer-checked:before:translate-x-[26px]" />
+			<span className="peer-focus-visible:ring-2 peer-focus-visible:ring-sky-300 absolute inset-0 cursor-pointer rounded-full bg-zinc-300 transition peer-checked:bg-sky-500 peer-disabled:cursor-not-allowed before:absolute before:bottom-1 before:left-1 before:h-[26px] before:w-[26px] before:rounded-full before:bg-white before:shadow-sm before:transition before:content-[''] peer-checked:before:translate-x-[26px]" />
 		</label>
 	)
 }
 
+const ROLE_BADGE_STYLES: Record<RoleId, string> = {
+	[Role.GlobalAdmin]: "bg-indigo-100 text-indigo-800",
+	[Role.Admin]: "bg-sky-100 text-sky-800",
+	[Role.Employé]: "bg-zinc-100 text-zinc-700",
+}
+
 function RoleBadge({ role }: { role: RoleId }) {
-	const isAdmin = role === Role.Admin
 	return (
-		<span
-			className={
-				isAdmin
-					? "inline-flex rounded-full bg-sky-100 px-2.5 py-0.5 text-xs font-medium text-sky-800"
-					: "inline-flex rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-700"
-			}
-		>
+		<span className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${ROLE_BADGE_STYLES[role]}`}>
 			{ROLE_LABELS[role]}
 		</span>
 	)

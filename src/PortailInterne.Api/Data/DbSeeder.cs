@@ -25,7 +25,7 @@ public class DbSeeder
                 {
                     Email = "admin@portail.local",
                     PasswordHash = passwords.Hash("Admin123!"),
-                    Role = Role.Admin,
+                    Role = Role.GlobalAdmin,
                     MustChangePassword = false, // pratique pour tester plus tard
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow

@@ -19,18 +19,18 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 
 ## Backend (API)
 
-- [ ] 1. Modèle `Site` (nom, fuseau IANA) + migration
+- [x] 1. Modèle `Site` (nom, fuseau IANA) + migration
   - [x] Migration : site par défaut « Montréal » (`America/Toronto`), tous les employés existants y sont rattachés
   - [x] `Employee.SiteId` obligatoire
-  - [ ] Validation : fuseau IANA reconnu, sinon 400 (avec la création de sites, item 20)
-- [ ] 1b. Rôle **Admin global** et portée par site (R23)
-  - [ ] Nouveau rôle `GlobalAdmin` (libellé « Admin global ») ; l’admin de démo devient Admin global
-  - [ ] Seul un Admin global peut attribuer le rôle Admin global
-  - [ ] Endpoints admin (comptes, fiche, création) : un Admin ne voit et ne modifie que les employés de son site ; création = son site imposé
-  - [ ] Approbations de congés et congé maladie pour autrui (R20) : un Admin seulement pour son site
-  - [ ] Manager : doit être du même site (validation du manager + recherche d’employés filtrée par site)
-  - [ ] Changement de site : Admin global seulement ; refusé avec un message clair (ce qu’il faut corriger) si l’employé a un manager ou des subordonnés
-  - [ ] Tests API : Admin d’un autre site → 404 ; changement de site refusé / accepté
+  - [x] Validation : fuseau IANA reconnu, sinon 400 (POST / PUT /api/sites, Admin global)
+- [x] 1b. Rôle **Admin global** et portée par site (R23)
+  - [x] Nouveau rôle `GlobalAdmin` (libellé « Admin global ») ; l’admin de démo devient Admin global
+  - [x] Seul un Admin global peut attribuer le rôle Admin global
+  - [x] Endpoints admin (comptes, fiche, création) : un Admin ne voit et ne modifie que les employés de son site ; création = son site imposé
+  - [x] Approbations de congés et congé maladie pour autrui (R20) : un Admin seulement pour son site
+  - [x] Manager : doit être du même site (validation du manager + recherche d’employés filtrée par site)
+  - [x] Changement de site : Admin global seulement ; refusé avec un message clair (ce qu’il faut corriger) si l’employé a un manager ou des subordonnés
+  - [x] Tests API : Admin d’un autre site → 404 ; changement de site refusé / accepté
 - [x] 2. « Aujourd’hui » calculé dans le fuseau du site de l’employé (remplace le fuseau fixe de Q3)
 - [x] 3. Modèles `WorkSchedule` + `WorkScheduleDay` + migration
   - [x] Un horaire = une date d’entrée en vigueur (`EffectiveFrom`) + 0 à 7 jours

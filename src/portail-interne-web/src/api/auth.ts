@@ -21,6 +21,7 @@ export type Me = {
 	isManager: boolean
 	mustChangePassword: boolean
 	isActive: boolean
+	siteId: number
 	siteTimeZoneId: string
 }
 

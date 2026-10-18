@@ -5,7 +5,8 @@ namespace PortailInterne.Api.Models;
 public enum Role
 {
     Admin,
-    Employee
+    Employee,
+	GlobalAdmin
 }
 
 public static class RoleLabels
@@ -15,6 +16,7 @@ public static class RoleLabels
 	{
 		[Role.Admin] = "Admin",
 		[Role.Employee] = "Employé",
+		[Role.GlobalAdmin] = "Admin global"
 	};
 }
 

@@ -16,11 +16,13 @@ public class WorkSchedulesController : ControllerBase
 {
 	private readonly AppDbContext _db;
 	private readonly SiteClock _siteClock;
+	private readonly AccessScope _scope;
 
-    public WorkSchedulesController(AppDbContext db, SiteClock siteClock)
+    public WorkSchedulesController(AppDbContext db, SiteClock siteClock, AccessScope scope)
     {
         _db = db;
 		_siteClock = siteClock;
+		_scope = scope;
     }
 
 	[HttpGet]
@@ -36,7 +38,7 @@ public class WorkSchedulesController : ControllerBase
 		if (employeeIdClaim is null || !int.TryParse(employeeIdClaim, out var userId))
             return Unauthorized();
 
-		if (!CanRead(employee, userId))
+		if (!await CanReadAsync(employee, userId))
 			return NotFound();
 
 		var today = await _siteClock.TodayForAsync(employee.Id);
@@ -82,7 +84,7 @@ public class WorkSchedulesController : ControllerBase
 		if (employeeIdClaim is null || !int.TryParse(employeeIdClaim, out var userId))
             return Unauthorized();
 
-		if (!CanManage(employee, userId))
+		if (!await CanManageAsync(employee, userId))
 			return NotFound();
 		
 		var today = await _siteClock.TodayForAsync(employee.Id);
@@ -159,7 +161,7 @@ public class WorkSchedulesController : ControllerBase
 		if (employeeIdClaim is null || !int.TryParse(employeeIdClaim, out var userId))
             return Unauthorized();
 		
-		if (!CanManage(employee, userId))
+		if (!await CanManageAsync(employee, userId))
 			return NotFound();
 		
 		var today = await _siteClock.TodayForAsync(employee.Id);
@@ -222,7 +224,7 @@ public class WorkSchedulesController : ControllerBase
 		if (employeeIdClaim is null || !int.TryParse(employeeIdClaim, out var userId))
             return Unauthorized();
 		
-		if (!CanManage(employee, userId))
+		if (!await CanManageAsync(employee, userId))
 			return NotFound();
 		
 		var today = await _siteClock.TodayForAsync(employee.Id);
@@ -242,13 +244,10 @@ public class WorkSchedulesController : ControllerBase
 		return NoContent();
 	}
 
-	private bool CanManage(Employee employee, int userId)
-	{
-		return User.IsInRole("Admin") || employee.ManagerId == userId;
-	}
+	private async Task<bool> CanManageAsync(Employee employee, int userId) =>
+		await _scope.CanAdministerSiteAsync(employee.SiteId) || employee.ManagerId == userId;
 
-	private bool CanRead(Employee employee, int userId)
-	{
-		return employee.Id == userId || CanManage(employee, userId);
-	}
+
+	private async Task<bool> CanReadAsync(Employee employee, int userId) =>
+		employee.Id == userId || await CanManageAsync(employee, userId);
 }

@@ -23,6 +23,9 @@ builder.Services.AddSingleton<PhotoStorage>();
 builder.Services.AddScoped<MustChangePasswordFilter>();
 builder.Services.AddScoped<SiteClock>();
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<AccessScope>();
+
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<MustChangePasswordFilter>();

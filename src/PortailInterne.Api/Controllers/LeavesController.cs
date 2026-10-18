@@ -20,16 +20,18 @@ public class LeavesController : ControllerBase
     private readonly AppDbContext _db;
     private readonly IAppClock _clock;
 	private readonly SiteClock _siteClock;
+	private readonly AccessScope _scope;
 
     private const int MaxSickLeaveBackdateDays = 14;
 
 	private static readonly CultureInfo FrenchCanada = new("fr-CA");
 
-    public LeavesController(AppDbContext db, IAppClock clock, SiteClock siteClock)
+    public LeavesController(AppDbContext db, IAppClock clock, SiteClock siteClock, AccessScope scope)
     {
         _db = db;
         _clock = clock;
 		_siteClock = siteClock;
+		_scope = scope;
     }
 
     [HttpPost]
@@ -101,7 +103,8 @@ public class LeavesController : ControllerBase
 		if (employeeId == employee.Id)
 			return BadRequest(new { message = "Pour toi-même, utilise une demande normale." });
 
-		if (!User.IsInRole("Admin") && employee.ManagerId != employeeId)
+		var isAdmin = await _scope.CanAdministerSiteAsync(employee.SiteId);
+		if (!isAdmin && employee.ManagerId != employeeId)
 			return NotFound();
 
 		var today = await _siteClock.TodayForAsync(employee.Id);
@@ -221,12 +224,16 @@ public class LeavesController : ControllerBase
         if (employeeIdClaim is null || !int.TryParse(employeeIdClaim, out var employeeId))
             return Unauthorized();
 
-        var isAdmin = User.IsInRole("Admin");
+		var callerSiteId = await _scope.CallerSiteIdAsync();
+		var isGlobalAdmin = _scope.IsGlobalAdmin;
+		var isAdmin = _scope.IsAdmin;
 
         var leaves = await _db.LeaveRequests
             .AsNoTracking()
             .Where(l => l.Status == LeaveStatus.EnAttente)
-            .Where(l => isAdmin || l.Employee.ManagerId == employeeId)
+            .Where(l => isGlobalAdmin
+				|| (isAdmin && l.Employee.SiteId == callerSiteId)
+				|| l.Employee.ManagerId == employeeId)
             .Where(l => l.EmployeeId != employeeId)
             .OrderBy(l => l.StartDate)
             .ThenBy(l => l.EndDate)
@@ -294,7 +301,7 @@ public class LeavesController : ControllerBase
         if (leave.EmployeeId == employeeId)
             return BadRequest(new { message = "Vous ne pouvez pas traiter votre propre demande." });
 
-        var isAdmin = User.IsInRole("Admin");
+        var isAdmin = await _scope.CanAdministerSiteAsync(leave.Employee.SiteId);
         var isManager = leave.Employee.ManagerId == employeeId;
 
         if (!isAdmin && !isManager)

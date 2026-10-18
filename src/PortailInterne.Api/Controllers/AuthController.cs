@@ -108,6 +108,7 @@ public class AuthController : ControllerBase
             IsManager = isManager,
             MustChangePassword = account.MustChangePassword,
             IsActive = account.IsActive && account.Employee.IsActive,
+			SiteId = account.Employee.SiteId,
 			SiteTimeZoneId = account.Employee.Site.TimeZoneId
         });
     }

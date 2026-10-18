@@ -65,7 +65,7 @@ export async function getEmployee(id: number): Promise<EmployeeDetail> {
 }
 
 export async function lookupEmployees(
-	params: { search: string; limit?: number; excludeTeamOf?: number },
+	params: { search: string; limit?: number; excludeTeamOf?: number; siteId?: number },
 	signal?: AbortSignal,
 ): Promise<EmployeeLookupResult> {
 	const query = new URLSearchParams()
@@ -76,6 +76,9 @@ export async function lookupEmployees(
 
 	if (params.excludeTeamOf !== undefined)
 		query.set("excludeTeamOf", params.excludeTeamOf.toString())
+
+	if (params.siteId !== undefined)
+		query.set("siteId", params.siteId.toString())
 
 	const res = await apiFetch(`/api/employees/lookup?${query}`, { signal })
 

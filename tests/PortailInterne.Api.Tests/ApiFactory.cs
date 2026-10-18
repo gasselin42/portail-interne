@@ -104,10 +104,10 @@ public sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider
 }
 
 /// <summary>
-/// Alex (Admin) ; Mark (manager de Sam) ; Sam ; Jane (dans aucune équipe).
+/// Site Montréal : Alex (Admin) ; Mark (manager de Sam) ; Sam ; Jane (dans aucune équipe) ; Gaby (Admin global).
 /// Tous avec le mot de passe <see cref="ApiFactory.Password"/>, sans changement forcé.
 /// </summary>
-public sealed record TestTeam(Employee Alex, Employee Mark, Employee Sam, Employee Jane)
+public sealed record TestTeam(Employee Alex, Employee Mark, Employee Sam, Employee Jane, Employee Gaby)
 {
 	public static TestTeam Seed(AppDbContext db)
 	{
@@ -137,13 +137,14 @@ public sealed record TestTeam(Employee Alex, Employee Mark, Employee Sam, Employ
 		var mark = Create("Mark", "mark@test.local", Role.Employee);
 		var sam = Create("Sam", "sam@test.local", Role.Employee);
 		var jane = Create("Jane", "jane@test.local", Role.Employee);
+		var gaby = Create("Gaby", "gaby@test.local", Role.GlobalAdmin);
 
-		db.Employees.AddRange(alex, mark, sam, jane);
+		db.Employees.AddRange(alex, mark, sam, jane, gaby);
 		db.SaveChanges();
 
 		sam.ManagerId = mark.Id;
 		db.SaveChanges();
 
-		return new TestTeam(alex, mark, sam, jane);
+		return new TestTeam(alex, mark, sam, jane, gaby);
 	}
 }

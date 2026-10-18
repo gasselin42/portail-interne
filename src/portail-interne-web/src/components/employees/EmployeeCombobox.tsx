@@ -14,6 +14,7 @@ type Props = {
 	value: EmployeeOption | null
 	onChange: (value: EmployeeOption | null) => void
 	excludeTeamOf?: number
+	siteId?: number
 	placeholder?: string
 	clearLabel?: string
 }
@@ -27,6 +28,7 @@ export function EmployeeCombobox({
 	value,
 	onChange,
 	excludeTeamOf,
+	siteId,
 	placeholder,
 	clearLabel = "Retirer la sélection",
 }: Props) {
@@ -43,7 +45,7 @@ export function EmployeeCombobox({
 		const timer = setTimeout(() => {
 			setLoading(true)
 			setError(false)
-			lookupEmployees({ search: query, excludeTeamOf }, controller.signal)
+			lookupEmployees({ search: query, excludeTeamOf, siteId }, controller.signal)
 				.then((r) => {
 					setResults(r.items)
 					setHasMore(r.hasMore)
@@ -60,7 +62,7 @@ export function EmployeeCombobox({
 			clearTimeout(timer)
 			controller.abort()
 		}
-	}, [query, excludeTeamOf])
+	}, [query, excludeTeamOf, siteId])
 
 	function handleClear() {
 		onChange(null)

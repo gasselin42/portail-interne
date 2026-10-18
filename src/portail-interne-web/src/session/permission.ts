@@ -6,5 +6,9 @@ export function canApprove(me: Me | null): boolean {
 }
 
 export function isAdmin(me: Me | null): boolean {
-	return me !== null && me.role === Role.Admin
+	return me !== null && (me.role === Role.Admin || me.role === Role.GlobalAdmin)
+}
+
+export function isGlobalAdmin(me: Me | null): boolean {
+	return me !== null && me.role === Role.GlobalAdmin
 }
