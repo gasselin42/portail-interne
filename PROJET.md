@@ -59,7 +59,8 @@ React (UI)  ←HTTP JSON→  ASP.NET Core Web API  ←→  SQLite
 
 | Rôle | Capacités principales |
 |------|------------------------|
-| **Admin** | Créer/désactiver des comptes, gérer rôles, accès global |
+| **Admin global** | Tout ce que fait un Admin, sur tous les sites ; gérer les sites ; changer le site d’un employé ; nommer d’autres Admins globaux |
+| **Admin** | Créer/désactiver des comptes, gérer rôles, horaires et approbations des employés de **son site** |
 | **Employé** | Annuaire, ses congés, son calendrier, créer des meetings, faire des demandes IT, réserver ressources selon règles |
 | **Manager** | Approuver/refuser les congés de son équipe |
 | **Agent IT** / **IT Lead** | Voir toutes les demandes IT, les assigner, les traiter |
@@ -78,6 +79,7 @@ Les rôles Manager / Agent IT seront introduits aux phases concernées.
 - À la création d’un compte : **mot de passe temporaire** généré.
 - À la **1re connexion**, l’utilisateur **doit** changer ce mot de passe avant d’accéder au reste.
 - Un compte **inactif** ne peut pas se connecter.
+- Un Admin ne gère que les employés de **son site** ; l’Admin global gère tous les sites (R23, introduit en phase 2.5).
 
 ---
 
@@ -87,6 +89,7 @@ Les rôles Manager / Agent IT seront introduits aux phases concernées.
 
 - Liste des employés actifs (nom, poste, équipe/département, contact).
 - Recherche (nom, équipe, poste).
+- L’annuaire montre **tous les sites** ; un filtre par site permet de n’afficher qu’un site (gardé dans l’URL).
 - Fiche employé (détails de contact, manager optionnel).
 - Lien naturel avec congés, meetings, tickets IT (qui est qui).
 
@@ -112,6 +115,9 @@ Le calendrier est l’élément central du portail.
   - À l’ouverture, la grille défile jusqu’à l’heure actuelle.
   - La vue et la date affichées sont gardées dans l’URL (F5, Retour, lien partagé).
 - Ajout d’événements / meetings dans l’horaire.
+- **Blocs personnels** : l’employé modèle son horaire avec des blocs à lui (ex. « Travailler sur le projet X »).
+  - Un bloc peut être **souple** : un meeting d’équipe peut le chevaucher sans conflit ; le bloc reste affiché, pâli, à côté du meeting, et son propriétaire est notifié (R21).
+  - Chaque employé choisit la **couleur** de chacun de ses événements, dans une palette fixe (R22).
 - Meeting **de groupe** avec plusieurs employés.
 - Meetings **récurrents** (quotidiens, hebdomadaires, mensuels) avec exceptions : modifier ou annuler une occurrence, les suivantes ou toute la série.
 - **Libre / occupé** : à la création d’un meeting, on voit si les participants sont disponibles, sans jamais voir le détail de leurs événements.
@@ -154,6 +160,8 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
 - L’horaire se répète chaque semaine sans intervention ; un changement = un **nouvel horaire** avec une date d’entrée en vigueur (le passé n’est jamais réécrit).
 - Les jours absents de l’horaire sont **non travaillés**, ce ne sont pas des congés.
 - Chaque employé appartient à un **site** (fuseau horaire IANA + jours fériés propres).
+  - Un Admin ne gère que les employés de son site ; un employé et son manager sont toujours du même site (R23).
+  - Seul l’Admin global change le site d’un employé, et seulement s’il n’a ni manager ni subordonnés.
 - Les **jours fériés** du site sont non travaillés par défaut ; un manager peut faire travailler quelqu’un ce jour-là.
 - Un **ajustement d’horaire** modifie une seule date (partir à 16h, venir un vendredi, travailler un férié) sans passer par Congés.
   - Il peut contenir une **plage d’absence** dans la journée (ex. rendez-vous de 10h à 12h), sans toucher au solde de congés.
@@ -219,6 +227,8 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
 
 **Inclus :**
 - Sites avec fuseau horaire + jours fériés par site
+- Rôle **Admin global** ; Admin limité à son site ; manager du même site (R23)
+- Annuaire : filtre par site
 - Horaire type hebdomadaire versionné par date d’entrée en vigueur
 - Ajustements d’horaire ponctuels (demande employé + approbation, ou création directe par le manager)
 - **Grille horaire** du calendrier : axe des heures, heures de travail mises en évidence, passé grisé et ligne « maintenant »
@@ -233,6 +243,7 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
 - [ ] Départ anticipé demandé, approuvé, visible au calendrier
 - [ ] Congé sur une semaine complète → seuls les jours travaillés comptés
 - [ ] « Aujourd’hui » calculé dans le fuseau du site de l’employé
+- [ ] Un Admin ne voit et ne modifie que les employés de son site ; l’Admin global, tous
 
 ---
 
@@ -242,6 +253,7 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
 
 **Inclus :**
 - Création de meeting (titre, créneau, participants)
+- Blocs personnels, fermes ou **souples** (R21), et couleur par événement (R22)
 - Interdiction si un participant est en **congé approuvé**
 - Détection de conflits d’horaire
 - Priorité du meeting d’équipe + notification aux personnes en conflit
@@ -252,8 +264,9 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
 **Exclu :** meetings récurrents (phase 3.5), réservation salle/équipement obligatoire, tickets IT
 
 **Critères de done :**
-- [ ] Meeting solo OK
+- [ ] Bloc personnel OK (ferme et souple, couleur choisie)
 - [ ] Meeting groupe OK
+- [ ] Meeting d’équipe sur un bloc souple : aucun conflit, bloc pâli, propriétaire notifié
 - [ ] Blocage si participant en congé
 - [ ] Conflit → notification(s)
 - [ ] Calendrier à jour pour tous les participants
@@ -344,7 +357,7 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
 ### Phase 1
 - **Employee** : Id, FirstName, LastName, Email, JobTitle, Department/Team, Phone?, ManagerId?, IsActive, CreatedAt
 - **UserAccount** : Id, EmployeeId, Email (unique), PasswordHash, Role, MustChangePassword, IsActive, CreatedAt, LastLoginAt?
-- **Role** : enum ou table (`Admin`, `Employee`, puis `Manager`, `ItAgent`, …)
+- **Role** : enum ou table (`Admin`, `Employee`, puis `GlobalAdmin`, `Manager`, `ItAgent`, …)
 
 ### Phase 2
 - **LeaveRequest** : Id, EmployeeId, StartDate, EndDate, Type, Status, Reason?, ReviewedById?, ReviewedAt?, CreatedAt
@@ -357,8 +370,8 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
 - **ScheduleAdjustment** : Id, EmployeeId, Date, StartTime?, EndTime?, BreakMinutes, Reason?, Status, CreatedById, ReviewedById?, ReviewedAt?, CreatedAt
 
 ### Phase 3
-- **CalendarEvent / Meeting** : Id, Title, Description?, StartAt, EndAt, OrganizerId, IsTeamMeeting, CreatedAt
-- **MeetingParticipant** : MeetingId, EmployeeId, ResponseStatus?
+- **CalendarEvent / Meeting** : Id, Title, Description?, StartAt, EndAt, OrganizerId, IsTeamMeeting, IsFlexible (bloc personnel seulement), CreatedAt
+- **MeetingParticipant** : MeetingId, EmployeeId, ResponseStatus?, Color? (choisie par chaque personne, organisateur compris)
 
 ### Phase 3.5
 - **MeetingSeries** : Id, OrganizerId, Title, Description?, IsTeamMeeting, TimeZoneId, FirstStartLocal, DurationMinutes, Frequency (Daily/Weekly/Monthly), Interval, DaysOfWeek?, Until? / Count?, CreatedAt
@@ -413,7 +426,7 @@ Les écrans sont côté **React**. L’API expose les routes `/api/...` correspo
 10a. (Manager/Admin) Horaire d’un employé
 10b. Demander un ajustement + mes ajustements
 10c. (Manager) Vue équipe semaine
-10d. (Admin) Sites et jours fériés
+10d. (Admin global) Sites ; (Admin du site) jours fériés
 10e. Calendrier en grille horaire (heures de travail, passé grisé, ligne « maintenant »)
 
 ### Phase 3
@@ -460,7 +473,10 @@ Les écrans sont côté **React**. L’API expose les routes `/api/...` correspo
 | R17 | Libre / occupé : un employé voit les créneaux occupés de ses collègues, jamais le titre, le motif ni les participants |
 | R18 | Meeting récurrent : chaque occurrence respecte R6–R8 ; une modification vise une occurrence, les suivantes ou toute la série ; la série suit l’heure locale du fuseau de l’organisateur |
 | R19 | Solde annuel de congés (20 jours par défaut, modifiable par l’Admin par employé, année civile) : les congés en attente et approuvés de l’année consomment le solde dans l’**ordre de création** des demandes ; les jours au-delà sont sans solde (calculés à l’affichage, jamais stockés) ; la maladie ne consomme pas le solde |
-| R20 | Congé maladie pour autrui : Admin (tous) ou Manager (équipe directe), jamais pour soi ; approuvé directement ; `CreatedById` conservé |
+| R20 | Congé maladie pour autrui : Admin (son site) ou Manager (équipe directe), jamais pour soi ; approuvé directement ; `CreatedById` conservé |
+| R21 | Bloc personnel **souple** : seul un meeting d’équipe peut le chevaucher sans conflit ; le bloc reste affiché, pâli, à côté du meeting, n’est jamais supprimé ni coupé, et son propriétaire est notifié ; il apparaît « occupé souple » dans le libre / occupé ; un meeting ordinaire sur un bloc souple = conflit normal |
+| R22 | Couleur d’un événement : choisie par chaque personne dans son propre calendrier, parmi une palette fixe qui exclut les couleurs des congés ; couleur par défaut si aucune n’est choisie ; ne change jamais celle des autres participants |
+| R23 | Portée par site : un Admin gère seulement les employés de son site (comptes, fiches, approbations, horaires, ajustements, congé maladie pour autrui) ; l’Admin global gère tous les sites, les sites eux-mêmes et le changement de site ; manager et subordonnés toujours du même site ; changement de site refusé tant que l’employé a un manager ou des subordonnés ; annuaire et meetings restent ouverts à tous les sites |
 
 ---
 
@@ -543,6 +559,8 @@ portail-interne/
 | 2026-10-16 | Bonus phase 2 : congé maladie pour autrui (approuvé directement, R20) ; soldes en jours ouvrables, dépassement = jours sans solde calculés (R19), couleurs distinctes avec hachures continues
 | 2026-10-16 | Solde : 20 jours par défaut ; consommé dans l’ordre de création (la demande qui dépasse porte les jours sans solde)
 | 2026-10-16 | Absence de quelques heures = ajustement d’horaire avec plage d’absence (phase 2.5), sans toucher au solde
+| 2026-10-18 | Blocs personnels souples (R21) : seul un meeting d’équipe passe par-dessus, le bloc reste affiché pâli, « occupé souple » dans le libre / occupé ; couleur par événement et par personne, palette fixe (R22)
+| 2026-10-18 | Portée par site (R23) : rôle Admin global ; Admin limité à son site ; manager du même site ; changement de site par l’Admin global seulement, refusé s’il y a un manager ou des subordonnés ; annuaire filtrable par site
 | 2026-10-12 | Ajout de la phase 3.5 — Meetings récurrents (occurrences calculées, exceptions stockées, R18)
 
 ---
