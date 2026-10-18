@@ -17,6 +17,62 @@ namespace PortailInterne.Api.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
 
+            modelBuilder.Entity("PortailInterne.Api.Models.Absence", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CreatedById")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<TimeOnly?>("EndedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<TimeOnly?>("PlannedEnd")
+                        .HasColumnType("TEXT");
+
+                    b.Property<TimeOnly?>("PlannedStart")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("ReturnConfirmed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ReviewedById")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<TimeOnly?>("StartedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("ReviewedById");
+
+                    b.HasIndex("EmployeeId", "Date");
+
+                    b.ToTable("Absences");
+                });
+
             modelBuilder.Entity("PortailInterne.Api.Models.Employee", b =>
                 {
                     b.Property<int>("Id")
@@ -295,6 +351,58 @@ namespace PortailInterne.Api.Migrations
                     b.ToTable("LeaveRequests");
                 });
 
+            modelBuilder.Entity("PortailInterne.Api.Models.ScheduleAdjustment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BreakMinutes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CreatedById")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<TimeOnly?>("EndTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ReviewedById")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<TimeOnly?>("StartTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("ReviewedById");
+
+                    b.HasIndex("EmployeeId", "Date")
+                        .IsUnique()
+                        .HasFilter("Status IN (0, 1)");
+
+                    b.ToTable("ScheduleAdjustments");
+                });
+
             modelBuilder.Entity("PortailInterne.Api.Models.Site", b =>
                 {
                     b.Property<int>("Id")
@@ -414,6 +522,32 @@ namespace PortailInterne.Api.Migrations
                     b.ToTable("WorkScheduleDays");
                 });
 
+            modelBuilder.Entity("PortailInterne.Api.Models.Absence", b =>
+                {
+                    b.HasOne("PortailInterne.Api.Models.Employee", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PortailInterne.Api.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PortailInterne.Api.Models.Employee", "ReviewedBy")
+                        .WithMany()
+                        .HasForeignKey("ReviewedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("ReviewedBy");
+                });
+
             modelBuilder.Entity("PortailInterne.Api.Models.Employee", b =>
                 {
                     b.HasOne("PortailInterne.Api.Models.Site", "Site")
@@ -442,6 +576,32 @@ namespace PortailInterne.Api.Migrations
                         .WithMany()
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("PortailInterne.Api.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PortailInterne.Api.Models.Employee", "ReviewedBy")
+                        .WithMany()
+                        .HasForeignKey("ReviewedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("ReviewedBy");
+                });
+
+            modelBuilder.Entity("PortailInterne.Api.Models.ScheduleAdjustment", b =>
+                {
+                    b.HasOne("PortailInterne.Api.Models.Employee", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("PortailInterne.Api.Models.Employee", "Employee")
                         .WithMany()

@@ -45,21 +45,31 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [x] Unicité (site, date)
   - [x] Seed : fériés du Québec 2026 et 2027
 - [x] 6. CRUD fériés (Admin du site ; l’Admin global s’ajoute avec 1b)
-- [ ] 7. Modèle `ScheduleAdjustment` + migration
-  - [ ] Champs : employé, date, `StartTime?`, `EndTime?`, `BreakMinutes`, motif, statut, `CreatedById`, `ReviewedById?`, `ReviewedAt?`
-  - [ ] Heures nulles = « ne travaille pas ce jour-là » (Manager/Admin seulement)
-  - [ ] Plage d’absence optionnelle dans la journée (ex. rendez-vous de 10h à 12h), comprise dans les heures du jour, sans toucher au solde
-  - [ ] Un seul ajustement actif (EnAttente ou Approuve) par employé et par date
+- [x] 7. Modèle `ScheduleAdjustment` + migration
+  - [x] Champs : employé, date, `StartTime?`, `EndTime?`, `BreakMinutes`, motif, statut, `CreatedById`, `ReviewedById?`, `ReviewedAt?`
+  - [x] Heures nulles = « ne travaille pas ce jour-là » (Manager/Admin seulement)
+  - [x] Un seul ajustement actif (EnAttente ou Approuve) par employé et par date
+- [x] 7b. Modèle `Absence` + migration (R24)
+  - [x] Heures prévues (`PlannedStart?`, `PlannedEnd?`) et réelles (`StartedAt?`, `EndedAt?`), `ReturnConfirmed`, motif, statut, `CreatedById`, `ReviewedById?`, `ReviewedAt?`
+  - [x] Plusieurs absences par jour, sans chevauchement ; comprises dans les heures travaillées du jour
+  - [x] Prévue : demandée par l’employé (EnAttente) ou créée par le manager / un Admin (approuvée) ; non prévue : approuvée d’office
 - [ ] 8. Créer un ajustement
   - [ ] Employé : seulement pour lui, date ≥ aujourd’hui, statut `EnAttente`, heures obligatoires (jamais une journée à 0 h)
   - [ ] Manager/Admin : pour son équipe / tous, statut `Approuve` directement
   - [ ] Mêmes validations d’heures que l’horaire type
+- [ ] 8b. **Absences** (R24)
+  - [ ] Demander une absence prévue (date ≥ aujourd’hui) ; annuler si EnAttente
+  - [ ] « Je pars » : démarre l’absence prévue et approuvée du moment, sinon crée une absence non prévue (approuvée d’office)
+  - [ ] « Je suis de retour » : ferme l’absence en cours à l’heure réelle (retour en avance ou en retard)
+  - [ ] Le manager ou un Admin du site peut confirmer le départ ou le retour à la place de l’employé
+  - [ ] Fermeture automatique en fin de journée de travail sans retour confirmé (heure prévue, sinon fin de journée) ; marquée « retour non confirmé »
 - [ ] 9. Annuler un ajustement (employé : si EnAttente ; manager : tant que la date n’est pas passée)
-- [ ] 10. File d’approbation : y ajouter les ajustements en attente (approuver / refuser, mêmes règles d’équipe que les congés)
+- [ ] 10. File d’approbation : y ajouter les ajustements et les absences prévues en attente (approuver / refuser, mêmes règles d’équipe que les congés)
 - [ ] 11. Service **horaire effectif** : pour un employé et une plage `[from, to]`, renvoie chaque jour avec :
   - [ ] les heures prévues (ou « non travaillé ») et la source : `Horaire`, `Ferie`, `Ajustement`, `Conge`, `NonDefini`
   - [ ] l’ajustement en attente éventuel (affiché sans être appliqué, comme un congé en attente)
   - [ ] le nom du férié le cas échéant
+  - [ ] les absences du jour (heures réelles sinon prévues, en cours, retour non confirmé)
 - [ ] 12. Endpoint calendrier : intégrer l’horaire effectif à la réponse existante
 - [ ] 13. Congés : ne compter que les jours travaillés (R14)
   - [ ] Demande qui ne couvre aucun jour travaillé → refusée avec un message clair
@@ -79,7 +89,8 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [ ] **Passé grisé** : jours passés entièrement, aujourd’hui jusqu’à l’heure exacte
   - [ ] **Ligne « maintenant »**, mise à jour chaque minute, dans le fuseau du site
   - [ ] Défilement automatique vers l’heure actuelle à l’ouverture
-- [ ] 17. **Demander un ajustement** (employé) + liste de mes ajustements avec statut
+- [ ] 17. **Demander un ajustement ou une absence prévue** (employé) + liste de mes demandes avec statut
+- [ ] 17b. **Bandeau de présence** en haut de toutes les pages : « Je pars » pendant une journée travaillée ; « Absent depuis 9h05 (retour prévu à 11h) — Je suis de retour » pendant une absence ; absences réelles au calendrier (en cours dessinée jusqu’à maintenant)
 - [ ] 18. File d’approbation : ajustements à côté des congés (type clairement indiqué)
 - [ ] 19. Vue **équipe semaine** (Manager) : qui travaille quand, d’un coup d’œil
 - [ ] 20. Écran **Sites et fériés** (Admin global : créer un site avec fuseau ; Admin du site : gérer ses fériés par année)

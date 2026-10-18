@@ -13,6 +13,8 @@ public class AppDbContext : DbContext
 	public DbSet<WorkSchedule> WorkSchedules => Set<WorkSchedule>();
 	public DbSet<WorkScheduleDay> WorkScheduleDays => Set<WorkScheduleDay>();
 	public DbSet<Holiday> Holidays => Set<Holiday>();
+	public DbSet<ScheduleAdjustment> ScheduleAdjustments => Set<ScheduleAdjustment>();
+	public DbSet<Absence> Absences => Set<Absence>();
 
 	public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
 	{
@@ -58,7 +60,7 @@ public class AppDbContext : DbContext
             entity.Property(u => u.PasswordHash).HasMaxLength(500);
         });
 
-        // --- UserAccount ---
+        // --- LeaveRequest ---
         modelBuilder.Entity<LeaveRequest>(entity =>
         {
             entity.HasOne(l => l.Employee)
@@ -75,6 +77,50 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(l => l.ReviewedById)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+		// --- ScheduleAdjustment ---
+        modelBuilder.Entity<ScheduleAdjustment>(entity =>
+        {
+            entity.HasOne(a => a.Employee)
+                .WithMany()
+                .HasForeignKey(a => a.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+			entity.HasOne(a => a.CreatedBy)
+                .WithMany()
+                .HasForeignKey(a => a.CreatedById)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(a => a.ReviewedBy)
+                .WithMany()
+                .HasForeignKey(a => a.ReviewedById)
+                .OnDelete(DeleteBehavior.Restrict);
+
+			entity.HasIndex(a => new { a.EmployeeId, a.Date })
+				.IsUnique()
+				.HasFilter("Status IN (0, 1)"); // EnAttente, Approuve
+        });
+
+		// --- Absence ---
+        modelBuilder.Entity<Absence>(entity =>
+        {
+            entity.HasOne(a => a.Employee)
+                .WithMany()
+                .HasForeignKey(a => a.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+			entity.HasOne(a => a.CreatedBy)
+                .WithMany()
+                .HasForeignKey(a => a.CreatedById)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(a => a.ReviewedBy)
+                .WithMany()
+                .HasForeignKey(a => a.ReviewedById)
+                .OnDelete(DeleteBehavior.Restrict);
+
+			entity.HasIndex(a => new { a.EmployeeId, a.Date });
         });
 
 		// --- Site ---

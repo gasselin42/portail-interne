@@ -164,11 +164,16 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
   - Seul l’Admin global change le site d’un employé, et seulement s’il n’a ni manager ni subordonnés.
 - Les **jours fériés** du site sont non travaillés par défaut ; un manager peut faire travailler quelqu’un ce jour-là.
 - Un **ajustement d’horaire** modifie une seule date (partir à 16h, venir un vendredi, travailler un férié) sans passer par Congés.
-  - Il peut contenir une **plage d’absence** dans la journée (ex. rendez-vous de 10h à 12h), sans toucher au solde de congés.
   - Demandé par l’employé → approbation du manager (même file que les congés).
   - Créé par le manager → approuvé directement.
   - Aucune banque d’heures : le portail enregistre les heures prévues, la paie reste hors périmètre.
-- La disponibilité d’une personne se calcule par couches : horaire type → férié → ajustement → congé approuvé (→ meetings à la phase 3).
+- Une **absence** est un moment où l’on s’absente pendant une journée de travail, sans toucher au solde de congés ; il peut y en avoir plusieurs par jour, sans chevauchement.
+  - **Prévue** (ex. rendez-vous de 10h à 12h) : demandée, puis approuvée par le manager.
+  - **Non prévue** (urgence) : créée par « Je pars », approuvée d’office.
+  - « Je pars » et « Je suis de retour » enregistrent les heures **réelles** ; le calendrier les affiche quand elles existent, sinon les heures prévues (R24).
+  - Le manager ou un Admin du site peut confirmer le départ ou le retour à la place de l’employé.
+  - Sans retour confirmé, l’absence se ferme à la fin de la journée de travail (heure prévue, sinon fin de journée), marquée « retour non confirmé ».
+- La disponibilité d’une personne se calcule par couches : horaire type → férié → ajustement → absences → congé approuvé (→ meetings à la phase 3).
 
 ---
 
@@ -368,6 +373,7 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
 - **WorkScheduleDay** : WorkScheduleId, DayOfWeek, StartTime, EndTime, BreakMinutes
 - **Holiday** : Id, SiteId, Date, Name
 - **ScheduleAdjustment** : Id, EmployeeId, Date, StartTime?, EndTime?, BreakMinutes, Reason?, Status, CreatedById, ReviewedById?, ReviewedAt?, CreatedAt
+- **Absence** : Id, EmployeeId, Date, PlannedStart?, PlannedEnd?, StartedAt?, EndedAt?, ReturnConfirmed, Reason?, Status, CreatedById, ReviewedById?, ReviewedAt?, CreatedAt
 
 ### Phase 3
 - **CalendarEvent / Meeting** : Id, Title, Description?, StartAt, EndAt, OrganizerId, IsTeamMeeting, IsFlexible (bloc personnel seulement), CreatedAt
@@ -466,10 +472,10 @@ Les écrans sont côté **React**. L’API expose les routes `/api/...` correspo
 | R10 | Assignation ticket → warning « prévoir un slot » pour l’assigné + notif demandeur |
 | R11 | Horaire type récurrent, versionné par `EffectiveFrom` ≥ aujourd’hui ; jours absents = non travaillés ; un bloc par jour, sans passer minuit |
 | R12 | Jour férié du site = non travaillé, sauf ajustement créé par un Manager/Admin |
-| R13 | Ajustement demandé par l’employé = EnAttente jusqu’à approbation ; créé par Manager/Admin = approuvé ; jamais de journée à 0 h demandée par l’employé ; peut contenir une plage d’absence dans la journée ; aucune banque d’heures |
+| R13 | Ajustement demandé par l’employé = EnAttente jusqu’à approbation ; créé par Manager/Admin = approuvé ; jamais de journée à 0 h demandée par l’employé ; aucune banque d’heures |
 | R14 | Un congé ne compte que les jours travaillés ; une demande sans aucun jour travaillé est refusée |
 | R15 | Horaires, fériés et ajustements en heure locale du site ; instants (meetings, horodatages) en UTC |
-| R16 | Disponibilité = horaire type → férié → ajustement approuvé → congé approuvé (la couche suivante l’emporte) |
+| R16 | Disponibilité = horaire type → férié → ajustement approuvé → absences → congé approuvé (la couche suivante l’emporte) |
 | R17 | Libre / occupé : un employé voit les créneaux occupés de ses collègues, jamais le titre, le motif ni les participants |
 | R18 | Meeting récurrent : chaque occurrence respecte R6–R8 ; une modification vise une occurrence, les suivantes ou toute la série ; la série suit l’heure locale du fuseau de l’organisateur |
 | R19 | Solde annuel de congés (20 jours par défaut, modifiable par l’Admin par employé, année civile) : les congés en attente et approuvés de l’année consomment le solde dans l’**ordre de création** des demandes ; les jours au-delà sont sans solde (calculés à l’affichage, jamais stockés) ; la maladie ne consomme pas le solde |
@@ -477,6 +483,7 @@ Les écrans sont côté **React**. L’API expose les routes `/api/...` correspo
 | R21 | Bloc personnel **souple** : seul un meeting d’équipe peut le chevaucher sans conflit ; le bloc reste affiché, pâli, à côté du meeting, n’est jamais supprimé ni coupé, et son propriétaire est notifié ; il apparaît « occupé souple » dans le libre / occupé ; un meeting ordinaire sur un bloc souple = conflit normal |
 | R22 | Couleur d’un événement : choisie par chaque personne dans son propre calendrier, parmi une palette fixe qui exclut les couleurs des congés ; couleur par défaut si aucune n’est choisie ; ne change jamais celle des autres participants |
 | R23 | Portée par site : un Admin gère seulement les employés de son site (comptes, fiches, approbations, horaires, ajustements, congé maladie pour autrui) ; l’Admin global gère tous les sites, les sites eux-mêmes et le changement de site ; manager et subordonnés toujours du même site ; changement de site refusé tant que l’employé a un manager ou des subordonnés ; annuaire et meetings restent ouverts à tous les sites |
+| R24 | Absence dans la journée : prévue (demandée, approuvée) ou non prévue (« Je pars », approuvée d’office) ; plusieurs par jour sans chevauchement ; « Je pars » et « Je suis de retour » enregistrent les heures réelles, affichées au calendrier ; confirmables aussi par le manager ou un Admin du site ; sans retour confirmé, fermeture à la fin de la journée de travail, marquée « retour non confirmé » ; un meeting chevauché n’est jamais annulé, l’organisateur et l’employé sont notifiés (phase 3) |
 
 ---
 
@@ -560,6 +567,8 @@ portail-interne/
 | 2026-10-16 | Solde : 20 jours par défaut ; consommé dans l’ordre de création (la demande qui dépasse porte les jours sans solde)
 | 2026-10-16 | Absence de quelques heures = ajustement d’horaire avec plage d’absence (phase 2.5), sans toucher au solde
 | 2026-10-18 | Blocs personnels souples (R21) : seul un meeting d’équipe passe par-dessus, le bloc reste affiché pâli, « occupé souple » dans le libre / occupé ; couleur par événement et par personne, palette fixe (R22)
+| 2026-10-18 | Absences séparées des ajustements (R24) : prévues ou non prévues (urgence), plusieurs par jour, « Je pars » / « Je suis de retour » avec heures réelles, fermeture automatique en fin de journée ; remplace la plage d’absence dans un ajustement
+| 2026-10-18 | Retard sur une absence (R24, première version) : prolongation le jour même, appliquée sans approbation, manager informé ; meeting chevauché conservé, organisateur et employé notifiés
 | 2026-10-18 | Portée par site (R23) : rôle Admin global ; Admin limité à son site ; manager du même site ; changement de site par l’Admin global seulement, refusé s’il y a un manager ou des subordonnés ; annuaire filtrable par site
 | 2026-10-12 | Ajout de la phase 3.5 — Meetings récurrents (occurrences calculées, exceptions stockées, R18)
 

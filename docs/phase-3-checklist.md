@@ -35,6 +35,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [ ] 10. Nouveau format de l’endpoint calendrier sur `[from, to]` : une entrée par jour (horaire effectif, congés) + la liste des meetings
 - [ ] 10b. Endpoint **libre / occupé** : créneaux occupés de plusieurs employés sur une plage, sans titre, motif ni participants (R17) ; les blocs souples sont marqués « occupé souple » (R21)
   - [ ] Participants de plusieurs sites : créneaux renvoyés en UTC, affichés dans le fuseau de la personne qui regarde
+- [ ] 10c. Absence (R24) qui chevauche un meeting, prévue ou réelle (départ, retour tardif) : meeting conservé ; organisateur et employé notifiés (« Sam manquera le début de … ») ; manager notifié d’un départ non prévu ou d’un retour non confirmé
 - [ ] 11. Endpoints notifications : lister / marquer lu (minimum viable)
 
 ## Frontend (React)
