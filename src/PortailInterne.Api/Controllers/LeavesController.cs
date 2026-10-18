@@ -19,15 +19,17 @@ public class LeavesController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly IAppClock _clock;
+	private readonly SiteClock _siteClock;
 
     private const int MaxSickLeaveBackdateDays = 14;
 
 	private static readonly CultureInfo FrenchCanada = new("fr-CA");
 
-    public LeavesController(AppDbContext db, IAppClock clock)
+    public LeavesController(AppDbContext db, IAppClock clock, SiteClock siteClock)
     {
         _db = db;
         _clock = clock;
+		_siteClock = siteClock;
     }
 
     [HttpPost]
@@ -37,8 +39,10 @@ public class LeavesController : ControllerBase
 
         if (employeeIdClaim is null || !int.TryParse(employeeIdClaim, out var employeeId))
             return Unauthorized();
+		
+		var today = await _siteClock.TodayForAsync(employeeId);
 
-		var validate = ValidateDates(request.StartDate, request.EndDate, request.Type);
+		var validate = ValidateDates(request.StartDate, request.EndDate, request.Type, today);
 
 		if (validate is not null)
 			return BadRequest(new { message = validate });
@@ -100,7 +104,9 @@ public class LeavesController : ControllerBase
 		if (!User.IsInRole("Admin") && employee.ManagerId != employeeId)
 			return NotFound();
 
-		var validate = ValidateDates(request.StartDate, request.EndDate, LeaveType.Maladie);
+		var today = await _siteClock.TodayForAsync(employee.Id);
+
+		var validate = ValidateDates(request.StartDate, request.EndDate, LeaveType.Maladie, today);
 
 		if (validate is not null)
 			return BadRequest(new { message = validate });
@@ -362,7 +368,7 @@ public class LeavesController : ControllerBase
 		if (employeeIdClaim is null || !int.TryParse(employeeIdClaim, out var employeeId))
             return Unauthorized();
 
-		var y = year ?? _clock.Today.Year;
+		var y = year ?? (await _siteClock.TodayForAsync(employeeId)).Year;
 
 		if (y < 2000 || y > 2100)
 			return BadRequest(new { message = "Année invalide." });
@@ -483,14 +489,14 @@ public class LeavesController : ControllerBase
 			: $"du {Format(start)} au {Format(end)}";
 	}
 
-	private string? ValidateDates(DateTime start, DateTime end, LeaveType type)
+	private string? ValidateDates(DateTime start, DateTime end, LeaveType type, DateOnly today)
 	{
 		if (end.Date < start.Date)
             return "La date de fin ne peut pas être avant la date de début.";
 
-		var minStartDate = (type == LeaveType.Maladie) ? _clock.Today.AddDays(-MaxSickLeaveBackdateDays) : _clock.Today;
+		var minStartDate = (type == LeaveType.Maladie) ? today.AddDays(-MaxSickLeaveBackdateDays) : today;
 
-		if (start.Date < minStartDate)
+		if (DateOnly.FromDateTime(start) < minStartDate)
 		{
 			if (type == LeaveType.Maladie)
             	return $"Un congé maladie peut être rétroactif de {MaxSickLeaveBackdateDays} jours au maximum.";

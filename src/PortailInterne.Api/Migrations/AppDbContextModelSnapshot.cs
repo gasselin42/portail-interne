@@ -79,10 +79,17 @@ namespace PortailInterne.Api.Migrations
                     b.Property<string>("PhotoFileName")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("SiteId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
                         .IsUnique();
+
+                    b.HasIndex("SiteId");
 
                     b.HasIndex("LastNameKey", "FirstNameKey");
 
@@ -136,6 +143,33 @@ namespace PortailInterne.Api.Migrations
                     b.ToTable("LeaveRequests");
                 });
 
+            modelBuilder.Entity("PortailInterne.Api.Models.Site", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TimeZoneId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Sites");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Montréal",
+                            TimeZoneId = "America/Toronto"
+                        });
+                });
+
             modelBuilder.Entity("PortailInterne.Api.Models.UserAccount", b =>
                 {
                     b.Property<int>("Id")
@@ -178,6 +212,67 @@ namespace PortailInterne.Api.Migrations
                     b.ToTable("UserAccounts");
                 });
 
+            modelBuilder.Entity("PortailInterne.Api.Models.WorkSchedule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CreatedById")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly>("EffectiveFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("EmployeeId", "EffectiveFrom")
+                        .IsUnique();
+
+                    b.ToTable("WorkSchedules");
+                });
+
+            modelBuilder.Entity("PortailInterne.Api.Models.WorkScheduleDay", b =>
+                {
+                    b.Property<int>("WorkScheduleId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BreakMinutes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("WorkScheduleId", "DayOfWeek");
+
+                    b.ToTable("WorkScheduleDays");
+                });
+
+            modelBuilder.Entity("PortailInterne.Api.Models.Employee", b =>
+                {
+                    b.HasOne("PortailInterne.Api.Models.Site", "Site")
+                        .WithMany()
+                        .HasForeignKey("SiteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Site");
+                });
+
             modelBuilder.Entity("PortailInterne.Api.Models.LeaveRequest", b =>
                 {
                     b.HasOne("PortailInterne.Api.Models.Employee", "CreatedBy")
@@ -214,9 +309,42 @@ namespace PortailInterne.Api.Migrations
                     b.Navigation("Employee");
                 });
 
+            modelBuilder.Entity("PortailInterne.Api.Models.WorkSchedule", b =>
+                {
+                    b.HasOne("PortailInterne.Api.Models.Employee", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PortailInterne.Api.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("PortailInterne.Api.Models.WorkScheduleDay", b =>
+                {
+                    b.HasOne("PortailInterne.Api.Models.WorkSchedule", null)
+                        .WithMany("Days")
+                        .HasForeignKey("WorkScheduleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("PortailInterne.Api.Models.Employee", b =>
                 {
                     b.Navigation("UserAccount");
+                });
+
+            modelBuilder.Entity("PortailInterne.Api.Models.WorkSchedule", b =>
+                {
+                    b.Navigation("Days");
                 });
 #pragma warning restore 612, 618
         }

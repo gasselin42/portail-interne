@@ -3,6 +3,7 @@ import { getMe, getToken, type Me } from "../api/auth"
 import { clearSession } from "../api/session"
 import { SessionContext } from "./context"
 import { clearPhotoCache } from "../api/photos"
+import { setTimeZone } from "../utils/date"
 
 export function SessionProvider({ children }: { children: ReactNode }) {
 	const [me, setMe] = useState<Me | null>(null)
@@ -19,6 +20,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 			.then((result) => {
 				if (requestId !== lastRequest.current) return
 				setMe(result)
+				if (result)
+					setTimeZone(result.siteTimeZoneId)
 				setError(null)
 			})
 			.catch((e) => {

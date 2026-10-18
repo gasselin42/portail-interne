@@ -22,7 +22,7 @@ public class EmployeesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<EmployeeListItemResponse>>> Lister([FromQuery] string? search)
+    public async Task<ActionResult<List<EmployeeListItemResponse>>> List([FromQuery] string? search)
     {
         var query = _db.Employees
             .AsNoTracking()

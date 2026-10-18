@@ -11,6 +11,7 @@ export type CreateEmployeeRequest = {
 	phoneNumber?: string
 	managerId?: number
 	leaveDays: number
+	siteId: number
 }
 
 export type UpdateEmployeeRequest = {
@@ -22,6 +23,7 @@ export type UpdateEmployeeRequest = {
 	phoneNumber?: string
 	managerId?: number
 	leaveDays: number
+	siteId: number
 }
 
 export type CreateEmployeeResponse = {
@@ -33,6 +35,7 @@ export type CreateEmployeeResponse = {
 	role: RoleId
 	mustChangePassword: boolean
 	temporaryPassword: string
+	siteId: number
 }
 
 export const Departement = {
@@ -76,6 +79,7 @@ export async function createEmployee(
 	form.append("departement", String(body.departement))
 	form.append("role", String(body.role))
 	form.append("annualLeaveDays", String(body.leaveDays))
+	form.append("siteId", String(body.siteId))
 	if (body.jobTitle) form.append("jobTitle", body.jobTitle)
 	if (body.phoneNumber) form.append("phoneNumber", body.phoneNumber)
 	if (body.managerId) form.append("managerId", String(body.managerId))
@@ -104,6 +108,7 @@ export async function updateEmployee(
 	form.append("departement", String(body.departement))
 	form.append("role", String(body.role))
 	form.append("annualLeaveDays", String(body.leaveDays))
+	form.append("siteId", String(body.siteId))
 	if (body.jobTitle) form.append("jobTitle", body.jobTitle)
 	if (body.phoneNumber) form.append("phoneNumber", body.phoneNumber)
 	if (body.managerId) form.append("managerId", String(body.managerId))

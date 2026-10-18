@@ -9,30 +9,30 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 
 ## Préparation
 
-- [ ] Relire le périmètre de la phase 2.5 dans `PROJET.md` (inclus / exclu)
-- [ ] Comprendre l’ordre des couches de disponibilité (R16) : horaire type → férié → ajustement → congé approuvé
-- [ ] Distinguer les deux types de date/heure :
-  - [ ] **Heure locale du site** (`DateOnly` + `TimeOnly`) : horaires, fériés, ajustements
-  - [ ] **Instant UTC** (`DateTimeOffset`) : meetings (phase 3), `CreatedAt`, `ReviewedAt`
-- [ ] Vérifier la conversion de fuseaux IANA en .NET (`TimeZoneInfo.FindSystemTimeZoneById("America/Toronto")`)
-- [ ] Choisir comment stocker `DateOnly` / `TimeOnly` dans SQLite avec EF Core (texte ISO, tri correct)
+- [x] Relire le périmètre de la phase 2.5 dans `PROJET.md` (inclus / exclu)
+- [x] Comprendre l’ordre des couches de disponibilité (R16) : horaire type → férié → ajustement → congé approuvé
+- [x] Distinguer les deux types de date/heure :
+  - [x] **Heure locale du site** (`DateOnly` + `TimeOnly`) : horaires, fériés, ajustements
+  - [x] **Instant UTC** (`DateTimeOffset`) : meetings (phase 3), `CreatedAt`, `ReviewedAt`
+- [x] Vérifier la conversion de fuseaux IANA en .NET (`TimeZoneInfo.FindSystemTimeZoneById("America/Toronto")`)
+- [x] Choisir comment stocker `DateOnly` / `TimeOnly` dans SQLite avec EF Core (texte ISO, tri correct)
 
 ## Backend (API)
 
 - [ ] 1. Modèle `Site` (nom, fuseau IANA) + migration
-  - [ ] Migration : site par défaut « Montréal » (`America/Toronto`), tous les employés existants y sont rattachés
-  - [ ] `Employee.SiteId` obligatoire
-  - [ ] Validation : fuseau IANA reconnu, sinon 400
-- [ ] 2. « Aujourd’hui » calculé dans le fuseau du site de l’employé (remplace le fuseau fixe de Q3)
-- [ ] 3. Modèles `WorkSchedule` + `WorkScheduleDay` + migration
-  - [ ] Un horaire = une date d’entrée en vigueur (`EffectiveFrom`) + 0 à 7 jours
-  - [ ] Un jour = `DayOfWeek`, `StartTime`, `EndTime`, `BreakMinutes`
-  - [ ] Validation : `StartTime < EndTime` (pas de quart de nuit, voir R11), un seul bloc par jour, pause < durée du bloc
-  - [ ] Un horaire sans jour travaillé est refusé (ce serait une désactivation, pas un horaire)
-- [ ] 4. CRUD horaires (Admin : tous ; Manager : son équipe)
-  - [ ] `EffectiveFrom` ≥ aujourd’hui (le passé n’est jamais réécrit)
-  - [ ] Un horaire futur peut être modifié ou supprimé ; un horaire déjà en vigueur, non (on en crée un nouveau)
-  - [ ] Deux horaires d’un même employé ne peuvent pas avoir le même `EffectiveFrom`
+  - [x] Migration : site par défaut « Montréal » (`America/Toronto`), tous les employés existants y sont rattachés
+  - [x] `Employee.SiteId` obligatoire
+  - [ ] Validation : fuseau IANA reconnu, sinon 400 (avec la création de sites, item 20)
+- [x] 2. « Aujourd’hui » calculé dans le fuseau du site de l’employé (remplace le fuseau fixe de Q3)
+- [x] 3. Modèles `WorkSchedule` + `WorkScheduleDay` + migration
+  - [x] Un horaire = une date d’entrée en vigueur (`EffectiveFrom`) + 0 à 7 jours
+  - [x] Un jour = `DayOfWeek`, `StartTime`, `EndTime`, `BreakMinutes`
+  - [x] Validation : `StartTime < EndTime` (pas de quart de nuit, voir R11), un seul bloc par jour, pause < durée du bloc
+  - [x] Un horaire sans jour travaillé est refusé (ce serait une désactivation, pas un horaire)
+- [x] 4. CRUD horaires (Admin : tous ; Manager : son équipe)
+  - [x] `EffectiveFrom` ≥ aujourd’hui (le passé n’est jamais réécrit)
+  - [x] Un horaire futur peut être modifié ou supprimé ; un horaire déjà en vigueur, non (on en crée un nouveau)
+  - [x] Deux horaires d’un même employé ne peuvent pas avoir le même `EffectiveFrom`
 - [ ] 5. Modèle `Holiday` (site, date, nom) + migration
   - [ ] Unicité (site, date)
   - [ ] Seed : fériés du Québec 2026 et 2027

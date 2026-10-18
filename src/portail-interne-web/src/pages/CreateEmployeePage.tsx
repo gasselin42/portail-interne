@@ -19,6 +19,8 @@ import { inputClass, labelClass } from "../ui/fields"
 import { PageHeader } from "../components/common/PageHeader"
 import { AVATAR_SIZES } from "../ui/avatar"
 import { EmployeePhoto } from "../components/employees/EmployeePhoto"
+import { useAsync } from "../hooks/useAsync"
+import { listSites } from "../api/sites"
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -30,6 +32,7 @@ export function CreateEmployeePage() {
 	const [role, setRole] = useState<RoleId | null>(null)
 	const [jobTitle, setJobTitle] = useState<string>("")
 	const [leaveDays, setLeaveDays] = useState(20)
+	const [siteId, setSiteId] = useState<number | null>(null)
 	const [phoneNumber, setPhoneNumber] = useState<string>("")
 	const [manager, setManager] = useState<EmployeeOption | null>(null)
 	const [photo, setPhoto] = useState<File | null>(null)
@@ -50,6 +53,8 @@ export function CreateEmployeePage() {
 	const navigate = useNavigate()
 	const photoInputRef = useRef<HTMLInputElement>(null)
 
+	const sites = useAsync((signal) => listSites(signal), [])
+
 	useEffect(() => {
 		if (!enEdition || employeId === null) return
 
@@ -63,6 +68,7 @@ export function CreateEmployeePage() {
 				setJobTitle(employee.jobTitle)
 				setPhoneNumber(employee.phoneNumber)
 				setLeaveDays(employee.annualLeaveDays)
+				setSiteId(employee.siteId)
 				setManager(
 					employee.managerId !== null
 						? {
@@ -100,7 +106,11 @@ export function CreateEmployeePage() {
 			} else if (leaveDays < 0 || leaveDays > 60) {
 				setErreur("Veuillez choisir entre 0 et 60 jours de congé")
 				return
+			} else if (siteId === null) {
+				setErreur("Veuillez choisir un site")
+				return
 			}
+
 
 			setEnCours(true)
 
@@ -115,7 +125,8 @@ export function CreateEmployeePage() {
 						jobTitle,
 						phoneNumber,
 						managerId: manager?.id,
-						leaveDays
+						leaveDays,
+						siteId: siteId!
 					},
 					photo,
 				)
@@ -133,7 +144,8 @@ export function CreateEmployeePage() {
 					jobTitle,
 					phoneNumber,
 					managerId: manager?.id,
-					leaveDays
+					leaveDays,
+					siteId: siteId!
 				},
 				photo,
 			)
@@ -314,22 +326,50 @@ export function CreateEmployeePage() {
 						</div>
 					</div>
 
-					<div>
-						<label htmlFor="email" className={labelClass}>
-							Email
-							<span className="ml-0.5 text-red-600" aria-hidden="true">
-								*
-							</span>
-						</label>
-						<input
-							id="email"
-							type="email"
-							required
-							value={email}
-							readOnly={enEdition}
-							onChange={(e) => setEmail(e.target.value)}
-							className={`${inputClass} read-only:cursor-default read-only:border-slate-200 read-only:bg-slate-100 read-only:text-slate-500 read-only:shadow-none read-only:focus:ring-0`}
-						/>
+					<div className="grid gap-5 sm:grid-cols-2">
+						<div>
+							<label htmlFor="email" className={labelClass}>
+								Email
+								<span className="ml-0.5 text-red-600" aria-hidden="true">
+									*
+								</span>
+							</label>
+							<input
+								id="email"
+								type="email"
+								required
+								value={email}
+								readOnly={enEdition}
+								onChange={(e) => setEmail(e.target.value)}
+								className={`${inputClass} read-only:cursor-default read-only:border-slate-200 read-only:bg-slate-100 read-only:text-slate-500 read-only:shadow-none read-only:focus:ring-0`}
+							/>
+						</div>
+						<div>
+							<label htmlFor="site" className={labelClass}>
+								Site
+								<span className="ml-0.5 text-red-600" aria-hidden="true">
+									*
+								</span>
+							</label>
+							<select
+								id="site"
+								required
+								disabled={sites.loading}
+								value={siteId ?? ""}
+								onChange={(e) =>
+									setSiteId(e.target.value === "" ? null : Number(e.target.value))
+								}
+								className={inputClass}
+							>
+								<option value="">sites.loading ? "Chargement…" : "Choisir…"</option>
+								{(sites.data ?? []).map((site) => (
+									<option key={site.id} value={site.id}>
+										{site.name}
+									</option>
+								))}
+							</select>
+							{sites.error && <p className="mt-1 text-xs text-red-600">{sites.error}</p>}
+						</div>
 					</div>
 
 					<div className="grid gap-5 sm:grid-cols-2">
@@ -354,7 +394,7 @@ export function CreateEmployeePage() {
 								}
 								className={inputClass}
 							>
-								<option value="">Choisir...</option>
+								<option value="">Choisir…</option>
 								{Object.entries(Departement).map(([, id]) => (
 									<option key={id} value={id}>
 										{DEPARTEMENT_LABELS[id]}
@@ -378,7 +418,7 @@ export function CreateEmployeePage() {
 								}
 								className={inputClass}
 							>
-								<option value="">Choisir...</option>
+								<option value="">Choisir…</option>
 								{Object.entries(Role).map(([label, id]) => (
 									<option key={id} value={id}>
 										{label}

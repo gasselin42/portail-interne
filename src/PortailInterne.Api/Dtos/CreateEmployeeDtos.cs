@@ -29,6 +29,9 @@ public class CreateEmployeeRequest
 	[Required(ErrorMessage = "Le nombre de jours de congé est obligatoire.")]
 	[Range(0, 60, ErrorMessage = "Le nombre de jours de congé doit être entre 0 et 60.")]
 	public int? AnnualLeaveDays { get; set; }
+
+	[Required(ErrorMessage = "Le site est obligatoire.")]
+	public int? SiteId { get; set; }
 }
 
 public class UpdateEmployeeRequest
@@ -54,6 +57,9 @@ public class UpdateEmployeeRequest
 	[Required(ErrorMessage = "Le nombre de jours de congé est obligatoire.")]
 	[Range(0, 60, ErrorMessage = "Le nombre de jours de congé doit être entre 0 et 60.")]
 	public int? AnnualLeaveDays { get; set; }
+
+	[Required(ErrorMessage = "Le site est obligatoire.")]
+	public int? SiteId { get; set; }
 }
 
 public class CreateEmployeeResponse

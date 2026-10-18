@@ -21,6 +21,7 @@ export type Me = {
 	isManager: boolean
 	mustChangePassword: boolean
 	isActive: boolean
+	siteTimeZoneId: string
 }
 
 function tokenIsExpired(token: string): boolean {

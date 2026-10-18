@@ -47,6 +47,11 @@ public class Employee
 
     public bool IsActive { get; set; } = true;
 
+	[Required]
+	public int SiteId { get; set; }
+
+	public Site Site { get; set; } = null!; // navigation
+
     public DateTime CreatedAt { get; set; }
 
     public string? PhotoFileName { get; set; }

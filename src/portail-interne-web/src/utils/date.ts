@@ -1,5 +1,7 @@
 import { APP_TIME_ZONE } from "../config"
 
+let timeZone = APP_TIME_ZONE // valeur par défaut, en attendant /me
+
 const dateFormatter = new Intl.DateTimeFormat("fr-CA", {
 	day: "numeric",
 	month: "short",
@@ -36,6 +38,11 @@ const shortWeekdayFormatter = new Intl.DateTimeFormat("fr-CA", {
 	weekday: "short",
 	timeZone: "UTC"
 })
+
+/** Appelée par la session : « aujourd'hui » suit le fuseau du site de la personne connectée. */
+export function setTimeZone(value: string): void {
+	timeZone = value
+}
 
 function toUtcDate(value: string): Date {
 	const isoDate = value.slice(0, 10)
@@ -95,7 +102,7 @@ export function startOfWeek(iso: string): string {
 }
 
 export function todayIso(): string {
-	return new Date().toLocaleDateString("en-CA", { timeZone: APP_TIME_ZONE })
+	return new Date().toLocaleDateString("en-CA", { timeZone })
 }
 
 export function isIsoDate(value: string): boolean {

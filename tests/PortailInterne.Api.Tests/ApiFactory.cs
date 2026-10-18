@@ -31,8 +31,12 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
 	public TestTeam Team { get; private set; } = null!;
 
-	public ApiFactory()
+	private readonly DateTimeOffset _now;
+
+	/// <param name="now">« Maintenant » pour ce test ; <see cref="Now"/> par défaut.</param>
+	public ApiFactory(DateTimeOffset? now = null)
 	{
+		_now = now ?? Now;
 		_connection.Open();
 	}
 
@@ -50,7 +54,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 			services.AddDbContext<AppDbContext>(options => options.UseSqlite(_connection));
 
 			services.RemoveAll<TimeProvider>();
-			services.AddSingleton<TimeProvider>(new FixedTimeProvider(Now));
+			services.AddSingleton<TimeProvider>(new FixedTimeProvider(_now));
 		});
 	}
 

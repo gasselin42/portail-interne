@@ -87,6 +87,7 @@ public class AuthController : ControllerBase
 
         var account = await _db.UserAccounts
             .Include(u => u.Employee)
+				.ThenInclude(e => e.Site)
             .FirstOrDefaultAsync(u => u.Id == userAccountId);
 
         if (account is null || !account.IsActive || account.Employee is null || !account.Employee.IsActive || account.Role is null)
@@ -106,7 +107,8 @@ public class AuthController : ControllerBase
             Role = account.Role.Value,
             IsManager = isManager,
             MustChangePassword = account.MustChangePassword,
-            IsActive = account.IsActive && account.Employee.IsActive
+            IsActive = account.IsActive && account.Employee.IsActive,
+			SiteTimeZoneId = account.Employee.Site.TimeZoneId
         });
     }
 

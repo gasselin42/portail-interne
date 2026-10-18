@@ -21,6 +21,7 @@ export type EmployeeDetail = EmployeeListItem & {
 
 export type EmployeeEdition = EmployeeDetail & {
 	role: number | null
+	siteId: number
 }
 
 /** Le minimum pour afficher une personne sélectionnée. */

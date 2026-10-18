@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Hosting;
 
 using PortailInterne.Api.Dtos;
 using PortailInterne.Api.Data;
@@ -42,6 +41,9 @@ public class AdminController : ControllerBase
 		if (managerError is not null)
 			return BadRequest(new { message = managerError });
 
+		if (await _db.Sites.AnyAsync(s => s.Id == request.SiteId) == false)
+			return BadRequest(new { message = "Le site choisi n'existe pas." });
+
 		if (photo is not null && photo.Length > 0)
 		{
 			var photoError = _photos.Validate(photo);
@@ -68,6 +70,7 @@ public class AdminController : ControllerBase
             PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber,
 			ManagerId = request.ManagerId,
 			AnnualLeaveDays = request.AnnualLeaveDays!.Value,
+			SiteId = request.SiteId!.Value,
 			IsActive = true,
 			CreatedAt = DateTime.UtcNow,
 			UserAccount = new UserAccount
@@ -142,7 +145,8 @@ public class AdminController : ControllerBase
             PhotoUrl = employee.PhotoFileName == null
                 ? null
                 : PhotoStorage.UrlFor(employee.PhotoFileName),
-			AnnualLeaveDays = employee.AnnualLeaveDays
+			AnnualLeaveDays = employee.AnnualLeaveDays,
+			SiteId = employee.SiteId
         };
 
         return Ok(employeeDetails);
@@ -160,6 +164,9 @@ public class AdminController : ControllerBase
 
 		if (employee is null)
 			return NotFound();
+
+		if (await _db.Sites.AnyAsync(s => s.Id == request.SiteId) == false)
+			return BadRequest(new { message = "Le site choisi n'existe pas." });
 
         var managerError = await ValidateManagerAsync(request.ManagerId, id);
 
@@ -186,6 +193,7 @@ public class AdminController : ControllerBase
 		employee.ManagerId = request.ManagerId;
 		employee.UserAccount.Role = request.Role;
 		employee.AnnualLeaveDays = request.AnnualLeaveDays!.Value;
+		employee.SiteId = request.SiteId!.Value;
 
 		var photoChanged = ancienNom != employee.PhotoFileName;
 
