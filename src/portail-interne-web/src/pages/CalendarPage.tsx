@@ -16,11 +16,7 @@ import {
 } from "../utils/date"
 import { iconButton, primaryButton, secondaryButton } from "../ui/buttons"
 import { ChevronLeft, ChevronRight } from "@mui/icons-material"
-import {
-	LeaveStatus,
-	listCalendar,
-	type LeaveRequestResponse,
-} from "../api/leaves"
+import { LeaveStatus, type LeaveRequestResponse } from "../api/leaves"
 import { ErrorBanner, type PageError } from "../components/feedback/Banner"
 import { segmentsFor } from "../utils/calendar"
 import { LEAVE_BAND_STYLES } from "../ui/leaveBands"
@@ -30,6 +26,7 @@ import { DayView } from "../components/calendar/DayView"
 import { SegmentedControl } from "../components/common/SegmentedControl"
 import { MonthView } from "../components/calendar/MonthView"
 import { leaveSwatchBackground } from "../ui/leaveBandBackground"
+import { getCalendar } from "../api/calendar"
 
 type CalendarResult =
 	| { from: string; to: string; leaves: LeaveRequestResponse[] }
@@ -143,8 +140,8 @@ export function CalendarPage() {
 	useEffect(() => {
 		const controller = new AbortController()
 
-		listCalendar(from, to, controller.signal)
-			.then((leaves) => setResult({ from, to, leaves }))
+		getCalendar(from, to, controller.signal)
+			.then((data) => setResult({ from, to, leaves: data.leaves }))
 			.catch((e) => {
 				if (controller.signal.aborted) return
 				setResult({

@@ -126,10 +126,9 @@ public class LeavesApiTests
 		var jane = await api.LoginAsync("jane@test.local");
 		await CreateAsync(sam, Conge("2026-11-16", "2026-11-20"));
 
-		var calendar = await jane.GetFromJsonAsync<List<LeaveRequestResponse>>(
-			"/api/leaves/calendar?from=2026-11-16&to=2026-11-22");
+		var calendar = await jane.GetFromJsonAsync<CalendarResponse>("/api/calendar?from=2026-11-16&to=2026-11-22");
 
-		Assert.Empty(calendar!);
+		Assert.Empty(calendar!.Leaves);
 	}
 
 	// ─── Approbation ────────────────────────────────────────────────────────

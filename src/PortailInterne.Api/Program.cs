@@ -20,11 +20,14 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IAppClock, AppClock>();
 builder.Services.AddSingleton<PhotoStorage>();
 
-builder.Services.AddScoped<MustChangePasswordFilter>();
 builder.Services.AddScoped<SiteClock>();
+builder.Services.AddScoped<MustChangePasswordFilter>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<AccessScope>();
+
+builder.Services.AddScoped<EffectiveScheduleService>();
+builder.Services.AddScoped<LeaveUsageService>();
 
 builder.Services.AddControllers(options =>
 {

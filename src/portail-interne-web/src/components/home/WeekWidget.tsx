@@ -1,4 +1,4 @@
-import { listCalendar } from "../../api/leaves"
+import { getCalendar } from "../../api/calendar"
 import { useAsync } from "../../hooks/useAsync"
 import { useMediaQuery } from "../../hooks/useMediaQuery"
 import { segmentsFor } from "../../utils/calendar"
@@ -14,7 +14,7 @@ export function WeekWidget() {
 	const days = Array.from({ length: 7 }, (_, i) => addDays(from, i))
 	const to = days[6]
 
-	const { data, error, loading, retry } = useAsync((signal) => listCalendar(from, to, signal), [from, to])
+	const { data, error, loading, retry } = useAsync((signal) => getCalendar(from, to, signal), [from, to])
 
 	const isDesktop = useMediaQuery("(min-width: 48rem)")
 
@@ -29,11 +29,11 @@ export function WeekWidget() {
 			) : isDesktop ? (
 				<WeekView
 					days={days}
-					segments={segmentsFor(data ?? [], days)}
+					segments={segmentsFor(data?.leaves ?? [], days)}
 					today={today}
 				/>
 			) : (
-				<DayView segments={segmentsFor(data ?? [], [today])} />
+				<DayView segments={segmentsFor(data?.leaves ?? [], [today])} />
 			)}
 		</Widget>
 	)

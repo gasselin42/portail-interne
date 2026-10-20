@@ -15,6 +15,8 @@ Tests automatisés de l'API, avec xUnit.
   - `LeavesApiTests` : tests d'intégration des congés — création, chevauchements (Q16), isolation des données, approbation (Manager / Admin), congé maladie déclaré pour autrui (R20), solde et aperçu (R19)
   - `WorkScheduleRulesTests` : validation d'un horaire type (`WorkScheduleRules.Validate`) — au moins un jour, pas de doublon, fin après début, pause valide (R11)
   - `AdjustmentAndAbsenceRulesTests` : validation d'un ajustement d'horaire (jour non travaillé, heures, pause — R13) et d'une absence dans la journée (prévue, non prévue, retour en avance ou en retard — R24)
+  - `EffectiveScheduleTests` : horaire effectif d'un jour (`EffectiveSchedule.ComputeDay`) — horaire type, jour hors horaire, non défini, férié, ajustement (même un férié), ajustement en attente non appliqué, congé par-dessus tout (R16)
+  - `CalendarApiTests` : `GET /api/calendar` de bout en bout — chaque couche de l'horaire effectif (horaire, ajustement approuvé ou en attente, congé, férié), changement d'horaire en cours de période, isolation, période invalide (R16)
   - `AdjustmentsApiTests` : tests d'intégration des ajustements — demande en attente (employé), approuvé d'office (manager / Admin, jamais pour soi), jour non travaillé réservé au manager, un seul actif par date, annulation selon le rôle (R13)
   - `WorkSchedulesApiTests` : tests d'intégration des horaires — création (Manager / Admin), date passée, doublon (409), droits de lecture, modification et suppression d'un horaire futur, historique jamais réécrit (R11)
   - `HolidaysApiTests` : tests d'intégration des jours fériés — lecture par tous, écriture par l'Admin du site seulement, date passée, doublon par site (409), férié passé figé, site sans employé (R12, R23)

@@ -21,17 +21,19 @@ public class LeavesController : ControllerBase
     private readonly IAppClock _clock;
 	private readonly SiteClock _siteClock;
 	private readonly AccessScope _scope;
+	private readonly LeaveUsageService _leaveUsage;
 
     private const int MaxSickLeaveBackdateDays = 14;
 
 	private static readonly CultureInfo FrenchCanada = new("fr-CA");
 
-    public LeavesController(AppDbContext db, IAppClock clock, SiteClock siteClock, AccessScope scope)
+    public LeavesController(AppDbContext db, IAppClock clock, SiteClock siteClock, AccessScope scope, LeaveUsageService leaveUsage)
     {
         _db = db;
         _clock = clock;
 		_siteClock = siteClock;
 		_scope = scope;
+		_leaveUsage = leaveUsage;
     }
 
     [HttpPost]
@@ -80,7 +82,7 @@ public class LeavesController : ControllerBase
             CreatedAt = leave.CreatedAt
         };
 
-		await AddUsageAsync([response]);
+		await _leaveUsage.AddUsageAsync([response]);
 
         return Created($"/api/leaves/{leave.Id}", response);
     }
@@ -150,7 +152,7 @@ public class LeavesController : ControllerBase
 			CreatedByLastName = caller!.LastName
         };
 
-		await AddUsageAsync([response]);
+		await _leaveUsage.AddUsageAsync([response]);
 
 		return Created($"/api/leaves/{leave.Id}", response); 
 	}
@@ -183,7 +185,7 @@ public class LeavesController : ControllerBase
             })
             .ToListAsync();
 
-		await AddUsageAsync(leaves);
+		await _leaveUsage.AddUsageAsync(leaves);
 
         return Ok(leaves);
     }
@@ -252,7 +254,7 @@ public class LeavesController : ControllerBase
             })
             .ToListAsync();
 
-		await AddUsageAsync(leaves);
+		await _leaveUsage.AddUsageAsync(leaves);
 
         return Ok(leaves);
     }
@@ -326,47 +328,6 @@ public class LeavesController : ControllerBase
         return NoContent();
     }
 
-    [HttpGet("calendar")]
-    public async Task<ActionResult<List<LeaveRequestResponse>>> Calendar(
-        [FromQuery, BindRequired] DateOnly from,
-        [FromQuery, BindRequired] DateOnly to)
-    {
-        var employeeIdClaim = User.FindFirstValue("employeeId");
-
-        if (employeeIdClaim is null || !int.TryParse(employeeIdClaim, out var employeeId))
-            return Unauthorized();
-
-		if (to < from)
-            return BadRequest(new { message = "La date de fin doit être après la date de début." });
-			
-		if (to.DayNumber - from.DayNumber >= 62)
-			return BadRequest(new { message = "Sélectionne une plage de 62 jours au maximum."});
-
-        List<LeaveRequestResponse> leaves = await _db.LeaveRequests
-            .AsNoTracking()
-            .Where(l => l.EmployeeId == employeeId)
-            .Where(l => DateOnly.FromDateTime(l.StartDate) <= to && DateOnly.FromDateTime(l.EndDate) >= from)
-            .Where(l => l.Status == LeaveStatus.EnAttente || l.Status == LeaveStatus.Approuve)
-            .OrderBy(l => l.StartDate)
-            .ThenBy(l => l.EndDate)
-            .Select(l => new LeaveRequestResponse
-            {
-                Id = l.Id,
-                EmployeeId = l.EmployeeId,
-                StartDate = l.StartDate,
-                EndDate = l.EndDate,
-                Type = l.Type,
-                Status = l.Status,
-                Reason = l.Reason,
-                CreatedAt = l.CreatedAt
-            })
-            .ToListAsync();
-
-		await AddUsageAsync(leaves);
-
-        return Ok(leaves);
-    }
-
 	[HttpGet("balance")]
 	public async Task<ActionResult<LeaveBalanceResponse>> Balance([FromQuery] int? year)
 	{
@@ -395,7 +356,7 @@ public class LeavesController : ControllerBase
 			.Select(l => new { l.Id, l.StartDate, l.EndDate, l.Status })
 			.ToListAsync();
 		
-		var usage = await UsageForAsync([employeeId]);
+		var usage = await _leaveUsage.UsageForAsync([employeeId]);
 
 		int approved = 0, pending = 0, unpaid = 0;
 
@@ -448,7 +409,7 @@ public class LeavesController : ControllerBase
 			.Select(e => e.AnnualLeaveDays)
 			.FirstAsync();
 		
-		var leaves = (await LoadBalanceLeavesAsync([employeeId])).GetValueOrDefault(employeeId, []);
+		var leaves = (await _leaveUsage.LoadBalanceLeavesAsync([employeeId])).GetValueOrDefault(employeeId, []);
 
 		// La demande envisagée, traitée en dernier comme si elle était créée maintenant
 		const int PreviewId = 0;
@@ -512,51 +473,6 @@ public class LeavesController : ControllerBase
 		}
 
 		return null;
-	}
-
-	private async Task<Dictionary<int, LeaveBalance.LeaveUsage>> UsageForAsync(IEnumerable<int> employeeIds)
-	{
-		var annualDays = await _db.Employees
-			.Where(e => employeeIds.Contains(e.Id))
-			.ToDictionaryAsync(e => e.Id, e => e.AnnualLeaveDays);
-
-		var balanceLeaves = await LoadBalanceLeavesAsync(employeeIds);
-
-		return annualDays
-			.SelectMany(p => LeaveBalance.ComputeUsage(p.Value, balanceLeaves.GetValueOrDefault(p.Key, [])))
-			.ToDictionary(p => p.Key, p => p.Value);
-	}
-
-	/// <summary>Complète WorkingDays et UnpaidDates des congés qui consomment le solde.</summary>
-	private async Task AddUsageAsync(List<LeaveRequestResponse> leaves)
-	{
-		var employeeIds = leaves.Select(l => l.EmployeeId).Distinct();
-		var usage = await UsageForAsync(employeeIds);
-
-		foreach (var leave in leaves)
-		{
-			if (usage.TryGetValue(leave.Id, out var u))
-			{
-				leave.WorkingDays = u.WorkingDays;
-				leave.UnpaidDates = u.UnpaidDates;
-			}
-		}
-	}
-
-	/// <summary>Congés qui consomment le solde (Congé, en attente ou approuvé), regroupés par employé.</summary>
-	private async Task<Dictionary<int, List<LeaveBalance.BalanceLeave>>> LoadBalanceLeavesAsync(IEnumerable<int> employeeIds)
-	{
-		return (await _db.LeaveRequests
-				.AsNoTracking()
-				.Where(l => employeeIds.Contains(l.EmployeeId)
-						&& l.Type == LeaveType.Conge
-						&& (l.Status == LeaveStatus.EnAttente || l.Status == LeaveStatus.Approuve))
-				.ToListAsync())
-			.GroupBy(l => l.EmployeeId)
-			.ToDictionary(
-				g => g.Key,
-				g => g.Select(l => new LeaveBalance.BalanceLeave(l.Id, l.StartDate, l.EndDate, l.CreatedAt)).ToList()
-			);
 	}
 }
 
