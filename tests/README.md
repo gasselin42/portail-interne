@@ -11,8 +11,8 @@ Tests automatisés de l'API, avec xUnit.
 ## Projets
 
 - **PortailInterne.Api.Tests**
-  - `LeaveBalanceTests` : calcul du solde de congés (`LeaveBalance.ComputeUsage`) — jours ouvrables, dépassement et jours sans solde, ordre de création, années civiles (R19)
-  - `LeavesApiTests` : tests d'intégration des congés — création, chevauchements (Q16), isolation des données, approbation (Manager / Admin), congé maladie déclaré pour autrui (R20), solde et aperçu (R19)
+  - `LeaveBalanceTests` : calcul du solde de congés (`LeaveBalance.ComputeUsage`) — jours travaillés fournis (R14), dépassement et jours sans solde, ordre de création, années civiles (R19)
+  - `LeavesApiTests` : tests d'intégration des congés — création, chevauchements (Q16), isolation des données, approbation (Manager / Admin), congé maladie déclaré pour autrui (R20), solde et aperçu (R19), seuls les jours travaillés comptent — horaire, férié, journée retirée, lun.–ven. sans horaire, demande sans aucun jour travaillé refusée (R14)
   - `WorkScheduleRulesTests` : validation d'un horaire type (`WorkScheduleRules.Validate`) — au moins un jour, pas de doublon, fin après début, pause valide (R11)
   - `AdjustmentAndAbsenceRulesTests` : validation d'un ajustement d'horaire (jour non travaillé, heures, pause — R13) et d'une absence dans la journée (prévue, non prévue, retour en avance ou en retard — R24)
   - `AbsenceStateTests` : où en est une absence (`AbsenceState.Compute`) — prévue sans clic (suit le plan), retour en avance ou en retard, « Je pars » sans retour (en cours puis fermée en fin de journée, non confirmée), jour non travaillé (R24)

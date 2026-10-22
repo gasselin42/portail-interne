@@ -6,9 +6,12 @@ public static class LeaveBalance
 	public record BalanceLeave(int Id, DateTime StartDate, DateTime EndDate, DateTime CreatedAt);
 
 	/// <summary>Ce qu'un congé consomme : ses jours ouvrables, et ceux qui sont sans solde.</summary>
-	public record LeaveUsage(int WorkingDays, List<DateOnly> UnpaidDates);
+	public record LeaveUsage(List<DateOnly> WorkedDates, List<DateOnly> UnpaidDates)
+	{
+		public int WorkingDays => WorkedDates.Count;
+	}
 
-	public static Dictionary<int, LeaveUsage> ComputeUsage(int annualDays, IEnumerable<BalanceLeave> leaves)
+	public static Dictionary<int, LeaveUsage> ComputeUsage(int annualDays, IEnumerable<BalanceLeave> leaves, Func<DateOnly, bool> isWorkedDay)
 	{
 		var remaining = new Dictionary<int, int>(); // année → jours restants
 		var result = new Dictionary<int, LeaveUsage>();
@@ -22,14 +25,14 @@ public static class LeaveBalance
 		{
 			var end = DateOnly.FromDateTime(leave.EndDate);
 			var unpaidDates = new List<DateOnly>();
-			int workingDays = 0;
+			List<DateOnly> workedDates = [];
 
 			for (var day = DateOnly.FromDateTime(leave.StartDate); day <= end; day = day.AddDays(1))
 			{
-				if (day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
+				if (!isWorkedDay(day))
 					continue;
 
-				workingDays++;
+				workedDates.Add(day);
 				
 				remaining.TryAdd(day.Year, annualDays);
 								
@@ -39,20 +42,9 @@ public static class LeaveBalance
 					unpaidDates.Add(day);
 			}
 
-			result.Add(leave.Id, new(workingDays, unpaidDates));
+			result.Add(leave.Id, new(workedDates, unpaidDates));
 		}
 
 		return result;
-	}
-
-	public static int CountWorkingDays(DateOnly from, DateOnly to, int year)
-	{
-		int count = 0;
-		for (var day = from; day <= to; day = day.AddDays(1))
-		{
-			if (day.DayOfWeek is not (DayOfWeek.Saturday or DayOfWeek.Sunday) && day.Year == year)
-				count++;
-		}
-		return count;
 	}
 }

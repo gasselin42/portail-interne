@@ -40,6 +40,7 @@ export type LeaveRequestResponse = {
 	reason: string
 	workingDays: number | null
 	unpaidDates: string[] | null
+	workedDates: string[] | null
 	createdAt: string
 	createdByFirstName: string | null
 	createdByLastName: string | null

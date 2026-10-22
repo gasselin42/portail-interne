@@ -153,11 +153,11 @@ export function NewLeavePage() {
 								<p className="text-slate-500">Impossible de calculer le solde pour l'instant.</p>
 							) : preview.data ? (
 								preview.data.workingDays === 0 ? (
-									<p className="text-slate-500">Cette période ne contient aucun jour ouvrable.</p>
+									<p className="text-slate-500">Tu ne travailles aucun jour durant cette période.</p>
 								) : (
 									<>
 										<p className="text-slate-500">
-											{preview.data.workingDays} jour{preview.data.workingDays > 1 ? "s" : ""} ouvrable{preview.data.workingDays > 1 ? "s" : ""}
+											{preview.data.workingDays} jour{preview.data.workingDays > 1 ? "s" : ""} travaillé{preview.data.workingDays > 1 ? "s" : ""}
 										</p>
 										{preview.data.unpaidDates.length > 0 && (
 											<p role="status" className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">

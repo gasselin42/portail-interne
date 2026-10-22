@@ -30,6 +30,7 @@ public class LeaveRequestResponse
     public string? Reason { get; set; }
 	public int? WorkingDays { get; set; }
 	public List<DateOnly>? UnpaidDates { get; set; }
+	public List<DateOnly>? WorkedDates { get; set; }
     public DateTime CreatedAt { get; set; }
 	public string? CreatedByFirstName { get; set; }
 	public string? CreatedByLastName { get; set; }

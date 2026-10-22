@@ -74,10 +74,11 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [x] le nom du férié le cas échéant
   - [x] les absences du jour : approuvées (effectives) et en attente (affichées), état calculé au calendrier ; aucune un jour de congé
 - [x] 12. Endpoint calendrier `GET /api/calendar` : horaire effectif de chaque jour + congés (remplace `/api/leaves/calendar`)
-- [ ] 13. Congés : ne compter que les jours travaillés (R14)
-  - [ ] Demande qui ne couvre aucun jour travaillé → refusée avec un message clair
-  - [ ] Nombre de jours travaillés affiché dans la demande et la file d’approbation
-  - [ ] Solde et jours sans solde (R19) recalculés sur les jours travaillés au lieu de lun.–ven.
+- [x] 13. Congés : ne compter que les jours travaillés (R14)
+  - [x] Demande qui ne couvre aucun jour travaillé → refusée avec un message clair
+  - [x] Nombre de jours travaillés affiché dans la demande et la file d’approbation
+  - [x] Solde et jours sans solde (R19) recalculés sur les jours travaillés au lieu de lun.–ven.
+  - [x] LeaveBand : un jour non travaillé prend l’état (payé / sans solde) du dernier jour travaillé qui le précède (`WorkedDates` renvoyé par l’API)
 - [ ] 14. Autorisation : employé = lecture de son horaire ; manager = son équipe ; admin = son site ; Admin global = tout
 
 ## Frontend (React)

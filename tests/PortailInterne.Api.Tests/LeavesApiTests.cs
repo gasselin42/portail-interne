@@ -279,7 +279,136 @@ public class LeavesApiTests
 		Assert.Empty((await sam.GetFromJsonAsync<List<LeaveRequestResponse>>("/api/leaves"))!);
 	}
 
+	// ─── Jours travaillés (R14) ─────────────────────────────────────────────
+	// Semaine du lundi 16 au vendredi 20 novembre 2026
+
+	[Fact]
+	public async Task Seuls_les_jours_de_l_horaire_comptent()
+	{
+		using var api = new ApiFactory().Start();
+		AddMondayToThursday(api);
+		var sam = await api.LoginAsync("sam@test.local");
+
+		var leave = await CreateAsync(sam, Conge("2026-11-16", "2026-11-20"));
+		var balance = await sam.GetFromJsonAsync<LeaveBalanceResponse>("/api/leaves/balance?year=2026");
+
+		Assert.Equal(4, leave.WorkingDays); // le vendredi n'est pas travaillé
+		Assert.Equal(new DateOnly(2026, 11, 19), leave.WorkedDates!.Last()); // le LeaveBand s'en sert
+		Assert.Equal(4, balance!.PendingDays);
+	}
+
+	[Fact]
+	public async Task Un_conge_approuve_compte_toujours_ses_propres_jours()
+	{
+		using var api = new ApiFactory().Start();
+		AddMondayToThursday(api);
+		api.WithDb(db => db.LeaveRequests.Add(Stored(api.Team.Sam.Id, "2026-11-16", "2026-11-20", LeaveStatus.Approuve)));
+		var sam = await api.LoginAsync("sam@test.local");
+
+		var balance = await sam.GetFromJsonAsync<LeaveBalanceResponse>("/api/leaves/balance?year=2026");
+
+		Assert.Equal(4, balance!.ApprovedDays);
+	}
+
+	[Fact]
+	public async Task Un_ferie_ne_compte_pas_meme_sans_horaire()
+	{
+		using var api = new ApiFactory().Start();
+		api.WithDb(db => db.Holidays.Add(new Holiday { SiteId = api.Team.Sam.SiteId, Date = new DateOnly(2026, 11, 18), Name = "Férié" }));
+		var sam = await api.LoginAsync("sam@test.local");
+
+		var leave = await CreateAsync(sam, Conge("2026-11-16", "2026-11-20"));
+
+		Assert.Equal(4, leave.WorkingDays); // sans horaire : lun.–ven., moins le férié
+	}
+
+	[Fact]
+	public async Task Une_journee_retiree_par_un_ajustement_ne_compte_pas()
+	{
+		using var api = new ApiFactory().Start();
+		AddMondayToThursday(api);
+		api.WithDb(db => db.ScheduleAdjustments.Add(new ScheduleAdjustment
+		{
+			EmployeeId = api.Team.Sam.Id,
+			Date = new DateOnly(2026, 11, 17),
+			Status = LeaveStatus.Approuve,
+			CreatedById = api.Team.Mark.Id,
+		}));
+		var sam = await api.LoginAsync("sam@test.local");
+
+		var leave = await CreateAsync(sam, Conge("2026-11-16", "2026-11-20"));
+
+		Assert.Equal(3, leave.WorkingDays);
+	}
+
+	[Fact]
+	public async Task L_apercu_suit_l_horaire()
+	{
+		using var api = new ApiFactory().Start();
+		AddMondayToThursday(api);
+		api.WithDb(db => db.Employees.Single(e => e.Id == api.Team.Sam.Id).AnnualLeaveDays = 3);
+		var sam = await api.LoginAsync("sam@test.local");
+
+		var preview = await sam.GetFromJsonAsync<LeavePreviewResponse>(
+			"/api/leaves/balance/preview?startDate=2026-11-16&endDate=2026-11-20");
+
+		Assert.Equal(4, preview!.WorkingDays);
+		Assert.Equal([new DateOnly(2026, 11, 19)], preview.UnpaidDates);
+	}
+
+	[Theory]
+	[InlineData("2026-11-20", "2026-11-22", HttpStatusCode.BadRequest)] // vendredi au dimanche : rien
+	[InlineData("2026-11-19", "2026-11-22", HttpStatusCode.Created)]    // le jeudi suffit
+	public async Task Une_demande_sans_aucun_jour_travaille_est_refusee(string start, string end, HttpStatusCode expected)
+	{
+		using var api = new ApiFactory().Start();
+		AddMondayToThursday(api);
+		var sam = await api.LoginAsync("sam@test.local");
+
+		var res = await sam.PostAsJsonAsync("/api/leaves", Conge(start, end));
+
+		Assert.Equal(expected, res.StatusCode);
+	}
+
+	[Fact]
+	public async Task Une_demande_sur_un_ferie_seul_est_refusee()
+	{
+		using var api = new ApiFactory().Start(); // Noël est un férié semé du site
+		var sam = await api.LoginAsync("sam@test.local");
+
+		var res = await sam.PostAsJsonAsync("/api/leaves", Conge("2026-12-25", "2026-12-25"));
+
+		Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+	}
+
+	[Fact]
+	public async Task Une_maladie_declaree_sans_aucun_jour_travaille_est_refusee()
+	{
+		using var api = new ApiFactory().Start();
+		AddMondayToThursday(api);
+		var mark = await api.LoginAsync("mark@test.local");
+
+		var res = await mark.PostAsJsonAsync("/api/leaves/declare",
+			new { employeeId = api.Team.Sam.Id, startDate = "2026-10-16", endDate = "2026-10-18" }); // vendredi au dimanche
+
+		Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+		Assert.Contains("Sam", await res.Content.ReadAsStringAsync());
+	}
+
 	// ─── Aides ──────────────────────────────────────────────────────────────
+
+	/// <summary>Donne à Sam un horaire du lundi au jeudi, 8 h à 17 h.</summary>
+	private static void AddMondayToThursday(ApiFactory api) => api.WithDb(db => db.WorkSchedules.Add(new WorkSchedule
+	{
+		EmployeeId = api.Team.Sam.Id,
+		EffectiveFrom = new DateOnly(2026, 10, 1),
+		CreatedById = api.Team.Mark.Id,
+		Days =
+		[
+			.. new[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday }
+				.Select(d => new WorkScheduleDay { DayOfWeek = d, StartTime = new(8, 0), EndTime = new(17, 0), BreakMinutes = 30 }),
+		],
+	}));
 
 	private static object Conge(string start, string end) =>
 		new { startDate = start, endDate = end, type = LeaveType.Conge };

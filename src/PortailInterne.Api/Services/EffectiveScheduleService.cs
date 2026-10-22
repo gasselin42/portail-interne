@@ -18,7 +18,7 @@ public class EffectiveScheduleService
 	}
 
 	/// <summary>Un <see cref="EffectiveDay"/> par jour, de <paramref name="from"/> à <paramref name="to"/> inclus.</summary>
-	public async Task<List<EffectiveDay>> ForAsync(int employeeId, DateOnly from, DateOnly to)
+	public async Task<List<EffectiveDay>> ForAsync(int employeeId, DateOnly from, DateOnly to, bool applyLeaves = true)
 	{
 		var siteId = await _db.Employees
 			.Where(e => e.Id == employeeId)
@@ -50,7 +50,7 @@ public class EffectiveScheduleService
 				&& (a.Status == LeaveStatus.Approuve || a.Status == LeaveStatus.EnAttente))
 			.ToListAsync();
 
-		var leaves = await _db.LeaveRequests
+		List<LeaveRequest> leaves = !applyLeaves ? [] : await _db.LeaveRequests
 			.AsNoTracking()
 			.Where(l => l.EmployeeId == employeeId
 				&& l.Status == LeaveStatus.Approuve
@@ -90,5 +90,14 @@ public class EffectiveScheduleService
 		}
 
 		return result;
+	}
+
+	public async Task<HashSet<DateOnly>> WorkedDaysAsync(int employeeId, DateOnly from, DateOnly to)
+	{
+		return (await ForAsync(employeeId, from, to, applyLeaves: false))
+				.Where(d => d.StartTime is not null || (d.Source == DaySource.NonDefini
+				&& d.Date.DayOfWeek is not (DayOfWeek.Saturday or DayOfWeek.Sunday)))
+			.Select(d => d.Date)
+			.ToHashSet();
 	}
 }

@@ -8,10 +8,12 @@ namespace PortailInterne.Api.Services;
 public class LeaveUsageService
 {
 	private readonly AppDbContext _db;
+	private readonly EffectiveScheduleService _schedule;
 
-	public LeaveUsageService(AppDbContext db)
+	public LeaveUsageService(AppDbContext db, EffectiveScheduleService schedule)
 	{
 		_db = db;
+		_schedule = schedule;
 	}
 
 	public async Task<Dictionary<int, LeaveBalance.LeaveUsage>> UsageForAsync(IEnumerable<int> employeeIds)
@@ -22,9 +24,23 @@ public class LeaveUsageService
 
 		var balanceLeaves = await LoadBalanceLeavesAsync(employeeIds);
 
-		return annualDays
-			.SelectMany(p => LeaveBalance.ComputeUsage(p.Value, balanceLeaves.GetValueOrDefault(p.Key, [])))
-			.ToDictionary(p => p.Key, p => p.Value);
+		Dictionary<int, LeaveBalance.LeaveUsage> result = [];
+
+		foreach (var (employeeId, days) in annualDays)
+		{
+			var leaves = balanceLeaves.GetValueOrDefault(employeeId, []);
+			if (leaves is null || leaves.Count == 0)
+				continue;
+			
+			var minDate = DateOnly.FromDateTime(leaves.Min(l => l.StartDate));
+			var maxDate = DateOnly.FromDateTime(leaves.Max(l => l.EndDate));
+			var worked = await _schedule.WorkedDaysAsync(employeeId, minDate, maxDate);
+
+			foreach (var (leaveId, usage) in LeaveBalance.ComputeUsage(days, leaves, worked.Contains))
+				result.Add(leaveId, usage);
+		}
+
+		return result;
 	}
 
 	/// <summary>Complète WorkingDays et UnpaidDates des congés qui consomment le solde.</summary>
@@ -39,6 +55,7 @@ public class LeaveUsageService
 			{
 				leave.WorkingDays = u.WorkingDays;
 				leave.UnpaidDates = u.UnpaidDates;
+				leave.WorkedDates = u.WorkedDates;
 			}
 		}
 	}

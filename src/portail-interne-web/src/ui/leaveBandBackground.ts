@@ -1,26 +1,20 @@
 import { LeaveStatus, type LeaveRequestResponse } from "../api/leaves"
 import type { LeaveSegment } from "../utils/calendar"
-import { addDays, getWeekDay } from "../utils/date"
+import { addDays } from "../utils/date"
 
 /** Hachures blanches semi-transparentes, posées par-dessus la couleur (congé en attente). */
 const HATCH = "repeating-linear-gradient(135deg, rgb(255 255 255 / 0.55) 0 6px, transparent 6px 12px)"
 
 /**
  * Le jour est-il sans solde pour ce congé ?
- * Une fin de semaine prend l'état du dernier jour ouvrable du congé qui la précède
- * (payé si le congé commence un samedi ou un dimanche).
+ * Un jour non travaillé prend l'état du dernier jour
+ * travaillé du congé qui le précède (payé s'il n'y en a pas).
  */
 export function isUnpaidDay(leave: LeaveRequestResponse, day: string): boolean {
 	const unpaidDates = leave.unpaidDates ?? []
 	if (unpaidDates.length === 0) return false
-
-	const leaveStart = leave.startDate.slice(0, 10)
-	let workday = day
-	while (getWeekDay(workday) === 0 || getWeekDay(workday) === 6) {
-		workday = addDays(workday, -1)
-		if (workday < leaveStart) return false
-	}
-	return unpaidDates.includes(workday)
+	const lastWorked = (leave.workedDates ?? []).findLast((d) => d <= day)
+	return lastWorked !== undefined && unpaidDates.includes(lastWorked)
 }
 
 /** Fond d'un LeaveBand : une coupure franche à chaque passage payé ↔ sans solde. */

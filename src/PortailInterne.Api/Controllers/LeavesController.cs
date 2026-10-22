@@ -22,18 +22,20 @@ public class LeavesController : ControllerBase
 	private readonly SiteClock _siteClock;
 	private readonly AccessScope _scope;
 	private readonly LeaveUsageService _leaveUsage;
+	private readonly EffectiveScheduleService _schedule;
 
     private const int MaxSickLeaveBackdateDays = 14;
 
 	private static readonly CultureInfo FrenchCanada = new("fr-CA");
 
-    public LeavesController(AppDbContext db, IAppClock clock, SiteClock siteClock, AccessScope scope, LeaveUsageService leaveUsage)
+    public LeavesController(AppDbContext db, IAppClock clock, SiteClock siteClock, AccessScope scope, LeaveUsageService leaveUsage, EffectiveScheduleService schedule)
     {
         _db = db;
         _clock = clock;
 		_siteClock = siteClock;
 		_scope = scope;
 		_leaveUsage = leaveUsage;
+		_schedule = schedule;
     }
 
     [HttpPost]
@@ -50,6 +52,9 @@ public class LeavesController : ControllerBase
 
 		if (validate is not null)
 			return BadRequest(new { message = validate });
+
+		if ((await _schedule.WorkedDaysAsync(employeeId, DateOnly.FromDateTime(request.StartDate), DateOnly.FromDateTime(request.EndDate))).Count == 0)
+			return BadRequest(new { message = "Aucun jour travaillé durant cette période." });
 
 		var overlap = await FindOverlapAsync(employeeId, request.StartDate, request.EndDate, [LeaveStatus.EnAttente, LeaveStatus.Approuve]);
 
@@ -115,6 +120,9 @@ public class LeavesController : ControllerBase
 
 		if (validate is not null)
 			return BadRequest(new { message = validate });
+
+		if ((await _schedule.WorkedDaysAsync(employee.Id, DateOnly.FromDateTime(request.StartDate), DateOnly.FromDateTime(request.EndDate))).Count == 0)
+			return BadRequest(new { message = $"Aucun jour travaillé par {employee.FirstName} durant cette période." });
 		
 		var overlap = await FindOverlapAsync(request.EmployeeId, request.StartDate, request.EndDate, [LeaveStatus.EnAttente, LeaveStatus.Approuve]);
 
@@ -365,12 +373,8 @@ public class LeavesController : ControllerBase
 			if (!usage.TryGetValue(leave.Id, out var u))
 				continue;
 
-			// Partie du congé dans l'année (un congé peut chevaucher deux années)
-			var start = DateOnly.FromDateTime(leave.StartDate);
-			var end = DateOnly.FromDateTime(leave.EndDate);
-
 			var unpaidInYear = u.UnpaidDates.Count(d => d.Year == y);
-			var paidInYear = LeaveBalance.CountWorkingDays(start, end, y) - unpaidInYear;
+			var paidInYear = u.WorkedDates.Count(d => d.Year == y) - unpaidInYear;
 
 			if (leave.Status == LeaveStatus.Approuve)
 				approved += paidInYear;
@@ -420,7 +424,10 @@ public class LeavesController : ControllerBase
 			DateTime.MaxValue
 		));
 
-		var usage = LeaveBalance.ComputeUsage(annualDays, leaves)[PreviewId];
+		var minDate = DateOnly.FromDateTime(leaves.Min(l => l.StartDate));
+		var maxDate = DateOnly.FromDateTime(leaves.Max(l => l.EndDate));
+		var worked = await _schedule.WorkedDaysAsync(employeeId, minDate, maxDate);
+		var usage = LeaveBalance.ComputeUsage(annualDays, leaves, worked.Contains)[PreviewId];
 
 		return Ok(new LeavePreviewResponse
 		{
