@@ -64,7 +64,10 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [x] Le manager ou un Admin du site peut confirmer le départ ou le retour à la place de l’employé
   - [x] Fermeture automatique en fin de journée de travail sans retour confirmé, calculée à la lecture (AbsenceState) ; marquée « retour non confirmé »
 - [x] 9. Annuler un ajustement (employé : si EnAttente ; manager : tant que la date n’est pas passée)
-- [ ] 10. File d’approbation : y ajouter les ajustements et les absences prévues en attente (approuver / refuser, mêmes règles d’équipe que les congés)
+- [x] 10. File d’approbation : y ajouter les ajustements et les absences prévues en attente (approuver / refuser, mêmes règles d’équipe que les congés)
+  - [x] 10-1. Approuver / refuser un ajustement en attente
+  - [x] 10-2. Approuver / refuser une absence prévue en attente
+  - [x] 10-3. Lister les ajustements et les absences en attente dans la file d’approbation
 - [x] 11. Service **horaire effectif** : pour un employé et une plage `[from, to]`, renvoie chaque jour avec :
   - [x] les heures prévues (ou « non travaillé ») et la source : `Horaire`, `Ferie`, `Ajustement`, `Conge`, `NonDefini`
   - [x] l’ajustement en attente éventuel (affiché sans être appliqué, comme un congé en attente)

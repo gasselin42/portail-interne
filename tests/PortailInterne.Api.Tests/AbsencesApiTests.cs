@@ -180,6 +180,154 @@ public class AbsencesApiTests
 		Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
 	}
 
+	// ─── Approbation ────────────────────────────────────────────────────────
+
+	[Theory]
+	[InlineData(LeaveStatus.Approuve)]
+	[InlineData(LeaveStatus.Refuse)]
+	public async Task Le_manager_traite_une_demande_en_attente(LeaveStatus decision)
+	{
+		using var api = StartWithSchedule();
+		var sam = await api.LoginAsync("sam@test.local");
+		var mark = await api.LoginAsync("mark@test.local");
+		var pending = await CreateAsync(sam, api.Team.Sam, Planned(Tuesday, "09:00:00", "11:00:00"));
+
+		var res = await mark.PostAsJsonAsync(Review(api.Team.Sam, pending.Id), new { status = decision });
+
+		Assert.Equal(HttpStatusCode.NoContent, res.StatusCode);
+		var absence = Assert.Single((await sam.GetFromJsonAsync<List<AbsenceResponse>>(Url(api.Team.Sam)))!);
+		Assert.Equal(decision, absence.Status);
+	}
+
+	[Fact]
+	public async Task On_ne_traite_pas_sa_propre_demande_ni_celle_d_un_collegue()
+	{
+		using var api = StartWithSchedule();
+		var sam = await api.LoginAsync("sam@test.local");
+		var jane = await api.LoginAsync("jane@test.local");
+		var pending = await CreateAsync(sam, api.Team.Sam, Planned(Tuesday, "09:00:00", "11:00:00"));
+
+		var bySam = await sam.PostAsJsonAsync(Review(api.Team.Sam, pending.Id), new { status = LeaveStatus.Approuve });
+		var byJane = await jane.PostAsJsonAsync(Review(api.Team.Sam, pending.Id), new { status = LeaveStatus.Approuve });
+
+		Assert.Equal(HttpStatusCode.BadRequest, bySam.StatusCode);
+		Assert.Equal(HttpStatusCode.NotFound, byJane.StatusCode);
+	}
+
+	[Fact]
+	public async Task Une_demande_deja_traitee_ne_se_traite_plus()
+	{
+		using var api = StartWithSchedule();
+		var sam = await api.LoginAsync("sam@test.local");
+		var mark = await api.LoginAsync("mark@test.local");
+		var pending = await CreateAsync(sam, api.Team.Sam, Planned(Tuesday, "09:00:00", "11:00:00"));
+		await mark.PostAsJsonAsync(Review(api.Team.Sam, pending.Id), new { status = LeaveStatus.Refuse });
+
+		var res = await mark.PostAsJsonAsync(Review(api.Team.Sam, pending.Id), new { status = LeaveStatus.Approuve });
+
+		Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+	}
+
+	[Fact]
+	public async Task Une_demande_en_cours_s_approuve_et_devient_effective()
+	{
+		using var api = StartWithSchedule();
+		var sam = await api.LoginAsync("sam@test.local");
+		var mark = await api.LoginAsync("mark@test.local");
+		// Aujourd'hui de 11 h à 13 h : il est midi
+		var pending = await CreateAsync(sam, api.Team.Sam, Planned("2026-10-14", "11:00:00", "13:00:00"));
+
+		var res = await mark.PostAsJsonAsync(Review(api.Team.Sam, pending.Id), new { status = LeaveStatus.Approuve });
+
+		Assert.Equal(HttpStatusCode.NoContent, res.StatusCode);
+		var absence = Assert.Single((await sam.GetFromJsonAsync<List<AbsenceResponse>>(Url(api.Team.Sam)))!);
+		Assert.True(absence.InProgress);
+	}
+
+	[Fact]
+	public async Task Une_demande_terminee_se_refuse_mais_ne_s_approuve_plus()
+	{
+		using var api = StartWithSchedule();
+		var sam = await api.LoginAsync("sam@test.local");
+		var mark = await api.LoginAsync("mark@test.local");
+		// Aujourd'hui de 9 h à 10 h : il est midi
+		var pending = await CreateAsync(sam, api.Team.Sam, Planned("2026-10-14", "09:00:00", "10:00:00"));
+
+		var approve = await mark.PostAsJsonAsync(Review(api.Team.Sam, pending.Id), new { status = LeaveStatus.Approuve });
+		var refuse = await mark.PostAsJsonAsync(Review(api.Team.Sam, pending.Id), new { status = LeaveStatus.Refuse });
+
+		Assert.Equal(HttpStatusCode.BadRequest, approve.StatusCode);
+		Assert.Equal(HttpStatusCode.NoContent, refuse.StatusCode);
+	}
+
+	[Fact]
+	public async Task Un_jour_devenu_conge_ne_s_approuve_plus_mais_se_refuse()
+	{
+		using var api = StartWithSchedule();
+		var sam = await api.LoginAsync("sam@test.local");
+		var mark = await api.LoginAsync("mark@test.local");
+		var pending = await CreateAsync(sam, api.Team.Sam, Planned(Tuesday, "09:00:00", "11:00:00"));
+		// Entre-temps, Sam obtient un congé ce mardi-là
+		api.WithDb(db => db.LeaveRequests.Add(new LeaveRequest
+		{
+			EmployeeId = api.Team.Sam.Id,
+			StartDate = new DateTime(2026, 10, 20),
+			EndDate = new DateTime(2026, 10, 20),
+			Type = LeaveType.Conge,
+			Status = LeaveStatus.Approuve,
+		}));
+
+		var approve = await mark.PostAsJsonAsync(Review(api.Team.Sam, pending.Id), new { status = LeaveStatus.Approuve });
+		var refuse = await mark.PostAsJsonAsync(Review(api.Team.Sam, pending.Id), new { status = LeaveStatus.Refuse });
+
+		Assert.Equal(HttpStatusCode.BadRequest, approve.StatusCode);
+		Assert.Equal(HttpStatusCode.NoContent, refuse.StatusCode);
+	}
+
+	[Fact]
+	public async Task Des_heures_changees_par_un_ajustement_sont_reverifiees()
+	{
+		using var api = StartWithSchedule();
+		var sam = await api.LoginAsync("sam@test.local");
+		var mark = await api.LoginAsync("mark@test.local");
+		var pending = await CreateAsync(sam, api.Team.Sam, Planned(Tuesday, "09:00:00", "11:00:00"));
+		// Entre-temps, le mardi passe à 10 h – 17 h
+		await mark.PostAsJsonAsync($"/api/employees/{api.Team.Sam.Id}/adjustments",
+			new { date = Tuesday, startTime = "10:00:00", endTime = "17:00:00", breakMinutes = 30 });
+
+		var res = await mark.PostAsJsonAsync(Review(api.Team.Sam, pending.Id), new { status = LeaveStatus.Approuve });
+
+		Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+	}
+
+	[Fact]
+	public async Task Une_urgence_en_cours_bloque_l_approbation_d_une_demande_qui_la_chevauche()
+	{
+		using var api = StartWithSchedule();
+		var sam = await api.LoginAsync("sam@test.local");
+		var mark = await api.LoginAsync("mark@test.local");
+		// Demande de 13 h à 14 h ; à midi, Sam clique « Je pars » (urgence, toujours en cours)
+		var pending = await CreateAsync(sam, api.Team.Sam, Planned("2026-10-14", "13:00:00", "14:00:00"));
+		(await sam.PostAsJsonAsync($"{Url(api.Team.Sam)}/depart", new { })).EnsureSuccessStatusCode();
+
+		var res = await mark.PostAsJsonAsync(Review(api.Team.Sam, pending.Id), new { status = LeaveStatus.Approuve });
+
+		Assert.Equal(HttpStatusCode.Conflict, res.StatusCode);
+	}
+
+	[Fact]
+	public async Task On_ne_traite_pas_l_absence_d_un_autre_employe_par_l_url()
+	{
+		using var api = StartWithSchedule();
+		var sam = await api.LoginAsync("sam@test.local");
+		var alex = await api.LoginAsync("alex@test.local");
+		var samRequest = await CreateAsync(sam, api.Team.Sam, Planned(Tuesday, "09:00:00", "11:00:00"));
+
+		var res = await alex.PostAsJsonAsync(Review(api.Team.Jane, samRequest.Id), new { status = LeaveStatus.Approuve });
+
+		Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
+	}
+
 	// ─── Aides ──────────────────────────────────────────────────────────────
 
 	/// <summary>Démarre l'API et donne à Sam un horaire du lundi au vendredi, 8 h à 17 h.</summary>
@@ -201,6 +349,8 @@ public class AbsencesApiTests
 	}
 
 	private static string Url(Employee employee) => $"/api/employees/{employee.Id}/absences";
+
+	private static string Review(Employee employee, int id) => $"{Url(employee)}/{id}/review";
 
 	private static object Planned(string date, string start, string end) =>
 		new { date, plannedStart = start, plannedEnd = end, reason = "Rendez-vous" };

@@ -211,9 +211,139 @@ public class AdjustmentsApiTests
 		Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
 	}
 
+	// ─── Approbation ────────────────────────────────────────────────────────
+
+	[Theory]
+	[InlineData(LeaveStatus.Approuve)]
+	[InlineData(LeaveStatus.Refuse)]
+	public async Task Le_manager_traite_une_demande_en_attente(LeaveStatus decision)
+	{
+		using var api = new ApiFactory().Start();
+		var sam = await api.LoginAsync("sam@test.local");
+		var mark = await api.LoginAsync("mark@test.local");
+		var pending = await CreateAsync(sam, api.Team.Sam, Hours(Date, "08:00:00", "16:00:00"));
+
+		var res = await mark.PostAsJsonAsync(Review(api.Team.Sam, pending.Id), new { status = decision });
+
+		Assert.Equal(HttpStatusCode.NoContent, res.StatusCode);
+		var adjustment = Assert.Single((await sam.GetFromJsonAsync<List<AdjustmentResponse>>(Url(api.Team.Sam)))!);
+		Assert.Equal(decision, adjustment.Status);
+	}
+
+	[Fact]
+	public async Task L_admin_du_site_traite_aussi_la_demande()
+	{
+		using var api = new ApiFactory().Start();
+		var sam = await api.LoginAsync("sam@test.local");
+		var alex = await api.LoginAsync("alex@test.local");
+		var pending = await CreateAsync(sam, api.Team.Sam, Hours(Date, "08:00:00", "16:00:00"));
+
+		var res = await alex.PostAsJsonAsync(Review(api.Team.Sam, pending.Id), new { status = LeaveStatus.Approuve });
+
+		Assert.Equal(HttpStatusCode.NoContent, res.StatusCode);
+	}
+
+	[Fact]
+	public async Task On_ne_traite_pas_sa_propre_demande()
+	{
+		using var api = new ApiFactory().Start();
+		var sam = await api.LoginAsync("sam@test.local");
+		var pending = await CreateAsync(sam, api.Team.Sam, Hours(Date, "08:00:00", "16:00:00"));
+
+		var res = await sam.PostAsJsonAsync(Review(api.Team.Sam, pending.Id), new { status = LeaveStatus.Approuve });
+
+		Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+	}
+
+	[Fact]
+	public async Task Un_collegue_ne_traite_pas_la_demande()
+	{
+		using var api = new ApiFactory().Start();
+		var sam = await api.LoginAsync("sam@test.local");
+		var jane = await api.LoginAsync("jane@test.local");
+		var pending = await CreateAsync(sam, api.Team.Sam, Hours(Date, "08:00:00", "16:00:00"));
+
+		var res = await jane.PostAsJsonAsync(Review(api.Team.Sam, pending.Id), new { status = LeaveStatus.Approuve });
+
+		Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
+	}
+
+	[Theory]
+	[InlineData(LeaveStatus.EnAttente)]
+	[InlineData(LeaveStatus.Annule)]
+	public async Task Le_statut_doit_etre_approuve_ou_refuse(LeaveStatus decision)
+	{
+		using var api = new ApiFactory().Start();
+		var sam = await api.LoginAsync("sam@test.local");
+		var mark = await api.LoginAsync("mark@test.local");
+		var pending = await CreateAsync(sam, api.Team.Sam, Hours(Date, "08:00:00", "16:00:00"));
+
+		var res = await mark.PostAsJsonAsync(Review(api.Team.Sam, pending.Id), new { status = decision });
+
+		Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+	}
+
+	[Fact]
+	public async Task Une_demande_deja_traitee_ne_se_traite_plus()
+	{
+		using var api = new ApiFactory().Start();
+		var sam = await api.LoginAsync("sam@test.local");
+		var mark = await api.LoginAsync("mark@test.local");
+		var pending = await CreateAsync(sam, api.Team.Sam, Hours(Date, "08:00:00", "16:00:00"));
+		await mark.PostAsJsonAsync(Review(api.Team.Sam, pending.Id), new { status = LeaveStatus.Refuse });
+
+		var res = await mark.PostAsJsonAsync(Review(api.Team.Sam, pending.Id), new { status = LeaveStatus.Approuve });
+
+		Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+	}
+
+	[Fact]
+	public async Task Une_demande_passee_se_refuse_mais_ne_s_approuve_plus()
+	{
+		using var api = new ApiFactory().Start();
+		var adjustmentId = 0;
+		api.WithDb(db =>
+		{
+			var past = new ScheduleAdjustment
+			{
+				EmployeeId = api.Team.Sam.Id,
+				Date = new DateOnly(2026, 10, 13),
+				StartTime = new(8, 0),
+				EndTime = new(16, 0),
+				Status = LeaveStatus.EnAttente,
+				CreatedById = api.Team.Sam.Id,
+			};
+			db.ScheduleAdjustments.Add(past);
+			db.SaveChanges();
+			adjustmentId = past.Id;
+		});
+		var mark = await api.LoginAsync("mark@test.local");
+
+		var approve = await mark.PostAsJsonAsync(Review(api.Team.Sam, adjustmentId), new { status = LeaveStatus.Approuve });
+		var refuse = await mark.PostAsJsonAsync(Review(api.Team.Sam, adjustmentId), new { status = LeaveStatus.Refuse });
+
+		Assert.Equal(HttpStatusCode.BadRequest, approve.StatusCode);
+		Assert.Equal(HttpStatusCode.NoContent, refuse.StatusCode);
+	}
+
+	[Fact]
+	public async Task On_ne_traite_pas_l_ajustement_d_un_autre_employe_par_l_url()
+	{
+		using var api = new ApiFactory().Start();
+		var jane = await api.LoginAsync("jane@test.local");
+		var alex = await api.LoginAsync("alex@test.local");
+		var janeRequest = await CreateAsync(jane, api.Team.Jane, Hours(Date, "08:00:00", "16:00:00"));
+
+		var res = await alex.PostAsJsonAsync(Review(api.Team.Sam, janeRequest.Id), new { status = LeaveStatus.Approuve });
+
+		Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
+	}
+
 	// ─── Aides ──────────────────────────────────────────────────────────────
 
 	private static string Url(Employee employee) => $"/api/employees/{employee.Id}/adjustments";
+
+	private static string Review(Employee employee, int id) => $"{Url(employee)}/{id}/review";
 
 	private static object Hours(string date, string start, string end) =>
 		new { date, startTime = start, endTime = end, breakMinutes = 30, reason = "Rendez-vous" };

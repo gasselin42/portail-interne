@@ -295,6 +295,72 @@ public class AbsenceController : ControllerBase
 		return Ok(ToResponse(absence, creator, isSelf, today, now, status));
 	}
 
+	[HttpPost("{id:int}/review")]
+	public async Task<IActionResult> Review(int employeeId, int id, ReviewLeaveRequest request)
+	{
+		if (request.Status is not (LeaveStatus.Approuve or LeaveStatus.Refuse))
+            return BadRequest(new { message = "Le statut doit être approuvé ou refusé" });
+		
+		var employee = await _db.Employees.AsNoTracking().FirstOrDefaultAsync(e => e.Id == employeeId);
+
+        if (employee is null || !employee.IsActive)
+            return NotFound();
+
+		var employeeIdClaim = User.FindFirstValue("employeeId");
+
+		if (employeeIdClaim is null || !int.TryParse(employeeIdClaim, out var userId))
+            return Unauthorized();
+
+		if (employee.Id == userId)
+			return BadRequest(new { message = "Tu ne peux pas approuver ou refuser ta propre demande." });
+		
+		if (!await CanManageAsync(employee, userId))
+			return NotFound();
+
+		var absence = await _db.Absences
+			.FirstOrDefaultAsync(a => a.Id == id && a.EmployeeId == employeeId);
+
+		if (absence is null)
+			return NotFound();
+
+		if (absence.Status != LeaveStatus.EnAttente)
+			return BadRequest(new { message = "Cette absence n'est pas en attente." });
+
+		if (request.Status == LeaveStatus.Approuve)
+		{
+			var (today, now) = await _clock.NowForAsync(employee.Id);
+
+			if (absence.Date < today || (absence.Date == today && absence.PlannedEnd <= now))
+				return BadRequest(new { message = "Cette absence est terminée." });
+			
+			var day = (await _schedule.ForAsync(employee.Id, absence.Date, absence.Date))[0];
+
+			if (day.StartTime is null)
+				return BadRequest(new { message = "Cet employé ne travaille pas ce jour-là." });
+
+			if (absence.PlannedStart < day.StartTime || absence.PlannedEnd > day.EndTime)
+				return BadRequest(new { message = "L'absence n'est pas comprise dans les heures de travail de l'employé." });
+
+			var overlap = day.Absences.Any(other =>
+			{
+				var state = AbsenceState.Compute(other, today, now, day.EndTime);
+				var otherEnd = state.End ?? day.EndTime;
+				return state.Start < absence.PlannedEnd && absence.PlannedStart < otherEnd;
+			});
+
+			if (overlap)
+				return Conflict(new { message = "Cet employé a déjà une absence qui chevauche ces heures ce jour-là." });
+		}
+
+		absence.Status = request.Status;
+		absence.ReviewedById = userId;
+		absence.ReviewedAt = DateTime.UtcNow;
+
+		await _db.SaveChangesAsync();
+
+		return NoContent();
+	}
+
 	private async Task<bool> CanManageAsync(Employee employee, int userId) =>
 		await _scope.CanAdministerSiteAsync(employee.SiteId) || employee.ManagerId == userId;
 

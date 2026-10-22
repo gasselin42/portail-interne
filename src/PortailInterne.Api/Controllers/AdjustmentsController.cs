@@ -157,6 +157,51 @@ public class AdjustmentsController : ControllerBase
 		return NoContent();
 	}
 
+	[HttpPost("{id:int}/review")]
+	public async Task<IActionResult> Review(int employeeId, int id, ReviewLeaveRequest request)
+	{
+		if (request.Status is not (LeaveStatus.Approuve or LeaveStatus.Refuse))
+            return BadRequest(new { message = "Le statut doit être approuvé ou refusé" });
+		
+		var employee = await _db.Employees.AsNoTracking().FirstOrDefaultAsync(e => e.Id == employeeId);
+
+        if (employee is null || !employee.IsActive)
+            return NotFound();
+
+		var employeeIdClaim = User.FindFirstValue("employeeId");
+
+		if (employeeIdClaim is null || !int.TryParse(employeeIdClaim, out var userId))
+            return Unauthorized();
+
+		if (employee.Id == userId)
+			return BadRequest(new { message = "Tu ne peux pas approuver ou refuser ta propre demande." });
+		
+		if (!await CanManageAsync(employee, userId))
+			return NotFound();
+
+		var adjustment = await _db.ScheduleAdjustments
+			.FirstOrDefaultAsync(a => a.Id == id && a.EmployeeId == employeeId);
+
+		if (adjustment is null)
+			return NotFound();
+
+		if (adjustment.Status != LeaveStatus.EnAttente)
+			return BadRequest(new { message = "Cet ajustement n'est pas en attente." });
+
+		var today = await _siteClock.TodayForAsync(employee.Id);
+		
+		if (request.Status == LeaveStatus.Approuve && adjustment.Date < today)
+			return BadRequest(new { message = "Cet ajustement est passé : il ne peut plus être approuvé." });
+
+		adjustment.Status = request.Status;
+		adjustment.ReviewedById = userId;
+		adjustment.ReviewedAt = DateTime.UtcNow;
+
+		await _db.SaveChangesAsync();
+
+		return NoContent();
+	}
+
 	private async Task<bool> CanManageAsync(Employee employee, int userId) =>
 		await _scope.CanAdministerSiteAsync(employee.SiteId) || employee.ManagerId == userId;
 
