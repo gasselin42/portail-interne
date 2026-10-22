@@ -18,12 +18,14 @@ public class CalendarController : ControllerBase
 	private readonly AppDbContext _db;
 	private readonly EffectiveScheduleService _scheduleService;
 	private readonly LeaveUsageService _leaveUsage;
+	private readonly SiteClock _clock;
 
-	public CalendarController(AppDbContext db, EffectiveScheduleService scheduleService, LeaveUsageService leaveUsage)
+	public CalendarController(AppDbContext db, EffectiveScheduleService scheduleService, LeaveUsageService leaveUsage, SiteClock clock)
 	{
 		_db = db;
 		_scheduleService = scheduleService;
 		_leaveUsage = leaveUsage;
+		_clock = clock;
 	}
 
 	[HttpGet]
@@ -42,7 +44,27 @@ public class CalendarController : ControllerBase
 		if (to.DayNumber - from.DayNumber >= 62)
 			return BadRequest(new { message = "Sélectionne une plage de 62 jours au maximum."});
 
+		var (today, now) = await _clock.NowForAsync(employeeId);
+
 		List<EffectiveDay> days = await _scheduleService.ForAsync(employeeId, from, to);
+
+		// Une absence pour le calendrier, avec son état calculé maintenant (R24)
+		CalendarAbsenceResponse ToCalendarAbsence(Absence a, TimeOnly? workdayEnd)
+		{
+			var status = AbsenceState.Compute(a, today, now, workdayEnd);
+			return new CalendarAbsenceResponse
+			{
+				Id = a.Id,
+				Status = a.Status,
+				Reason = a.Reason,
+				PlannedStart = a.PlannedStart,
+				PlannedEnd = a.PlannedEnd,
+				Start = status.Start,
+				End = status.End,
+				InProgress = status.InProgress,
+				ReturnConfirmed = status.ReturnConfirmed,
+			};
+		}
 
 		List<EffectiveDayResponse> daysResponse = days
 			.Select(d => new EffectiveDayResponse
@@ -62,7 +84,9 @@ public class CalendarController : ControllerBase
 								EndTime = d.PendingAdjustment.EndTime,
 								BreakMinutes = d.PendingAdjustment.BreakMinutes
 							}
-						: null
+						: null,
+				Absences = d.Absences.Select(a => ToCalendarAbsence(a, d.EndTime)).ToList(),
+				PendingAbsences = d.PendingAbsences.Select(a => ToCalendarAbsence(a, d.EndTime)).ToList(),
 			})
 			.ToList();
 

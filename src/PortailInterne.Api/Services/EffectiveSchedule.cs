@@ -20,7 +20,14 @@ public record EffectiveDay(
 	TimeOnly? EndTime,
 	int BreakMinutes,
 	string? HolidayName,
-	ScheduleAdjustment? PendingAdjustment);
+	ScheduleAdjustment? PendingAdjustment)
+{
+	/// <summary>Les absences actives du jour (en attente ou approuvées), triées par heure. Vide un jour de congé.</summary>
+	public IReadOnlyList<Absence> Absences { get; init; } = [];
+
+	/// <summary>Les absences demandées, pas encore approuvées : affichées, jamais effectives.</summary>
+	public IReadOnlyList<Absence> PendingAbsences { get; init; } = [];
+}
 
 public static class EffectiveSchedule
 {

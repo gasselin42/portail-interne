@@ -1,5 +1,5 @@
 import { apiFetch, readApiError } from "./client"
-import type { LeaveRequestResponse } from "./leaves"
+import type { LeaveRequestResponse, LeaveStatusId } from "./leaves"
 
 export const DaySource = {
 	Horaire: 0,
@@ -26,11 +26,25 @@ export type EffectiveDay = {
 	breakMinutes: number
 	holidayName: string | null
 	pendingAdjustment: PendingAdjustment | null
+	absences: CalendarAbsence[]
+	pendingAbsences: CalendarAbsence[]
 }
 
 export type CalendarData = {
 	days: EffectiveDay[]
 	leaves: LeaveRequestResponse[]
+}
+
+export type CalendarAbsence = {
+	id: number
+	status: LeaveStatusId
+	reason: string | null
+	plannedStart: string | null
+	plannedEnd: string | null
+	start: string
+	end: string | null
+	inProgress: boolean
+	returnConfirmed: boolean
 }
 
 export async function getCalendar(from: string, to: string, signal?: AbortSignal): Promise<CalendarData> {

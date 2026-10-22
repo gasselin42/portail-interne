@@ -65,11 +65,11 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [x] Fermeture automatique en fin de journée de travail sans retour confirmé, calculée à la lecture (AbsenceState) ; marquée « retour non confirmé »
 - [x] 9. Annuler un ajustement (employé : si EnAttente ; manager : tant que la date n’est pas passée)
 - [ ] 10. File d’approbation : y ajouter les ajustements et les absences prévues en attente (approuver / refuser, mêmes règles d’équipe que les congés)
-- [ ] 11. Service **horaire effectif** : pour un employé et une plage `[from, to]`, renvoie chaque jour avec :
+- [x] 11. Service **horaire effectif** : pour un employé et une plage `[from, to]`, renvoie chaque jour avec :
   - [x] les heures prévues (ou « non travaillé ») et la source : `Horaire`, `Ferie`, `Ajustement`, `Conge`, `NonDefini`
   - [x] l’ajustement en attente éventuel (affiché sans être appliqué, comme un congé en attente)
   - [x] le nom du férié le cas échéant
-  - [ ] les absences du jour (heures réelles sinon prévues, en cours, retour non confirmé) — avec l’étape 8b
+  - [x] les absences du jour : approuvées (effectives) et en attente (affichées), état calculé au calendrier ; aucune un jour de congé
 - [x] 12. Endpoint calendrier `GET /api/calendar` : horaire effectif de chaque jour + congés (remplace `/api/leaves/calendar`)
 - [ ] 13. Congés : ne compter que les jours travaillés (R14)
   - [ ] Demande qui ne couvre aucun jour travaillé → refusée avec un message clair

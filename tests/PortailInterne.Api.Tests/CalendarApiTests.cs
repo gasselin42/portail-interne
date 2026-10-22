@@ -122,6 +122,65 @@ public class CalendarApiTests
 		Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
 	}
 
+	// ─── Absences (R24) ─────────────────────────────────────────────────────
+
+	[Fact]
+	public async Task Les_absences_du_jour_sont_triees_avec_leur_etat()
+	{
+		// « Maintenant » = mercredi 14 octobre 2026, midi
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		api.WithDb(db =>
+		{
+			db.WorkSchedules.Add(Schedule(team, new DateOnly(2026, 10, 1), new TimeOnly(8, 0)));
+			db.Absences.AddRange(
+				Absence(team, start: "11:30", started: true, LeaveStatus.Approuve),  // urgence en cours
+				Absence(team, start: "09:00", started: false, LeaveStatus.Approuve), // rendez-vous terminé
+				Absence(team, start: "15:00", started: false, LeaveStatus.EnAttente), // demande
+				Absence(team, start: "13:00", started: false, LeaveStatus.Annule));   // annulée
+		});
+		var sam = await api.LoginAsync("sam@test.local");
+
+		var today = Assert.Single((await sam.GetFromJsonAsync<CalendarResponse>("/api/calendar?from=2026-10-14&to=2026-10-14"))!.Days);
+
+		// Approuvées : triées par heure
+		Assert.Equal([new TimeOnly(9, 0), new TimeOnly(11, 30)], today.Absences.Select(a => a.Start));
+		Assert.False(today.Absences[0].InProgress);
+		Assert.Equal(new TimeOnly(10, 0), today.Absences[0].End);
+		Assert.True(today.Absences[1].InProgress);
+		Assert.Null(today.Absences[1].End);
+		// En attente : affichée à part ; annulée : absente
+		var pending = Assert.Single(today.PendingAbsences);
+		Assert.Equal(new TimeOnly(15, 0), pending.Start);
+		Assert.DoesNotContain(today.Absences.Concat(today.PendingAbsences), a => a.Start == new TimeOnly(13, 0));
+	}
+
+	[Fact]
+	public async Task Un_jour_de_conge_n_a_pas_d_absences()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		api.WithDb(db =>
+		{
+			db.WorkSchedules.Add(Schedule(team, new DateOnly(2026, 10, 1), new TimeOnly(8, 0)));
+			db.Absences.Add(Absence(team, start: "09:00", started: false, LeaveStatus.Approuve, date: new DateOnly(2026, 10, 15)));
+			db.LeaveRequests.Add(new LeaveRequest
+			{
+				EmployeeId = team.Sam.Id,
+				StartDate = new DateTime(2026, 10, 15),
+				EndDate = new DateTime(2026, 10, 15),
+				Type = LeaveType.Conge,
+				Status = LeaveStatus.Approuve,
+			});
+		});
+		var sam = await api.LoginAsync("sam@test.local");
+
+		var day = Assert.Single((await sam.GetFromJsonAsync<CalendarResponse>("/api/calendar?from=2026-10-15&to=2026-10-15"))!.Days);
+
+		Assert.Equal(DaySource.Conge, day.Source);
+		Assert.Empty(day.Absences);
+	}
+
 	// ─── Aides ──────────────────────────────────────────────────────────────
 
 	private static void AssertDay(EffectiveDayResponse day, DaySource source, int? startHour, int? endHour)
@@ -140,6 +199,22 @@ public class CalendarApiTests
 		Status = status,
 		CreatedById = createdById,
 	};
+
+	/// <summary>Une absence d'une heure pour Sam ; « started » = « Je pars » cliqué (urgence, sans heures prévues).</summary>
+	private static Absence Absence(TestTeam team, string start, bool started, LeaveStatus status, DateOnly? date = null)
+	{
+		var startTime = TimeOnly.Parse(start);
+		return new Absence
+		{
+			EmployeeId = team.Sam.Id,
+			Date = date ?? new DateOnly(2026, 10, 14),
+			PlannedStart = started ? null : startTime,
+			PlannedEnd = started ? null : startTime.AddHours(1),
+			StartedAt = started ? startTime : null,
+			Status = status,
+			CreatedById = team.Sam.Id,
+		};
+	}
 
 	private static WorkSchedule Schedule(TestTeam team, DateOnly effectiveFrom, TimeOnly start) => new()
 	{

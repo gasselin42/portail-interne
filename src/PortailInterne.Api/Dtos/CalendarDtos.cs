@@ -1,3 +1,4 @@
+using PortailInterne.Api.Models;
 using PortailInterne.Api.Services;
 
 namespace PortailInterne.Api.Dtos;
@@ -21,10 +22,25 @@ public class EffectiveDayResponse
 	public int BreakMinutes { get; set; }
 	public string? HolidayName { get; set; }
 	public PendingAdjustmentResponse? PendingAdjustment { get; set; }
+	public List<CalendarAbsenceResponse> Absences { get; set; } = [];
+	public List<CalendarAbsenceResponse> PendingAbsences { get; set; } = [];
 }
 
 public class CalendarResponse
 {
 	public List<EffectiveDayResponse> Days { get; set; } = [];
 	public List<LeaveRequestResponse> Leaves { get; set; } = [];
+}
+
+public class CalendarAbsenceResponse
+{
+	public int Id { get; set; }
+	public LeaveStatus Status { get; set; }
+	public string? Reason { get; set; }
+	public TimeOnly? PlannedStart { get; set; }
+	public TimeOnly? PlannedEnd { get; set; }
+	public TimeOnly Start { get; set; }
+	public TimeOnly? End { get; set; }
+	public bool InProgress { get; set; }
+	public bool ReturnConfirmed { get; set; }
 }

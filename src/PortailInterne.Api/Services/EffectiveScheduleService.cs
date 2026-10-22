@@ -31,6 +31,13 @@ public class EffectiveScheduleService
 			.Where(s => s.EmployeeId == employeeId && s.EffectiveFrom <= to)
 			.ToListAsync();
 
+		var absences = await _db.Absences
+			.AsNoTracking()
+			.Where(a => a.EmployeeId == employeeId
+				&& a.Date >= from && a.Date <= to
+				&& (a.Status == LeaveStatus.Approuve || a.Status == LeaveStatus.EnAttente))
+			.ToListAsync();
+
 		var holidays = await _db.Holidays
 			.AsNoTracking()
 			.Where(h => h.SiteId == siteId && h.Date >= from && h.Date <= to)
@@ -67,7 +74,19 @@ public class EffectiveScheduleService
 			var onLeave = leaves.Any(l =>
 				DateOnly.FromDateTime(l.StartDate) <= date && DateOnly.FromDateTime(l.EndDate) >= date);
 
-			result.Add(EffectiveSchedule.ComputeDay(date, schedule, holiday, approved, pending, onLeave));
+			var day = EffectiveSchedule.ComputeDay(date, schedule, holiday, approved, pending, onLeave);
+
+			// Les absences du jour, triées ; approuvées = effectives, en attente = affichées seulement
+			var todays = absences
+				.Where(a => a.Date == date)
+				.OrderBy(a => a.StartedAt ?? a.PlannedStart)
+				.ToList();
+
+			result.Add(day with
+			{
+				Absences = onLeave ? [] : todays.Where(a => a.Status == LeaveStatus.Approuve).ToList(),
+				PendingAbsences = onLeave ? [] : todays.Where(a => a.Status == LeaveStatus.EnAttente).ToList(),
+			});
 		}
 
 		return result;
