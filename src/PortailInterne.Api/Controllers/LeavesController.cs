@@ -110,8 +110,7 @@ public class LeavesController : ControllerBase
 		if (employeeId == employee.Id)
 			return BadRequest(new { message = "Pour toi-même, utilise une demande normale." });
 
-		var isAdmin = await _scope.CanAdministerSiteAsync(employee.SiteId);
-		if (!isAdmin && employee.ManagerId != employeeId)
+		if (!await _scope.CanManageAsync(employee))
 			return NotFound();
 
 		var today = await _siteClock.TodayForAsync(employee.Id);
@@ -311,10 +310,7 @@ public class LeavesController : ControllerBase
         if (leave.EmployeeId == employeeId)
             return BadRequest(new { message = "Vous ne pouvez pas traiter votre propre demande." });
 
-        var isAdmin = await _scope.CanAdministerSiteAsync(leave.Employee.SiteId);
-        var isManager = leave.Employee.ManagerId == employeeId;
-
-        if (!isAdmin && !isManager)
+        if (!await _scope.CanManageAsync(leave.Employee))
             return NotFound();
 
         if (leave.Status != LeaveStatus.EnAttente)

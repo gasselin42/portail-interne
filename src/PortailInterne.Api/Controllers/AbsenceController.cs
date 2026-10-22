@@ -40,7 +40,7 @@ public class AbsenceController : ControllerBase
 		if (employeeIdClaim is null || !int.TryParse(employeeIdClaim, out var userId))
             return Unauthorized();
 
-		if (!await CanReadAsync(employee, userId))
+		if (!await _scope.CanReadAsync(employee))
 			return NotFound();
 
 		var (today, now) = await _clock.NowForAsync(employeeId);
@@ -82,7 +82,7 @@ public class AbsenceController : ControllerBase
             return Unauthorized();
 		
 		var isSelf = employee.Id == userId;
-		if (!isSelf && !await CanManageAsync(employee, userId))
+		if (!isSelf && !await _scope.CanManageAsync(employee))
 			return NotFound();
 
 		var autoApproved = !isSelf;
@@ -152,7 +152,7 @@ public class AbsenceController : ControllerBase
             return Unauthorized();
 
 		var isSelf = employee.Id == userId;
-		if (!isSelf && !await CanManageAsync(employee, userId))
+		if (!isSelf && !await _scope.CanManageAsync(employee))
 			return NotFound();
 
 		var absence = await _db.Absences
@@ -197,7 +197,7 @@ public class AbsenceController : ControllerBase
             return Unauthorized();
 
 		var isSelf = employee.Id == userId;
-		if (!isSelf && !await CanManageAsync(employee, userId))
+		if (!isSelf && !await _scope.CanManageAsync(employee))
 			return NotFound();
 		
 		var (today, now) = await _clock.NowForAsync(employee.Id);
@@ -266,7 +266,7 @@ public class AbsenceController : ControllerBase
             return Unauthorized();
 
 		var isSelf = employee.Id == userId;
-		if (!isSelf && !await CanManageAsync(employee, userId))
+		if (!isSelf && !await _scope.CanManageAsync(employee))
 			return NotFound();
 		
 		var (today, now) = await _clock.NowForAsync(employee.Id);
@@ -314,7 +314,7 @@ public class AbsenceController : ControllerBase
 		if (employee.Id == userId)
 			return BadRequest(new { message = "Tu ne peux pas approuver ou refuser ta propre demande." });
 		
-		if (!await CanManageAsync(employee, userId))
+		if (!await _scope.CanManageAsync(employee))
 			return NotFound();
 
 		var absence = await _db.Absences
@@ -361,18 +361,12 @@ public class AbsenceController : ControllerBase
 		return NoContent();
 	}
 
-	private async Task<bool> CanManageAsync(Employee employee, int userId) =>
-		await _scope.CanAdministerSiteAsync(employee.SiteId) || employee.ManagerId == userId;
-
 	/// <summary>Annulable : active, pas encore commencée, et pas « soi-même avec une absence approuvée ».</summary>
 	private static bool CanCancel(Absence absence, bool isSelf, DateOnly today, TimeOnly now) =>
 		(absence.Status == LeaveStatus.EnAttente || absence.Status == LeaveStatus.Approuve)
 		&& !(isSelf && absence.Status == LeaveStatus.Approuve)
 		&& absence.StartedAt is null
 		&& (absence.Date > today || (absence.Date == today && absence.PlannedStart > now));
-
-	private async Task<bool> CanReadAsync(Employee employee, int userId) =>
-		employee.Id == userId || await CanManageAsync(employee, userId);
 
 	private static AbsenceResponse ToResponse(Absence absence, Employee? creator, bool isSelf, DateOnly today, TimeOnly now, AbsenceStatus status) => new()
 	{

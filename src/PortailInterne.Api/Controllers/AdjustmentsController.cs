@@ -38,7 +38,7 @@ public class AdjustmentsController : ControllerBase
 		if (employeeIdClaim is null || !int.TryParse(employeeIdClaim, out var userId))
             return Unauthorized();
 		
-		if (!await CanReadAsync(employee, userId))
+		if (!await _scope.CanReadAsync(employee))
 			return NotFound();
 
 		var today = await _siteClock.TodayForAsync(employee.Id);
@@ -70,7 +70,7 @@ public class AdjustmentsController : ControllerBase
             return Unauthorized();
 
 		var isSelf = employee.Id == userId;
-		if (!isSelf && !await CanManageAsync(employee, userId))
+		if (!isSelf && !await _scope.CanManageAsync(employee))
 			return NotFound();
 
 		var autoApproved = !isSelf;
@@ -131,7 +131,7 @@ public class AdjustmentsController : ControllerBase
             return Unauthorized();
 
 		var isSelf = employee.Id == userId;
-		if (!isSelf && !await CanManageAsync(employee, userId))
+		if (!isSelf && !await _scope.CanManageAsync(employee))
 			return NotFound();
 
 		var adjustment = await _db.ScheduleAdjustments
@@ -176,7 +176,7 @@ public class AdjustmentsController : ControllerBase
 		if (employee.Id == userId)
 			return BadRequest(new { message = "Tu ne peux pas approuver ou refuser ta propre demande." });
 		
-		if (!await CanManageAsync(employee, userId))
+		if (!await _scope.CanManageAsync(employee))
 			return NotFound();
 
 		var adjustment = await _db.ScheduleAdjustments
@@ -201,13 +201,6 @@ public class AdjustmentsController : ControllerBase
 
 		return NoContent();
 	}
-
-	private async Task<bool> CanManageAsync(Employee employee, int userId) =>
-		await _scope.CanAdministerSiteAsync(employee.SiteId) || employee.ManagerId == userId;
-
-
-	private async Task<bool> CanReadAsync(Employee employee, int userId) =>
-		employee.Id == userId || await CanManageAsync(employee, userId);
 
 	/// <summary>Annulable : actif, pas passé, et pas « soi-même avec un ajustement déjà approuvé ».</summary>
 	private static bool CanCancel(ScheduleAdjustment adjustment, bool isSelf, DateOnly today) =>

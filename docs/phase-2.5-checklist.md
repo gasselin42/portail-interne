@@ -79,7 +79,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [x] Nombre de jours travaillés affiché dans la demande et la file d’approbation
   - [x] Solde et jours sans solde (R19) recalculés sur les jours travaillés au lieu de lun.–ven.
   - [x] LeaveBand : un jour non travaillé prend l’état (payé / sans solde) du dernier jour travaillé qui le précède (`WorkedDates` renvoyé par l’API)
-- [ ] 14. Autorisation : employé = lecture de son horaire ; manager = son équipe ; admin = son site ; Admin global = tout
+- [x] 14. Autorisation : employé = lecture de son horaire ; manager = son équipe ; admin = son site ; Admin global = tout
 
 ## Frontend (React)
 

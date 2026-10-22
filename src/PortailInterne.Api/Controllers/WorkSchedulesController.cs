@@ -38,7 +38,7 @@ public class WorkSchedulesController : ControllerBase
 		if (employeeIdClaim is null || !int.TryParse(employeeIdClaim, out var userId))
             return Unauthorized();
 
-		if (!await CanReadAsync(employee, userId))
+		if (!await _scope.CanReadAsync(employee))
 			return NotFound();
 
 		var today = await _siteClock.TodayForAsync(employee.Id);
@@ -84,7 +84,7 @@ public class WorkSchedulesController : ControllerBase
 		if (employeeIdClaim is null || !int.TryParse(employeeIdClaim, out var userId))
             return Unauthorized();
 
-		if (!await CanManageAsync(employee, userId))
+		if (!await _scope.CanManageAsync(employee))
 			return NotFound();
 		
 		var today = await _siteClock.TodayForAsync(employee.Id);
@@ -161,7 +161,7 @@ public class WorkSchedulesController : ControllerBase
 		if (employeeIdClaim is null || !int.TryParse(employeeIdClaim, out var userId))
             return Unauthorized();
 		
-		if (!await CanManageAsync(employee, userId))
+		if (!await _scope.CanManageAsync(employee))
 			return NotFound();
 		
 		var today = await _siteClock.TodayForAsync(employee.Id);
@@ -224,7 +224,7 @@ public class WorkSchedulesController : ControllerBase
 		if (employeeIdClaim is null || !int.TryParse(employeeIdClaim, out var userId))
             return Unauthorized();
 		
-		if (!await CanManageAsync(employee, userId))
+		if (!await _scope.CanManageAsync(employee))
 			return NotFound();
 		
 		var today = await _siteClock.TodayForAsync(employee.Id);
@@ -243,11 +243,4 @@ public class WorkSchedulesController : ControllerBase
 
 		return NoContent();
 	}
-
-	private async Task<bool> CanManageAsync(Employee employee, int userId) =>
-		await _scope.CanAdministerSiteAsync(employee.SiteId) || employee.ManagerId == userId;
-
-
-	private async Task<bool> CanReadAsync(Employee employee, int userId) =>
-		employee.Id == userId || await CanManageAsync(employee, userId);
 }
