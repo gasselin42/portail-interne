@@ -57,12 +57,12 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [x] Employé : seulement pour lui, date ≥ aujourd’hui, statut `EnAttente`, heures obligatoires (jamais une journée à 0 h)
   - [x] Manager / Admin du site : statut `Approuve` directement (jamais pour soi-même)
   - [x] Mêmes validations d’heures que l’horaire type
-- [ ] 8b. **Absences** (R24)
-  - [ ] Demander une absence prévue (date ≥ aujourd’hui) ; annuler si EnAttente
-  - [ ] « Je pars » : démarre l’absence prévue et approuvée du moment, sinon crée une absence non prévue (approuvée d’office)
-  - [ ] « Je suis de retour » : ferme l’absence en cours à l’heure réelle (retour en avance ou en retard)
-  - [ ] Le manager ou un Admin du site peut confirmer le départ ou le retour à la place de l’employé
-  - [ ] Fermeture automatique en fin de journée de travail sans retour confirmé (heure prévue, sinon fin de journée) ; marquée « retour non confirmé »
+- [x] 8b. **Absences** (R24)
+  - [x] Demander une absence prévue (date ≥ aujourd’hui) ; annuler tant qu’elle n’a pas commencé (employé : si EnAttente)
+  - [x] « Je pars » : démarre l’absence prévue et approuvée du moment, sinon crée une absence non prévue (approuvée d’office)
+  - [x] « Je suis de retour » : ferme l’absence en cours à l’heure réelle (retour en avance ou en retard)
+  - [x] Le manager ou un Admin du site peut confirmer le départ ou le retour à la place de l’employé
+  - [x] Fermeture automatique en fin de journée de travail sans retour confirmé, calculée à la lecture (AbsenceState) ; marquée « retour non confirmé »
 - [x] 9. Annuler un ajustement (employé : si EnAttente ; manager : tant que la date n’est pas passée)
 - [ ] 10. File d’approbation : y ajouter les ajustements et les absences prévues en attente (approuver / refuser, mêmes règles d’équipe que les congés)
 - [ ] 11. Service **horaire effectif** : pour un employé et une plage `[from, to]`, renvoie chaque jour avec :
@@ -90,7 +90,10 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [ ] **Ligne « maintenant »**, mise à jour chaque minute, dans le fuseau du site
   - [ ] Défilement automatique vers l’heure actuelle à l’ouverture
 - [ ] 17. **Demander un ajustement ou une absence prévue** (employé) + liste de mes demandes avec statut
-- [ ] 17b. **Bandeau de présence** en haut de toutes les pages : « Je pars » pendant une journée travaillée ; « Absent depuis 9h05 (retour prévu à 11h) — Je suis de retour » pendant une absence ; absences réelles au calendrier (en cours dessinée jusqu’à maintenant)
+- [ ] 17b. **Présence** (R24)
+  - [ ] « Ma présence » dans le menu de l’utilisateur (icône) : modal avec « Je pars » (motif optionnel) et confirmation ; prêt pour d’autres réglages
+  - [ ] Bandeau « Absent depuis 15 h 02 — Je suis de retour », visible en haut de toutes les pages **seulement pendant une absence**
+  - [ ] Absences réelles au calendrier (en cours dessinée jusqu’à maintenant)
 - [ ] 18. File d’approbation : ajustements à côté des congés (type clairement indiqué)
 - [ ] 19. Vue **équipe semaine** (Manager) : qui travaille quand, d’un coup d’œil
 - [ ] 20. Écran **Sites et fériés** (Admin global : créer un site avec fuseau ; Admin du site : gérer ses fériés par année)

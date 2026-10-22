@@ -7,6 +7,9 @@ public interface IAppClock
 
 	/// <summary>La date du jour dans le fuseau horaire reçu.</summary>
 	DateTime TodayIn(string timeZoneId);
+
+	/// <summary>La date et l'heure actuelles dans le fuseau horaire reçu.</summary>
+	DateTime NowIn(string timeZoneId);
 }
 
 public class AppClock : IAppClock
@@ -31,4 +34,7 @@ public class AppClock : IAppClock
 		var timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
 		return TimeZoneInfo.ConvertTimeFromUtc(_time.GetUtcNow().UtcDateTime, timeZone).Date;
 	}
+
+	public DateTime NowIn(string timeZoneId) =>
+		TimeZoneInfo.ConvertTimeFromUtc(_time.GetUtcNow().UtcDateTime, TimeZoneInfo.FindSystemTimeZoneById(timeZoneId));
 }

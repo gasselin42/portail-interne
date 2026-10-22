@@ -25,4 +25,15 @@ public class SiteClock
 		var timeZoneId = await _db.Sites.Where(s => s.Id == siteId).Select(s => s.TimeZoneId).FirstAsync();
 		return DateOnly.FromDateTime(_clock.TodayIn(timeZoneId));
 	}
+
+	/// <summary>La date et l'heure actuelles dans le fuseau du site de l'employé.</summary>
+	public async Task<(DateOnly Today, TimeOnly Now)> NowForAsync(int employeeId)
+	{
+		var timeZoneId = await _db.Employees.AsNoTracking()
+			.Where(e => e.Id == employeeId)
+			.Select(e => e.Site.TimeZoneId)
+			.FirstAsync();
+		var now = _clock.NowIn(timeZoneId);
+		return (DateOnly.FromDateTime(now), TimeOnly.FromDateTime(now));
+	}
 }
