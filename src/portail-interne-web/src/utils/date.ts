@@ -86,6 +86,12 @@ export function formatShortWeekday(iso: string): string {
 	return shortWeekdayFormatter.format(date)
 }
 
+export function formatTime(time: string): string {
+	const [hours, minutes] = time.split(":")
+	const h = Number(hours)
+	return minutes === "00" ? `${h} h` : `${h} h ${minutes}`
+}
+
 export function daysFromToday(offset: number): string {
 	return addDays(todayIso(), offset)
 }
@@ -99,6 +105,10 @@ export function addDays(iso: string, offset: number): string {
 export function startOfWeek(iso: string): string {
 	const weekday = toUtcDate(iso).getUTCDay()
 	return addDays(iso, -((weekday + 6) % 7))
+}
+
+export function nowTime(): string {
+	return new Date().toLocaleTimeString("en-CA", { timeZone, hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" })
 }
 
 export function todayIso(): string {

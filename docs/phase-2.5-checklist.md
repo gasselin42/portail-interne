@@ -95,8 +95,11 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [ ] Défilement automatique vers l’heure actuelle à l’ouverture
 - [ ] 17. **Demander un ajustement ou une absence prévue** (employé) + liste de mes demandes avec statut
 - [ ] 17b. **Présence** (R24)
-  - [ ] « Ma présence » dans le menu de l’utilisateur (icône) : modal avec « Je pars » (motif optionnel) et confirmation ; prêt pour d’autres réglages
-  - [ ] Bandeau « Absent depuis 15 h 02 — Je suis de retour », visible en haut de toutes les pages **seulement pendant une absence**
+  - [x] Trois boutons dans le bloc utilisateur de la sidebar, chacun ouvre son modal (la déconnexion reste telle quelle)
+    - [x] **Ma présence** (`ScheduleOutlined`) : mon statut du jour, mon horaire de la semaine, mes prochaines absences prévues, « Je pars » (`MeetingRoomOutlined`) avec motif optionnel et avertissement dans la confirmation
+    - [x] **Mes infos** (`BadgeOutlined`) : site et fuseau, manager, solde de congés (lecture)
+    - [x] **Préférences** (`SettingsOutlined`) : changer mon mot de passe (retiré du menu) ; plus tard : photo, vue par défaut, couleur (R22), notifications
+  - [x] Bandeau « Absent depuis 15 h 02 — Je suis de retour », visible en haut de toutes les pages **seulement pendant une absence**
   - [ ] Absences réelles au calendrier (en cours dessinée jusqu’à maintenant)
 - [ ] 18. File d’approbation : ajustements à côté des congés (type clairement indiqué)
 - [ ] 19. Vue **équipe semaine** (Manager) : qui travaille quand, d’un coup d’œil

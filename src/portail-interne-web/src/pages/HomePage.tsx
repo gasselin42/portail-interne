@@ -3,7 +3,7 @@ import { useSession } from "../session/useSession"
 import { PageHeader } from "../components/common/PageHeader"
 import { primaryButton } from "../ui/buttons"
 import { canApprove } from "../session/permission"
-import { UpcomingLeavesWidget } from "../components/home/UpcomingLeavesWidget"
+import { UpcomingWidget } from "../components/home/UpcomingWidget"
 import { PendingApprovalsWidget } from "../components/home/PendingApprovalsWidget"
 import { WeekWidget } from "../components/home/WeekWidget"
 
@@ -25,7 +25,7 @@ export function HomePage() {
 
 			<div className="grid gap-4 md:grid-cols-2">
 				<WeekWidget />
-				<UpcomingLeavesWidget />
+				<UpcomingWidget />
 				{canApprove(me) && (
 					<PendingApprovalsWidget />
 				)}

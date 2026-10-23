@@ -38,3 +38,11 @@ export const rowIconDangerButton = `${rowIconBase} hover:bg-red-50 hover:text-re
 
 export const textLink = `rounded text-sm font-medium text-sky-700 hover:text-sky-800 hover:underline ${focusRing}`
 
+export function linkClasses(active: boolean, collapsed: boolean): string {
+	const base = "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
+	const state = active
+		? "bg-sky-50 font-medium text-sky-700"
+		: "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+	const layout = collapsed ? "justify-center" : ""
+	return `${base} ${state} ${layout}`
+}

@@ -54,8 +54,8 @@ export async function listEmployees(search?: string, signal?: AbortSignal): Prom
 	return (await res.json()) as EmployeeListItem[]
 }
 
-export async function getEmployee(id: number): Promise<EmployeeDetail> {
-	const res = await apiFetch(`/api/employees/${id}`)
+export async function getEmployee(id: number, signal?: AbortSignal): Promise<EmployeeDetail> {
+	const res = await apiFetch(`/api/employees/${id}`, { signal })
 
 	if (!res.ok) {
 		throw new Error(await readApiError(res, "Impossible de charger l'employé"))

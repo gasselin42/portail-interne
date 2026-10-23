@@ -2,16 +2,20 @@ import { useLocation, Link, useNavigate } from "react-router-dom"
 import { useSession } from "../session/useSession"
 import { isNavItemActive, NAV_ITEMS } from "./navItems"
 import { ROLE_LABELS } from "../api/admin"
-import { KeyOutlined, LogoutOutlined } from "@mui/icons-material"
+import { LogoutOutlined, SettingsOutlined, ScheduleOutlined, BadgeOutlined } from "@mui/icons-material"
 import { Avatar } from "../components/employees/Avatar"
 import { Brand } from "../components/common/Brand"
+import { linkClasses } from "../ui/buttons"
+
+export type UserDialog = "presence" | "info" | "preferences"
 
 type Props = {
 	collapsed: boolean
 	onNavigate?: () => void
+	onOpenDialog: (dialog: UserDialog) => void
 }
 
-export function SidebarContent({ collapsed, onNavigate }: Props) {
+export function SidebarContent({ collapsed, onNavigate, onOpenDialog }: Props) {
 	const { me, logout } = useSession()
 	const navigate = useNavigate()
 	const { pathname } = useLocation()
@@ -19,22 +23,12 @@ export function SidebarContent({ collapsed, onNavigate }: Props) {
 	const navItems = NAV_ITEMS.filter((i) => !i.visible || i.visible(me))
 	const labelClass = collapsed ? "sr-only" : "whitespace-nowrap"
 
-	function linkClasses(active: boolean): string {
-		const base = "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
-		const state = active
-			? "bg-sky-50 font-medium text-sky-700"
-			: "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-		const layout = collapsed ? "justify-center" : ""
-		return `${base} ${state} ${layout}`
-	}
-
 	function handleLogout() {
 		onNavigate?.()
 		logout()
 		navigate("/login", { replace: true })
 	}
 
-	const passwordActive = pathname === "/change-password"
 
 	return (
 		<div className="flex h-full flex-col">
@@ -55,7 +49,7 @@ export function SidebarContent({ collapsed, onNavigate }: Props) {
 									onClick={onNavigate}
 									title={collapsed ? item.label : undefined}
 									aria-current={active ? "page" : undefined}
-									className={linkClasses(active)}
+									className={linkClasses(active, collapsed)}
 								>
 									<item.icon fontSize="small" />
 									<span className={labelClass}>{item.label}</span>
@@ -81,23 +75,44 @@ export function SidebarContent({ collapsed, onNavigate }: Props) {
 				)}
 				<ul className="mt-3 space-y-1">
 					<li>
-						<Link
-							to="/change-password"
-							onClick={onNavigate}
-							title={collapsed ? "Changer mon mot de passe" : undefined}
-							aria-current={passwordActive ? "page" : undefined}
-							className={linkClasses(passwordActive)}
+						<button
+							type="button"
+							onClick={() => onOpenDialog("presence")}
+							title={collapsed ? "Ma présence" : undefined}
+							className={linkClasses(false, collapsed)}
 						>
-							<KeyOutlined fontSize="small" />
-							<span className={labelClass}>Changer mon mot de passe</span>
-						</Link>
+							<ScheduleOutlined fontSize="small" />
+							<span className={labelClass}>Ma présence</span>
+						</button>
+					</li>
+					<li>
+						<button
+							type="button"
+							onClick={() => onOpenDialog("info")}
+							title={collapsed ? "Mes infos" : undefined}
+							className={linkClasses(false, collapsed)}
+						>
+							<BadgeOutlined fontSize="small" />
+							<span className={labelClass}>Mes infos</span>
+						</button>
+					</li>
+					<li>
+						<button
+							type="button"
+							onClick={() => onOpenDialog("preferences")}
+							title={collapsed ? "Préférences" : undefined}
+							className={linkClasses(false, collapsed)}
+						>
+							<SettingsOutlined fontSize="small" />
+							<span className={labelClass}>Préférences</span>
+						</button>
 					</li>
 					<li>
 						<button
 							type="button"
 							onClick={handleLogout}
 							title={collapsed ? "Déconnexion" : undefined}
-							className={linkClasses(false)}
+							className={linkClasses(false, collapsed)}
 						>
 							<LogoutOutlined fontSize="small" />
 							<span className={labelClass}>Déconnexion</span>

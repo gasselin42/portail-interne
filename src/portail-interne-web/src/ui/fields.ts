@@ -5,3 +5,5 @@ export const fieldBase = "w-full rounded-lg border border-slate-200 bg-white py-
 
 /** Un champ standard (texte, courriel, liste déroulante). */
 export const inputClass = `${fieldBase} px-3`
+
+export const sectionTitle = "text-xs font-semibold uppercase tracking-wide text-slate-500"

@@ -1,13 +1,17 @@
 import { useState, useEffect } from "react"
 import { Dialog, DialogBackdrop, DialogPanel } from "@headlessui/react"
 import { Outlet, useLocation } from "react-router-dom"
-import { SidebarContent } from "./SidebarContent"
+import { SidebarContent, type UserDialog } from "./SidebarContent"
 import { useSession } from "../session/useSession"
 import { MenuOutlined, MenuOpenOutlined, CloseOutlined } from "@mui/icons-material"
 import { iconButton } from "../ui/buttons"
 import { Brand } from "../components/common/Brand"
 import { ErrorBoundary } from "../components/errors/ErrorBoundary"
 import { PageCrash } from "../components/errors/PageCrash"
+import { PresenceDialog } from "../components/profile/PresenceDialog"
+import { PreferencesDialog } from "../components/profile/PreferencesDialog"
+import { ReturnBanner } from "../components/profile/ReturnBanner"
+import { MyInfoDialog } from "../components/profile/MyInfoDialog"
 
 const COLLAPSED_KEY = "portail_sidebar_collapsed"
 
@@ -23,6 +27,8 @@ export function AppLayout() {
 	const { me } = useSession()
 	const [collapsed, setCollapsed] = useState(readCollapsed)
 	const [mobileOpen, setMobileOpen] = useState(false)
+	const [openDialog, setOpenDialog] = useState<UserDialog | null>(null)
+	const [presenceVersion, setPresenceVersion] = useState(0)
 
 	const { pathname } = useLocation()
 
@@ -55,7 +61,7 @@ export function AppLayout() {
 				className={`sticky top-0 hidden h-screen shrink-0 flex-col lg:flex ${collapsed ? "w-20" : "w-64"} overflow-hidden border-r border-slate-200 bg-white transition-[width] duration-200`}
 			>
 				<div className="min-h-0 flex-1">
-					<SidebarContent collapsed={collapsed} />
+					<SidebarContent collapsed={collapsed} onOpenDialog={setOpenDialog} />
 				</div>
 				<button
 					type="button"
@@ -81,11 +87,19 @@ export function AppLayout() {
 					<Brand />
 				</header>
 				<main className="flex-1">
+					<ReturnBanner version={presenceVersion} />
 					<ErrorBoundary key={pathname} fallback={(reset) => <PageCrash onRetry={reset} />}>
 						<Outlet />
 					</ErrorBoundary>
 				</main>
 			</div>
+			<PresenceDialog
+				open={openDialog === "presence"}
+				onClose={() => setOpenDialog(null)}
+				onDeparted={() => setPresenceVersion((v) => v + 1)}
+			/>
+			<MyInfoDialog open={openDialog === "info"} onClose={() => setOpenDialog(null)} />
+			<PreferencesDialog open={openDialog === "preferences"} onClose={() => setOpenDialog(null)} />
 			<Dialog open={mobileOpen} onClose={setMobileOpen} className="relative z-50 lg:hidden">
 				<DialogBackdrop
 					transition
@@ -105,7 +119,7 @@ export function AppLayout() {
 							<CloseOutlined fontSize="small" />
 						</button>
 						<div className="min-h-0 flex-1">
-							<SidebarContent collapsed={false} onNavigate={() => setMobileOpen(false)} />
+							<SidebarContent collapsed={false} onNavigate={() => setMobileOpen(false)} onOpenDialog={(dialog) => { setMobileOpen(false); setOpenDialog(dialog) }} />
 						</div>
 					</DialogPanel>
 				</div>
