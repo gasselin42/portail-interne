@@ -81,6 +81,23 @@ public class AuthorizationMatrixTests
 		Assert.Equal(expected, leaveReview.StatusCode);
 	}
 
+	[Theory]
+	[InlineData("sam@test.local", false)]
+	[InlineData("mark@test.local", true)]
+	[InlineData("alex@test.local", true)]
+	[InlineData("gaby@test.local", true)]
+	[InlineData("jane@test.local", false)]
+	[InlineData("pierre@test.local", false)]
+	public async Task La_fiche_indique_si_l_on_peut_gerer_l_employe(string caller, bool expected)
+	{
+		using var api = Start();
+		var client = await api.LoginAsync(caller);
+
+		var sam = await client.GetFromJsonAsync<Dtos.EmployeeDetailResponse>($"/api/employees/{api.Team.Sam.Id}");
+
+		Assert.Equal(expected, sam!.CanManage);
+	}
+
 	// ─── Aides ──────────────────────────────────────────────────────────────
 
 	/// <summary>L'équipe de test, plus Pierre, Admin du site de Paris.</summary>

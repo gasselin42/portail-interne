@@ -4,10 +4,14 @@ import { RequireAdmin } from "./components/auth/RequireAdmin"
 import { RequireApprover } from "./components/auth/RequireApprover"
 import { SessionProvider } from "./session/SessionProvider"
 
+import { NotFoundPage } from "./pages/NotFoundPage"
+import { ErrorBoundary } from "./components/errors/ErrorBoundary"
+import { AppCrash } from "./components/errors/AppCrash"
+
+import { AppLayout } from "./layout/AppLayout"
 import { LoginPage } from "./pages/LoginPage"
 import { ChangePassword } from "./pages/ChangePassword"
 import { HomePage } from "./pages/HomePage"
-import { AppLayout } from "./layout/AppLayout"
 import { AdminAccountsPage } from "./pages/AdminAccountsPage"
 import { CreateEmployeePage } from "./pages/CreateEmployeePage"
 import { AnnuairePage } from "./pages/AnnuairePage"
@@ -15,10 +19,8 @@ import { FicheEmployePage } from "./pages/FicheEmployePage"
 import { LeavesPage } from "./pages/LeavesPage"
 import { NewLeavePage } from "./pages/NewLeavePage"
 import { PendingLeavesPage } from "./pages/PendingLeavesPage"
-import { NotFoundPage } from "./pages/NotFoundPage"
-import { ErrorBoundary } from "./components/errors/ErrorBoundary"
-import { AppCrash } from "./components/errors/AppCrash"
 import { CalendarPage } from "./pages/CalendarPage"
+import { EmployeeSchedulePage } from "./pages/EmployeeSchedulePage"
 
 export default function App() {
 	return (
@@ -42,6 +44,7 @@ export default function App() {
 								<Route path="/" element={<HomePage />} />
 								<Route path="/employees" element={<AnnuairePage />} />
 								<Route path="/employees/:id" element={<FicheEmployePage />} />
+								<Route path="/employees/:id/schedule" element={<EmployeeSchedulePage />} />
 								<Route path="/leaves" element={<LeavesPage />} />
 								<Route path="/leaves/new" element={<NewLeavePage />} />
 								<Route path="/calendar" element={<CalendarPage />} />

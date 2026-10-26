@@ -17,6 +17,7 @@ export type EmployeeDetail = EmployeeListItem & {
 	managerId: number | null
 	managerFirstName: string | null
 	managerLastName: string | null
+	canManage: boolean
 }
 
 export type EmployeeEdition = EmployeeDetail & {

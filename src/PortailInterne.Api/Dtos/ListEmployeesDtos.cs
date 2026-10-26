@@ -19,6 +19,7 @@ public class EmployeeDetailResponse : EmployeeListItemResponse
     public int? ManagerId { get; set; }
     public string? ManagerFirstName { get; set; }
     public string? ManagerLastName { get; set; }
+	public bool CanManage { get; set; }
 }
 
 public class AdminEmployeeResponse : EmployeeDetailResponse

@@ -83,10 +83,10 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 
 ## Frontend (React)
 
-- [ ] 15. Écran **Horaire d’un employé** (Manager/Admin)
-  - [ ] Grille 7 jours : coché / non coché, début, fin, pause
-  - [ ] Date d’entrée en vigueur ; historique des horaires passés en lecture seule
-  - [ ] Total d’heures par semaine affiché en direct
+- [x] 15. Écran **Horaire d’un employé** (Manager/Admin)
+  - [x] Grille 7 jours : coché / non coché, début, fin, pause
+  - [x] Date d’entrée en vigueur ; historique des horaires passés en lecture seule
+  - [x] Total d’heures par semaine affiché en direct
 - [ ] 16. Calendrier en **grille horaire** (vues jour et semaine ; la vue mois reste en journées)
   - [ ] Axe des heures ; la rangée « toute la journée » de la phase 2 reste en haut (congés, fériés)
   - [ ] Heures de travail mises en évidence ; jours non travaillés, fériés et ajustements visuellement distincts

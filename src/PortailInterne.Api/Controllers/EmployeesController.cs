@@ -15,10 +15,12 @@ namespace PortailInterne.Api.Controllers;
 public class EmployeesController : ControllerBase
 {
     private readonly AppDbContext _db;
+	private readonly AccessScope _scope;
 
-    public EmployeesController(AppDbContext db)
+    public EmployeesController(AppDbContext db, AccessScope scope)
     {
         _db = db;
+		_scope = scope;
     }
 
     [HttpGet]
@@ -68,6 +70,7 @@ public class EmployeesController : ControllerBase
             Departement = employee.Departement,
             PhoneNumber = employee.PhoneNumber ?? string.Empty,
             ManagerId = employee.ManagerId,
+			CanManage = await _scope.CanManageAsync(employee),
             PhotoUrl = employee.PhotoFileName == null
                 ? null
                 : PhotoStorage.UrlFor(employee.PhotoFileName),

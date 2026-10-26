@@ -5,10 +5,10 @@ import { getEmployee, type EmployeeDetail } from "../api/employees"
 import { ErrorBanner, SuccessBanner } from "../components/feedback/Banner"
 import { EmployeePhoto } from "../components/employees/EmployeePhoto"
 import { useSession } from "../session/useSession"
-import { isAdmin } from "../session/permission"
 import { secondaryButton } from "../ui/buttons"
 import { DeclareSickLeaveDialog } from "../components/leaves/DeclareSickLeaveDialog"
 import { formatRange } from "../utils/date"
+import { ScheduleOutlined } from "@mui/icons-material"
 
 export function FicheEmployePage() {
 	const { id } = useParams()
@@ -27,7 +27,7 @@ export function FicheEmployePage() {
 			employee !== null &&
 			me !== null &&
 			employee.id !== me.employeeId &&
-			(isAdmin(me) || employee.managerId === me.employeeId)
+			employee.canManage
 
 	useEffect(() => {
 		if (idInvalide) return
@@ -77,8 +77,16 @@ export function FicheEmployePage() {
 								</h1>
 								<p className="mt-1 text-sm text-slate-500">{employee.jobTitle || "-"}</p>
 							</div>
-							{canDeclare && 
-								<div className="ml-auto">
+							<div className="ml-auto flex gap-3">
+								{employee.canManage &&
+									<Link
+										to={`/employees/${employee.id}/schedule`}
+										className={`${secondaryButton} inline-flex items-center gap-2`}
+									>
+										<ScheduleOutlined fontSize="small" />Horaire
+									</Link>
+								}
+								{canDeclare &&
 									<button
 										type="button"
 										className={secondaryButton}
@@ -89,8 +97,8 @@ export function FicheEmployePage() {
 									>
 										Déclarer un congé maladie
 									</button>
-								</div>
-							}
+								}
+							</div>
 						</div>
 
 						{/* Informations, sous la rangée */}
