@@ -152,6 +152,19 @@ namespace PortailInterne.Api.Migrations
                     b.ToTable("Employees");
                 });
 
+            modelBuilder.Entity("PortailInterne.Api.Models.EmployeePreferences", b =>
+                {
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CalendarHourRange")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("EmployeeId");
+
+                    b.ToTable("EmployeePreferences");
+                });
+
             modelBuilder.Entity("PortailInterne.Api.Models.Holiday", b =>
                 {
                     b.Property<int>("Id")
@@ -557,6 +570,17 @@ namespace PortailInterne.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Site");
+                });
+
+            modelBuilder.Entity("PortailInterne.Api.Models.EmployeePreferences", b =>
+                {
+                    b.HasOne("PortailInterne.Api.Models.Employee", "Employee")
+                        .WithOne()
+                        .HasForeignKey("PortailInterne.Api.Models.EmployeePreferences", "EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
                 });
 
             modelBuilder.Entity("PortailInterne.Api.Models.Holiday", b =>

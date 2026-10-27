@@ -87,20 +87,22 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [x] Grille 7 jours : coché / non coché, début, fin, pause
   - [x] Date d’entrée en vigueur ; historique des horaires passés en lecture seule
   - [x] Total d’heures par semaine affiché en direct
-- [ ] 16. Calendrier en **grille horaire** (vues jour et semaine ; la vue mois reste en journées)
-  - [ ] Axe des heures ; la rangée « toute la journée » de la phase 2 reste en haut (congés, fériés)
-  - [ ] Heures de travail mises en évidence ; jours non travaillés, fériés et ajustements visuellement distincts
-  - [ ] **Passé grisé** : jours passés entièrement, aujourd’hui jusqu’à l’heure exacte
-  - [ ] **Ligne « maintenant »**, mise à jour chaque minute, dans le fuseau du site
-  - [ ] Défilement automatique vers l’heure actuelle à l’ouverture
+- [x] 16. Calendrier en **grille horaire** (vues jour et semaine ; la vue mois reste en journées)
+  - [x] Axe des heures ; la rangée « toute la journée » de la phase 2 reste en haut (congés, fériés)
+  - [x] Heures de travail mises en évidence ; jours non travaillés, fériés et ajustements visuellement distincts
+  - [x] Aucun texte dans les blocs de la grille : l'ajustement (« Ajusté · 9 h – 15 h ») et la demande en attente sont indiqués dans l'en-tête du jour
+  - [x] Plage d'heures affichée, préférence stockée dans l'API (Préférences) : « Mes heures de travail » (période affichée ± 1 h, élargie par les absences ; 7 h – 19 h si aucun jour travaillé) ou « Journée complète »
+  - [x] **Passé grisé** : jours passés entièrement, aujourd’hui jusqu’à l’heure exacte
+  - [x] **Ligne « maintenant »**, mise à jour chaque minute, dans le fuseau du site
+  - [x] Défilement automatique vers l’heure actuelle à l’ouverture
 - [ ] 17. **Demander un ajustement ou une absence prévue** (employé) + liste de mes demandes avec statut
-- [ ] 17b. **Présence** (R24)
+- [x] 17b. **Présence** (R24)
   - [x] Trois boutons dans le bloc utilisateur de la sidebar, chacun ouvre son modal (la déconnexion reste telle quelle)
     - [x] **Ma présence** (`ScheduleOutlined`) : mon statut du jour, mon horaire de la semaine, mes prochaines absences prévues, « Je pars » (`MeetingRoomOutlined`) avec motif optionnel et avertissement dans la confirmation
     - [x] **Mes infos** (`BadgeOutlined`) : site et fuseau, manager, solde de congés (lecture)
     - [x] **Préférences** (`SettingsOutlined`) : changer mon mot de passe (retiré du menu) ; plus tard : photo, vue par défaut, couleur (R22), notifications
   - [x] Bandeau « Absent depuis 15 h 02 — Je suis de retour », visible en haut de toutes les pages **seulement pendant une absence**
-  - [ ] Absences réelles au calendrier (en cours dessinée jusqu’à maintenant)
+  - [x] Absences réelles au calendrier (en cours dessinée jusqu’à maintenant)
 - [ ] 18. File d’approbation : ajustements à côté des congés (type clairement indiqué)
 - [ ] 19. Vue **équipe semaine** (Manager) : qui travaille quand, d’un coup d’œil
 - [ ] 20. Écran **Sites et fériés** (Admin global : créer un site avec fuseau ; Admin du site : gérer ses fériés par année)

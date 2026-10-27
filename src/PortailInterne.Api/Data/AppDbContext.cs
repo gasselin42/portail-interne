@@ -15,6 +15,7 @@ public class AppDbContext : DbContext
 	public DbSet<Holiday> Holidays => Set<Holiday>();
 	public DbSet<ScheduleAdjustment> ScheduleAdjustments => Set<ScheduleAdjustment>();
 	public DbSet<Absence> Absences => Set<Absence>();
+	public DbSet<EmployeePreferences> EmployeePreferences => Set<EmployeePreferences>();
 
 	public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
 	{
@@ -122,6 +123,17 @@ public class AppDbContext : DbContext
 
 			entity.HasIndex(a => new { a.EmployeeId, a.Date });
         });
+
+		// --- EmployeePreferences ---
+		modelBuilder.Entity<EmployeePreferences>(entity =>
+		{
+			entity.HasKey(p => p.EmployeeId);
+			
+			entity.HasOne(p => p.Employee)
+				.WithOne()
+				.HasForeignKey<EmployeePreferences>(p => p.EmployeeId)
+				.OnDelete(DeleteBehavior.Cascade);
+		});
 
 		// --- Site ---
 		modelBuilder.Entity<Site>(entity =>

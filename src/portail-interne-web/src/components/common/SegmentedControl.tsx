@@ -1,9 +1,9 @@
 import { useLayoutEffect, useRef } from "react"
 import { focusRing } from "../../ui/buttons"
 
-type Option<T extends string> = { value: T; label: string }
+type Option<T extends string | number> = { value: T; label: string }
 
-type Props<T extends string> = {
+type Props<T extends string | number> = {
 	/** Nom du groupe pour les lecteurs d'écran (ex. « Vue »). */
 	label: string
 	/** Doit être un tableau stable (constante hors du composant), sinon la pastille est remesurée à chaque rendu. */
@@ -16,7 +16,7 @@ type Props<T extends string> = {
  * Groupe de boutons dont un seul est actif (Jour / Semaine / Mois…).
  * Une pastille glisse sous le bouton actif et prend sa largeur.
  */
-export function SegmentedControl<T extends string>({ label, options, value, onChange }: Props<T>) {
+export function SegmentedControl<T extends string | number>({ label, options, value, onChange }: Props<T>) {
 	const buttonsRef = useRef<(HTMLButtonElement | null)[]>([])
 	const pillRef = useRef<HTMLSpanElement>(null)
 

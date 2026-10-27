@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { useSearchParams, Link } from "react-router-dom"
+import { useSearchParams, Link, useOutletContext } from "react-router-dom"
 import { PageHeader } from "../components/common/PageHeader"
 import {
 	addDays,
@@ -16,7 +16,7 @@ import {
 } from "../utils/date"
 import { iconButton, primaryButton, secondaryButton } from "../ui/buttons"
 import { ChevronLeft, ChevronRight } from "@mui/icons-material"
-import { LeaveStatus, type LeaveRequestResponse } from "../api/leaves"
+import { LeaveStatus } from "../api/leaves"
 import { ErrorBanner, type PageError } from "../components/feedback/Banner"
 import { segmentsFor } from "../utils/calendar"
 import { LEAVE_BAND_STYLES } from "../ui/leaveBands"
@@ -26,10 +26,11 @@ import { DayView } from "../components/calendar/DayView"
 import { SegmentedControl } from "../components/common/SegmentedControl"
 import { MonthView } from "../components/calendar/MonthView"
 import { leaveSwatchBackground } from "../ui/leaveBandBackground"
-import { getCalendar } from "../api/calendar"
+import { getCalendar, type CalendarData } from "../api/calendar"
+import { getPreferences, type Preferences } from "../api/preferences"
 
 type CalendarResult =
-	| { from: string; to: string; leaves: LeaveRequestResponse[] }
+	| { from: string; to: string; data: CalendarData; preferences: Preferences }
 	| { from: string; to: string; error: PageError }
 
 type View = "jour" | "semaine" | "mois"
@@ -119,9 +120,13 @@ export function CalendarPage() {
 		view === "mois" ? startOfMonth(date) === startOfMonth(today) : from <= today && today <= to
 
 	const current = result?.from === from && result.to === to ? result : null
-	const leaves = current && "leaves" in current ? current.leaves : null
+	const leaves = current && "data" in current ? current.data.leaves : null
+	const effectiveDays = current && "data" in current ? current.data.days : null
 	const segments = view === "mois" ? segmentsFor(leaves ?? [], [date]) : segmentsFor(leaves ?? [], days)
 	const error = current && "error" in current ? current.error : null
+
+	const { preferencesVersion } = useOutletContext<{ preferencesVersion: number }>()
+	const range = current && "data" in current ? current.preferences.calendarHourRange : undefined
 
 	const title =
 		view === "mois"
@@ -140,8 +145,8 @@ export function CalendarPage() {
 	useEffect(() => {
 		const controller = new AbortController()
 
-		getCalendar(from, to, controller.signal)
-			.then((data) => setResult({ from, to, leaves: data.leaves }))
+		Promise.all([getCalendar(from, to, controller.signal), getPreferences(controller.signal)])
+			.then(([data, preferences]) => setResult({ from, to, data, preferences }))
 			.catch((e) => {
 				if (controller.signal.aborted) return
 				setResult({
@@ -155,7 +160,7 @@ export function CalendarPage() {
 			})
 
 		return () => controller.abort()
-	}, [from, to, retry])
+	}, [from, to, retry, preferencesVersion])
 
 	function handleRetry() {
 		setResult(null)
@@ -227,8 +232,8 @@ export function CalendarPage() {
 				) : null}
 			</div>
 
-			{view === "jour" && <DayView segments={segments} />}
-			{view === "semaine" && <WeekView days={days} segments={segments} today={today} />}
+			{view === "jour" && <DayView segments={segments} effectiveDay={effectiveDays?.[0]} range={range} />}
+			{view === "semaine" && <WeekView days={days} segments={segments} today={today} effectiveDays={effectiveDays ?? undefined} range={range} />}
 			{view === "mois" && (
 				<MonthView
 					days={days}

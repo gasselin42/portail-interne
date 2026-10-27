@@ -29,6 +29,7 @@ export function AppLayout() {
 	const [mobileOpen, setMobileOpen] = useState(false)
 	const [openDialog, setOpenDialog] = useState<UserDialog | null>(null)
 	const [presenceVersion, setPresenceVersion] = useState(0)
+	const [preferencesVersion, setPreferencesVersion] = useState(0)
 
 	const { pathname } = useLocation()
 
@@ -89,7 +90,7 @@ export function AppLayout() {
 				<main className="flex-1">
 					<ReturnBanner version={presenceVersion} />
 					<ErrorBoundary key={pathname} fallback={(reset) => <PageCrash onRetry={reset} />}>
-						<Outlet />
+						<Outlet context={{ preferencesVersion }} />
 					</ErrorBoundary>
 				</main>
 			</div>
@@ -99,7 +100,7 @@ export function AppLayout() {
 				onDeparted={() => setPresenceVersion((v) => v + 1)}
 			/>
 			<MyInfoDialog open={openDialog === "info"} onClose={() => setOpenDialog(null)} />
-			<PreferencesDialog open={openDialog === "preferences"} onClose={() => setOpenDialog(null)} />
+			<PreferencesDialog open={openDialog === "preferences"} onClose={() => setOpenDialog(null)} onSaved={() => setPreferencesVersion((v) => v + 1)} />
 			<Dialog open={mobileOpen} onClose={setMobileOpen} className="relative z-50 lg:hidden">
 				<DialogBackdrop
 					transition

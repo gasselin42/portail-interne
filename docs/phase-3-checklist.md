@@ -48,6 +48,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [ ] Couleur choisie par l’employé ; bloc souple chevauché affiché pâli à côté du meeting
   - [ ] Libre / occupé : « occupé souple » visuellement distinct, sans dépendre de la couleur seule
   - [ ] Vue mois : « 10h Titre », 3 au maximum puis « + N autres »
+- [ ] 14b. **Densité** de la grille horaire (Compacte / Normale / Aérée), préférence stockée dans l’API comme la plage d’heures : plus de place par heure quand il y a plusieurs réunions ou tâches
 - [ ] 15. Affichage des erreurs métier (congé, conflit) côté UI
 - [ ] 16. Centre de notifs simple (badge / liste) — même si la phase 5 le pousse plus loin
 - [ ] 17. Accueil : widget / badge **notifications** + lien meetings dans le menu

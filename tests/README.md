@@ -27,4 +27,5 @@ Tests automatisés de l'API, avec xUnit.
   - `HolidaysApiTests` : tests d'intégration des jours fériés — lecture par tous, écriture par l'Admin du site seulement, date passée, doublon par site (409), férié passé figé, site sans employé (R12, R23)
   - `SiteScopeApiTests` : portée par site (R23) — un Admin ne gère que son site (comptes, fiches, approbations, horaires), l'Admin global gère tout ; rôle Admin global, création sur son site, manager du même site, changement de site, création des sites (fuseau IANA)
   - `SiteTimeZoneTests` : « aujourd'hui » dans le fuseau du site de chaque employé (Montréal vs Paris), fuseau renvoyé par `/me` (R15)
+  - `PreferencesApiTests` : préférences personnelles `api/me/preferences` — valeurs par défaut sans ligne en base, enregistrer puis modifier (une seule ligne), isolation entre employés, plage d'heures inconnue refusée, connexion requise (étape 16)
   - `ApiFactory` : démarre la vraie API en mémoire pour un test — base SQLite neuve (migrations), date fixée au mercredi 14 octobre 2026, équipe de test (Alex admin, Mark manager de Sam, Sam, Jane hors équipe)
