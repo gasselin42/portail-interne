@@ -217,6 +217,7 @@ public class AdjustmentsController : ControllerBase
 		BreakMinutes = adjustment.BreakMinutes,
 		Reason = adjustment.Reason,
 		Status = adjustment.Status,
+		CreatedById = creator.Id,
 		CreatedByFirstName = creator.FirstName,
 		CreatedByLastName = creator.LastName,
 		CanCancel = CanCancel(adjustment, isSelf, today),

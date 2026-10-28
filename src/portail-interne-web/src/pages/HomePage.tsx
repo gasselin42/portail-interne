@@ -17,7 +17,7 @@ export function HomePage() {
 				title={`Bonjour, ${me?.firstName}`}
 				description="Voici ton portail."
 				actions={
-					<Link to="/leaves/new" className={primaryButton}>
+					<Link to="/leaves?nouvelle=1" className={primaryButton}>
 						Nouvelle demande de congé
 					</Link>
 				}

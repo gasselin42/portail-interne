@@ -95,7 +95,11 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [x] **Passé grisé** : jours passés entièrement, aujourd’hui jusqu’à l’heure exacte
   - [x] **Ligne « maintenant »**, mise à jour chaque minute, dans le fuseau du site
   - [x] Défilement automatique vers l’heure actuelle à l’ouverture
-- [ ] 17. **Demander un ajustement ou une absence prévue** (employé) + liste de mes demandes avec statut
+- [x] 17. **Demander un ajustement ou une absence prévue** (employé) + liste de mes demandes avec statut
+  - [x] « Mes congés » devient « Mes demandes » : onglets Congés / Ajustements / Absences (`?onglet=`)
+  - [x] Ajustements : liste à venir avec statut et annulation ; formulaire en modal avec rappel de l'horaire prévu
+  - [x] Absences prévues : liste avec statut et annulation ; formulaire en modal
+  - [x] Demande de congé en modal aussi (remplace la page `/leaves/new`) ; les boutons « Nouvelle demande » de l'accueil et du calendrier l'ouvrent
 - [x] 17b. **Présence** (R24)
   - [x] Trois boutons dans le bloc utilisateur de la sidebar, chacun ouvre son modal (la déconnexion reste telle quelle)
     - [x] **Ma présence** (`ScheduleOutlined`) : mon statut du jour, mon horaire de la semaine, mes prochaines absences prévues, « Je pars » (`MeetingRoomOutlined`) avec motif optionnel et avertissement dans la confirmation

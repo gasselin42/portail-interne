@@ -174,7 +174,7 @@ export function CalendarPage() {
 				title="Calendrier"
 				description="Vois tes absences, en attente ou approuvées."
 				actions={
-					<Link to="/leaves/new" className={primaryButton}>
+					<Link to="/leaves?nouvelle=1" className={primaryButton}>
 						Nouvelle demande
 					</Link>
 				}

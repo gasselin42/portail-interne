@@ -1,24 +1,35 @@
 import { useState, type SubmitEvent } from "react"
-import { Link, useNavigate } from "react-router-dom"
-import { createLeave, LEAVE_TYPE_LABELS, LeaveType, previewLeave, type LeaveTypeId } from "../api/leaves"
-import { ErrorBanner } from "../components/feedback/Banner"
-import { daysFromToday, formatDate } from "../utils/date"
-import { primaryButton, secondaryButton } from "../ui/buttons"
-import { inputClass, labelClass } from "../ui/fields"
-import { PageHeader } from "../components/common/PageHeader"
-import { useAsync } from "../hooks/useAsync"
+import { Modal } from "../dialogs/Modal"
+import { primaryButton, secondaryButton } from "../../ui/buttons"
+import { inputClass, labelClass } from "../../ui/fields"
+import { ErrorBanner } from "../feedback/Banner"
+import { daysFromToday, formatDate } from "../../utils/date"
+import { useAsync } from "../../hooks/useAsync"
+import { createLeave, LEAVE_TYPE_LABELS, LeaveType, previewLeave, type LeaveTypeId } from "../../api/leaves"
+
+type Props = {
+	open: boolean
+	onClose: () => void
+	onCreated: () => void
+}
 
 const MAX_SICK_BACKDATE_DAYS = 14
 
-export function NewLeavePage() {
+export function LeaveDialog({ open, onClose, onCreated }: Props) {
+	return (
+		<Modal open={open} title="Demander un congé" onClose={onClose}>
+			<LeaveForm onClose={onClose} onCreated={onCreated} />
+		</Modal>
+	)
+}
+
+function LeaveForm({ onClose, onCreated }: { onClose: () => void, onCreated: () => void }) {
 	const [startDate, setStartDate] = useState<string>("")
 	const [endDate, setEndDate] = useState<string>("")
 	const [reason, setReason] = useState<string>("")
 	const [leaveType, setLeaveType] = useState<LeaveTypeId | null>(null)
-	const [enCours, setEnCours] = useState<boolean>(false)
-	const [erreur, setErreur] = useState<string | null>(null)
-
-	const navigate = useNavigate()
+	const [busy, setBusy] = useState<boolean>(false)
+	const [error, setError] = useState<string | null>(null)
 
 	const minStartDate =
 		leaveType === LeaveType.Maladie ? daysFromToday(-MAX_SICK_BACKDATE_DAYS) : daysFromToday(0)
@@ -32,29 +43,29 @@ export function NewLeavePage() {
 
 	async function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
 		e.preventDefault()
-		setErreur(null)
+		setError(null)
 		try {
 			if (leaveType === null) {
-				setErreur("Veuillez choisir un type de congé.")
+				setError("Choisis un type de congé.")
 				return
 			}
 
 			if (endDate < startDate) {
-				setErreur("La date de fin ne peut pas être avant la date de début.")
+				setError("La date de fin ne peut pas être avant la date de début.")
 				return
 			}
 
 			if (startDate < minStartDate) {
 				if (leaveType === LeaveType.Conge)
-					setErreur("Un congé ne peut pas commencer dans le passé.")
+					setError("Un congé ne peut pas commencer dans le passé.")
 				else
-					setErreur(
+					setError(
 						`Un congé maladie peut être rétroactif de ${MAX_SICK_BACKDATE_DAYS} jours au maximum.`,
 					)
 				return
 			}
 
-			setEnCours(true)
+			setBusy(true)
 
 			await createLeave({
 				startDate,
@@ -62,32 +73,24 @@ export function NewLeavePage() {
 				type: leaveType,
 				reason,
 			})
-
-			navigate("/leaves")
+			onCreated()
 		} catch (e) {
-			setErreur(e instanceof Error ? e.message : "Erreur à la création du congé")
+			setError(e instanceof Error ? e.message : "Erreur à la création du congé")
 		} finally {
-			setEnCours(false)
+			setBusy(false)
 		}
 	}
 
 	return (
-		<div className="mx-auto max-w-2xl px-6 py-10">
-			<PageHeader
-				eyebrow="Congés"
-				title="Nouvelle demande de congé"
-				description="Crée une nouvelle demande de congé."
-				actions={
-					<Link to="/leaves" className={secondaryButton}>
-						Retour à mes congés
-					</Link>
-				}
-			/>
-
-			{erreur && <ErrorBanner message={erreur} dismissible onDismiss={() => setErreur(null)} />}
-
-			<section className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
-				<form onSubmit={handleSubmit} className="space-y-5">
+		<>
+			{error &&
+				<div className="mt-3">
+					<ErrorBanner message={error} />
+				</div>
+			}
+			
+			<form onSubmit={handleSubmit}>
+				<section className="space-y-5 pt-2">
 					<div className="grid gap-5 sm:grid-cols-3">
 						<div>
 							<label
@@ -185,13 +188,33 @@ export function NewLeavePage() {
 							className={inputClass}
 						/>
 					</div>
-
-					<button type="submit" disabled={enCours} className={`${primaryButton} w-full`}>
-						{enCours ? "Enregistrement..." : "Créer la demande de congé"}
+				</section>
+				<div className="mt-6 flex justify-end gap-3">
+					<button
+						type="button"
+						onClick={onClose}
+						disabled={busy}
+						className={secondaryButton}
+					>
+						Annuler
 					</button>
-				</form>
-			</section>
-		</div>
+					<button
+						type="submit"
+						disabled={busy}
+						className={primaryButton}
+					>
+						<span className="grid">
+							<span className={`col-start-1 row-start-1 ${busy ? "invisible" : ""}`}>
+								Envoyer la demande
+							</span>
+							<span className={`col-start-1 row-start-1 ${busy ? "" : "invisible"}`}>
+								Envoi…
+							</span>
+						</span>
+					</button>
+				</div>
+			</form>
+		</>
 	)
 }
 

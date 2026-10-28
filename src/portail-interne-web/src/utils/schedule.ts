@@ -38,20 +38,23 @@ export function toDays(draft: DayDraft[]): WorkScheduleDay[] {
 
 export function rowError(row: DayDraft): string | null {
 	if (!row.worked) return null
+	return hoursError(row.startTime, row.endTime, row.breakMinutes)
+}
 
-	if (!row.startTime || !row.endTime)
+export function hoursError(startTime: string, endTime: string, breakMinutes: number) {
+	if (!startTime || !endTime)
 		return "Indique le début et la fin."
 
-	const start = toMinutes(row.startTime)
-	const end = toMinutes(row.endTime)
+	const start = toMinutes(startTime)
+	const end = toMinutes(endTime)
 
 	if (end <= start)
 		return "La fin doit être après le début."
 
-	if (row.breakMinutes < 0)
+	if (breakMinutes < 0)
 		return "La pause ne peut pas être négative."
 
-	if (row.breakMinutes >= end - start)
+	if (breakMinutes >= end - start)
 		return "La pause doit être plus courte que la journée."
 
 	return null

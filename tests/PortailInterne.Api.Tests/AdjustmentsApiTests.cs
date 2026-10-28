@@ -135,6 +135,7 @@ public class AdjustmentsApiTests
 
 		// Triés par date ; chacun garde son vrai auteur
 		Assert.Equal(["Mark", "Sam"], seenBySam!.Select(a => a.CreatedByFirstName));
+		Assert.Equal([api.Team.Mark.Id, api.Team.Sam.Id], seenBySam.Select(a => a.CreatedById));
 		Assert.Equal(2, seenByMark!.Count);
 		// Sam ne peut pas annuler le jour retiré par Mark (approuvé), mais Mark le peut
 		Assert.False(seenBySam[0].CanCancel);

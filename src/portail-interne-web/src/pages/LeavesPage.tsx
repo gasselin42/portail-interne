@@ -1,197 +1,56 @@
-import { useEffect, useState, useCallback } from "react"
-import { Link } from "react-router-dom"
-import { DeleteForever } from "@mui/icons-material"
-
-import {
-	LeaveStatus,
-	listLeaves,
-	cancelLeave,
-	type LeaveRequestResponse,
-	LEAVE_TYPE_LABELS,
-} from "../api/leaves"
-import { StatusBadge } from "../components/leaves/StatusBadge"
-import { ErrorBanner, type PageError } from "../components/feedback/Banner"
-import { DateText } from "../components/common/DateText"
-import { ConfirmDialog } from "../components/dialogs/ConfirmDialog"
-import { formatRange } from "../utils/date"
-import { primaryButton, rowIconDangerButton } from "../ui/buttons"
+import { useSearchParams } from "react-router-dom"
+import { primaryButton } from "../ui/buttons"
 import { PageHeader } from "../components/common/PageHeader"
-import { LeaveBalanceCard } from "../components/leaves/LeaveBalanceCard"
-import { LeaveDaysNote } from "../components/leaves/LeaveDaysNote"
+import { LeaveRequests } from "../components/requests/LeaveRequests"
+import { SegmentedControl } from "../components/common/SegmentedControl"
+import { AdjustmentRequests } from "../components/requests/AdjustmentRequests"
+import { AbsenceRequests } from "../components/requests/AbsenceRequests"
+
+type Tab = "conges" | "ajustements" | "absences"
+
+const TABS: { value: Tab, label: string }[] = [
+	{ value: "conges", label: "Congés" },
+	{ value: "ajustements", label: "Ajustements" },
+	{ value: "absences", label: "Absences" },
+]
 
 export function LeavesPage() {
-	const [leaves, setLeaves] = useState<LeaveRequestResponse[]>([])
-	const [error, setError] = useState<PageError | null>(null)
-	const [loading, setLoading] = useState(true)
-	const [cancellingId, setCancellingId] = useState<number | null>(null)
-	const [confirmOpen, setConfirmOpen] = useState(false)
-	const [selectedLeave, setSelectedLeave] = useState<LeaveRequestResponse | null>(null)
-	const [balanceKey, setBalanceKey] = useState(0)
+	const [searchParams, setSearchParams] = useSearchParams()
+	const newOpen = searchParams.get("nouvelle") === "1"
 
-	const cancelMessage = selectedLeave
-		? `Ta demande (${LEAVE_TYPE_LABELS[selectedLeave.type]}) du ${formatRange(selectedLeave.startDate, selectedLeave.endDate)} sera annulée. Cette action est définitive.`
-		: ""
+	const tabParam = searchParams.get("onglet")
 
-	const loadLeaves = useCallback(() => {
-		return listLeaves()
-			.then(setLeaves)
-			.catch((e) =>
-				setError({
-					message: e instanceof Error ? e.message : "Erreur",
-					dismissible: false,
-				}),
-			)
-			.finally(() => setLoading(false))
-	}, [])
+	const tab: Tab =
+		tabParam === "ajustements" || tabParam === "absences"
+			? tabParam
+			: "conges"
 
-	useEffect(() => {
-		loadLeaves()
-	}, [loadLeaves])
-
-	async function handleCancel(id: number) {
-		setError(null)
-		setCancellingId(id)
-		try {
-			await cancelLeave(id)
-			await loadLeaves()
-			setBalanceKey((k) => k + 1)
-		} catch (e) {
-			setError({
-				message: e instanceof Error ? e.message : "Erreur",
-				dismissible: true,
-			})
-		} finally {
-			setCancellingId(null)
-		}
-	}
-
-	async function handleCancellation() {
-		if (!selectedLeave) return
-
-		await handleCancel(selectedLeave.id)
-		setConfirmOpen(false)
-	}
-
-	function openCancelLeave(leave: LeaveRequestResponse) {
-		setSelectedLeave(leave)
-		setConfirmOpen(true)
-	}
+	const openNew = () => setSearchParams({ onglet: tab, nouvelle: "1" })
+	const closeNew = () => setSearchParams({ onglet: tab })
 
 	return (
 		<div className="mx-auto max-w-6xl px-6 py-10">
 			<PageHeader
-				eyebrow="Congés"
-				title="Mes congés"
-				description="Vois et crée tes demandes de congés."
+				eyebrow="Demandes"
+				title="Mes demandes"
+				description="Tes congés, ajustements d'horaire et absences prévues."
 				actions={
-					<Link to="/leaves/new" className={primaryButton}>
+					<button type="button" onClick={openNew} className={primaryButton}>
 						Nouvelle demande
-					</Link>
+					</button>
 				}
 			/>
-
-			{error && (
-				<ErrorBanner
-					message={error.message}
-					dismissible={error.dismissible}
-					onDismiss={() => setError(null)}
+			<div className="mb-6">
+				<SegmentedControl
+					label="Type de demande"
+					options={TABS}
+					value={tab}
+					onChange={(t) => setSearchParams({ onglet: t })}
 				/>
-			)}
-
-			<LeaveBalanceCard refreshKey={balanceKey} />
-
-			<section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/50">
-				{loading ? (
-					<p className="px-6 py-12 text-center text-sm text-slate-500">Chargement des congés...</p>
-				) : leaves.length === 0 ? (
-					!(error && !error.dismissible) && (
-						<p className="px-6 py-12 text-center text-sm text-slate-500">
-							Aucune demande pour le moment
-						</p>
-					)
-				) : (
-					<div className="overflow-x-auto">
-						<table className="w-full min-w-200 table-fixed border-collapse text-left">
-							<thead>
-								<tr className="border-b border-slate-200 bg-slate-50/80">
-									<th className="w-[15%] px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
-										Début
-									</th>
-									<th className="w-[15%] px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
-										Fin
-									</th>
-									<th className="w-[15%] px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
-										Type
-									</th>
-									<th className="px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
-										Motif
-									</th>
-									<th className="w-[15%] px-5 py-3.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
-										Statut
-									</th>
-									<th className="w-16 px-3 py-3.5">
-										<span className="sr-only">Actions</span>
-									</th>
-								</tr>
-							</thead>
-							<tbody>
-								{leaves.map((leave) => (
-									<tr
-										key={leave.id}
-										className="border-b border-slate-100 transition last:border-b-0 hover:bg-slate-50/70"
-									>
-										<td className="px-5 py-3.5 text-sm font-semibold text-slate-700">
-											<DateText value={leave.startDate} />
-										</td>
-										<td className="px-5 py-3.5 text-sm font-semibold text-slate-700">
-											<DateText value={leave.endDate} />
-										</td>
-										<td className="px-5 py-3.5 text-sm text-slate-600">
-											{LEAVE_TYPE_LABELS[leave.type]}
-											{leave.createdByFirstName && 
-												<span className="block text-xs text-slate-500">
-													Déclaré par {leave.createdByFirstName} {leave.createdByLastName}
-												</span>
-											}
-											<LeaveDaysNote workingDays={leave.workingDays} unpaidDates={leave.unpaidDates} />
-										</td>
-										<td className="px-5 py-3.5 text-sm wrap-break-word whitespace-normal text-slate-700">
-											{leave.reason || "-"}
-										</td>
-										<td className="px-5 py-3.5 text-sm text-slate-600">
-											<StatusBadge status={leave.status} />
-										</td>
-										<td className="px-3 py-3.5 text-center">
-											{leave.status === LeaveStatus.EnAttente && (
-												<button
-													type="button"
-													onClick={() => openCancelLeave(leave)}
-													disabled={cancellingId === leave.id}
-													aria-label="Annuler la demande"
-													title="Annuler la demande"
-													className={rowIconDangerButton}
-												>
-													<DeleteForever fontSize="small" />
-												</button>
-											)}
-										</td>
-									</tr>
-								))}
-							</tbody>
-						</table>
-					</div>
-				)}
-			</section>
-			<ConfirmDialog
-				open={confirmOpen}
-				title="Annuler cette demande ?"
-				message={cancelMessage}
-				confirmLabel="Annuler la demande"
-				busyLabel="Annulation…"
-				destructive
-				onClose={() => setConfirmOpen(false)}
-				onConfirm={handleCancellation}
-			/>
+			</div>
+			{tab === "conges" && <LeaveRequests newOpen={newOpen} onNewClose={closeNew} />}
+			{tab === "ajustements" && <AdjustmentRequests newOpen={newOpen} onNewClose={closeNew} />}
+			{tab === "absences" && <AbsenceRequests newOpen={newOpen} onNewClose={closeNew} />}
 		</div>
 	)
 }

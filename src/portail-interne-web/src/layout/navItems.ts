@@ -22,7 +22,7 @@ export type NavItem = {
 
 export const NAV_ITEMS: NavItem[] = [
 	{ to: "/", label: "Accueil", icon: HomeOutlined },
-	{ to: "/leaves", label: "Mes congés", icon: EventAvailableOutlined },
+	{ to: "/leaves", label: "Mes demandes", icon: EventAvailableOutlined },
 	{ to: "/calendar", label: "Calendrier", icon: CalendarMonthOutlined },
 	{ to: "/employees", label: "Annuaire", icon: PeopleOutlined },
 	{ to: "/approvals", label: "À approuver", icon: FactCheckOutlined, visible: canApprove },

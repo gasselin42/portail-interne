@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom"
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
 import { RequireAuth } from "./components/auth/RequireAuth"
 import { RequireAdmin } from "./components/auth/RequireAdmin"
 import { RequireApprover } from "./components/auth/RequireApprover"
@@ -17,7 +17,6 @@ import { CreateEmployeePage } from "./pages/CreateEmployeePage"
 import { AnnuairePage } from "./pages/AnnuairePage"
 import { FicheEmployePage } from "./pages/FicheEmployePage"
 import { LeavesPage } from "./pages/LeavesPage"
-import { NewLeavePage } from "./pages/NewLeavePage"
 import { PendingLeavesPage } from "./pages/PendingLeavesPage"
 import { CalendarPage } from "./pages/CalendarPage"
 import { EmployeeSchedulePage } from "./pages/EmployeeSchedulePage"
@@ -46,7 +45,7 @@ export default function App() {
 								<Route path="/employees/:id" element={<FicheEmployePage />} />
 								<Route path="/employees/:id/schedule" element={<EmployeeSchedulePage />} />
 								<Route path="/leaves" element={<LeavesPage />} />
-								<Route path="/leaves/new" element={<NewLeavePage />} />
+								<Route path="/leaves/new" element={<Navigate to="/leaves?nouvelle=1" replace />} />
 								<Route path="/calendar" element={<CalendarPage />} />
 
 								<Route element={<RequireApprover />}>
