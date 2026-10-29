@@ -17,7 +17,7 @@ import { CreateEmployeePage } from "./pages/CreateEmployeePage"
 import { AnnuairePage } from "./pages/AnnuairePage"
 import { FicheEmployePage } from "./pages/FicheEmployePage"
 import { LeavesPage } from "./pages/LeavesPage"
-import { PendingLeavesPage } from "./pages/PendingLeavesPage"
+import { ApprovalsPage } from "./pages/ApprovalsPage"
 import { CalendarPage } from "./pages/CalendarPage"
 import { EmployeeSchedulePage } from "./pages/EmployeeSchedulePage"
 
@@ -49,7 +49,7 @@ export default function App() {
 								<Route path="/calendar" element={<CalendarPage />} />
 
 								<Route element={<RequireApprover />}>
-									<Route path="/approvals" element={<PendingLeavesPage />} />
+									<Route path="/approvals" element={<ApprovalsPage />} />
 								</Route>
 
 								<Route element={<RequireAdmin />}>

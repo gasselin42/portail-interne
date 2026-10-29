@@ -1,59 +1,59 @@
 import { useState, useRef } from "react"
-import { LEAVE_TYPE_LABELS, LeaveStatus, reviewLeave, type LeaveRequestResponse } from "../api/leaves"
-import { formatRange } from "../utils/date"
+import { LeaveStatus, type ReviewStatus } from "../api/leaves"
+import { approvalOf, approvalWhen, reviewApproval, type ApprovalItem } from "../utils/approvals"
 
 type Options = {
 	/** Après une approbation ou un refus réussi (ex. retirer la demande de la liste). */
-	onReviewed: (leave: LeaveRequestResponse) => void
+	onReviewed: (item: ApprovalItem) => void
 	/** Après un échec (ex. recharger la liste, qui a peut-être changé). */
 	onFailed?: () => void
 	/** Après une approbation ou un refus réussi, une fois la ligne disparue : où placer le focus clavier. */
 	focusAfterReview?: () => void
 }
 
-/** Approuver (direct) ou refuser (après confirmation) une demande de congé. */
-export function useLeaveReview({ onReviewed, onFailed, focusAfterReview }: Options) {
-	const [reviewingId, setReviewingId] = useState<number | null>(null)
+/** Approuver (direct) ou refuser (après confirmation) une demande : congé, ajustement ou absence. */
+export function useApprovalReview({ onReviewed, onFailed, focusAfterReview }: Options) {
+	const [reviewingKey, setReviewingKey] = useState<string | null>(null)
 	const [error, setError] = useState<string | null>(null)
 	const [declineOpen, setDeclineOpen] = useState(false)
 	// Gardée après la fermeture : le message reste affiché pendant l'animation de sortie.
-	const [declineTarget, setDeclineTarget] = useState<LeaveRequestResponse | null>(null)
+	const [declineTarget, setDeclineTarget] = useState<ApprovalItem | null>(null)
 	const [announcement, setAnnouncement] = useState("")
 
 	const declineSucceededRef = useRef(false)
 
-	async function review(leave: LeaveRequestResponse, status: typeof LeaveStatus.Approuve | typeof LeaveStatus.Refuse): Promise<boolean> {
+	async function review(item: ApprovalItem, status: ReviewStatus): Promise<boolean> {
 		setError(null)
 		setAnnouncement("")
-		setReviewingId(leave.id)
+		setReviewingKey(item.key)
 		try {
-			await reviewLeave(leave.id, status)
-			onReviewed(leave)
+			await reviewApproval(item, status)
+			onReviewed(item)
 			setAnnouncement(
-				`Demande de ${leave.employeeFirstName} ${leave.employeeLastName} ${status === LeaveStatus.Approuve ? "approuvée" : "refusée"}.`,
+				`Demande ${approvalOf(item)} de ${item.employeeName} ${status === LeaveStatus.Approuve ? "approuvée" : "refusée"}.`,
 			)
 		} catch (e) {
 			setError(e instanceof Error ? e.message : "Erreur")
 			onFailed?.()
 			return false
 		} finally {
-			setReviewingId(null)
+			setReviewingKey(null)
 		}
 
 		return true;
 	}
 
 	return {
-		reviewingId,
+		reviewingKey,
 		announcement,
 		error,
 		dismissError: () => setError(null),
-		approve: async (leave: LeaveRequestResponse) => {
-			const success = await review(leave, LeaveStatus.Approuve)
+		approve: async (item: ApprovalItem) => {
+			const success = await review(item, LeaveStatus.Approuve)
 			if (success) focusAfterReview?.()
 		},
-		requestDecline: (leave: LeaveRequestResponse) => {
-			setDeclineTarget(leave)
+		requestDecline: (item: ApprovalItem) => {
+			setDeclineTarget(item)
 			setDeclineOpen(true)
 			declineSucceededRef.current = false
 		},
@@ -62,7 +62,7 @@ export function useLeaveReview({ onReviewed, onFailed, focusAfterReview }: Optio
 			open: declineOpen,
 			title: "Refuser cette demande ?",
 			message: declineTarget
-				? `Cette demande (${LEAVE_TYPE_LABELS[declineTarget.type]}) de ${declineTarget.employeeFirstName} ${declineTarget.employeeLastName} du ${formatRange(declineTarget.startDate, declineTarget.endDate)} sera refusée. ${declineTarget.employeeFirstName} verra le statut Refusé.`
+				? `La demande ${approvalOf(declineTarget)} de ${declineTarget.employeeName} (${approvalWhen(declineTarget)}) sera refusée. ${declineTarget.employeeName} verra le statut Refusé.`
 				: "",
 			confirmLabel: "Refuser",
 			busyLabel: "Refus…",
