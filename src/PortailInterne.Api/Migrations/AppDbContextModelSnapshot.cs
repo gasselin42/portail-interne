@@ -426,6 +426,9 @@ namespace PortailInterne.Api.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("TeamVisibility")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("TimeZoneId")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -439,6 +442,7 @@ namespace PortailInterne.Api.Migrations
                         {
                             Id = 1,
                             Name = "Montréal",
+                            TeamVisibility = 0,
                             TimeZoneId = "America/Toronto"
                         });
                 });

@@ -50,4 +50,20 @@ public class AccessScope
 	/// <summary>Admin global : tous les employés. Admin : tous les employés de son site. Ou tout User sur ses propres données.</summary>
 	public async Task<bool> CanReadAsync(Employee employee) =>
 		employee.Id == CallerEmployeeId || await CanManageAsync(employee);
+
+	public async Task<bool> CanSeeTeamAsync()
+	{
+		if (IsAdmin) return true;
+
+		var hasSubordinates = await _db.Employees.AnyAsync(e => e.ManagerId == CallerEmployeeId && e.IsActive);
+		if (hasSubordinates) return true;
+
+		var siteId = await CallerSiteIdAsync();
+		var visibility = await _db.Sites
+			.Where(s => s.Id == siteId)
+			.Select(s => s.TeamVisibility)
+			.FirstAsync();
+
+		return visibility != TeamVisibility.Nobody;
+	}
 }

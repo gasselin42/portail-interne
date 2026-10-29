@@ -48,46 +48,8 @@ public class CalendarController : ControllerBase
 
 		List<EffectiveDay> days = await _scheduleService.ForAsync(employeeId, from, to);
 
-		// Une absence pour le calendrier, avec son état calculé maintenant (R24)
-		CalendarAbsenceResponse ToCalendarAbsence(Absence a, TimeOnly? workdayEnd)
-		{
-			var status = AbsenceState.Compute(a, today, now, workdayEnd);
-			return new CalendarAbsenceResponse
-			{
-				Id = a.Id,
-				Status = a.Status,
-				Reason = a.Reason,
-				PlannedStart = a.PlannedStart,
-				PlannedEnd = a.PlannedEnd,
-				Start = status.Start,
-				End = status.End,
-				InProgress = status.InProgress,
-				ReturnConfirmed = status.ReturnConfirmed,
-			};
-		}
-
 		List<EffectiveDayResponse> daysResponse = days
-			.Select(d => new EffectiveDayResponse
-			{
-				Date = d.Date,
-				Source = d.Source,
-				StartTime = d.StartTime,
-				EndTime = d.EndTime,
-				BreakMinutes = d.BreakMinutes,
-				HolidayName = d.HolidayName,
-				PendingAdjustment = 
-					d.PendingAdjustment is not null
-						? new PendingAdjustmentResponse
-							{
-								Id = d.PendingAdjustment.Id,
-								StartTime = d.PendingAdjustment.StartTime,
-								EndTime = d.PendingAdjustment.EndTime,
-								BreakMinutes = d.PendingAdjustment.BreakMinutes
-							}
-						: null,
-				Absences = d.Absences.Select(a => ToCalendarAbsence(a, d.EndTime)).ToList(),
-				PendingAbsences = d.PendingAbsences.Select(a => ToCalendarAbsence(a, d.EndTime)).ToList(),
-			})
+			.Select(d => CalendarMapping.ToDayResponse(d, today, now, details: true))
 			.ToList();
 
 		List<LeaveRequestResponse> leaves = await _db.LeaveRequests

@@ -36,6 +36,7 @@ public class MeResponse
     public Departement Departement { get; set; }
     public Role Role { get; set; }
     public bool IsManager { get; set; }
+	public bool CanSeeTeam { get; set; }
     public bool MustChangePassword { get; set; }
     public bool IsActive { get; set; }
 }

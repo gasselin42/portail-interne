@@ -19,6 +19,7 @@ export type Me = {
 	departement: DepartementId
 	role: RoleId
 	isManager: boolean
+	canSeeTeam: boolean
 	mustChangePassword: boolean
 	isActive: boolean
 	siteId: number

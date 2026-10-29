@@ -19,12 +19,14 @@ public class AuthController : ControllerBase
     private readonly AppDbContext _db;
     private readonly PasswordService _passwords;
     private readonly IConfiguration _config;
+	private readonly AccessScope _scope;
 
-    public AuthController(AppDbContext db, PasswordService passwords, IConfiguration config)
+    public AuthController(AppDbContext db, PasswordService passwords, IConfiguration config, AccessScope scope)
     {
         _db = db;
         _passwords = passwords;
         _config = config;
+		_scope = scope;
     }
 
     [HttpPost("login")]
@@ -94,6 +96,7 @@ public class AuthController : ControllerBase
             return Unauthorized();
 
         var isManager = await _db.Employees.AnyAsync(e => e.ManagerId == account.EmployeeId);
+		var canSeeTeam = await _scope.CanSeeTeamAsync();
 
         return Ok(new MeResponse
         {
@@ -106,6 +109,7 @@ public class AuthController : ControllerBase
             Departement = account.Employee.Departement,
             Role = account.Role.Value,
             IsManager = isManager,
+			CanSeeTeam = canSeeTeam,
             MustChangePassword = account.MustChangePassword,
             IsActive = account.IsActive && account.Employee.IsActive,
 			SiteId = account.Employee.SiteId,

@@ -107,9 +107,14 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
     - [x] **Préférences** (`SettingsOutlined`) : changer mon mot de passe (retiré du menu) ; plus tard : photo, vue par défaut, couleur (R22), notifications
   - [x] Bandeau « Absent depuis 15 h 02 — Je suis de retour », visible en haut de toutes les pages **seulement pendant une absence**
   - [x] Absences réelles au calendrier (en cours dessinée jusqu’à maintenant)
-- [ ] 18. File d’approbation : ajustements à côté des congés (type clairement indiqué)
-- [ ] 19. Vue **équipe semaine** (Manager) : qui travaille quand, d’un coup d’œil
+- [x] 18. File d’approbation : ajustements à côté des congés (type clairement indiqué)
+- [ ] 19. Vue **équipe semaine** : qui travaille quand, d’un coup d’œil
+  - [ ] Réglage par site « Visibilité de l'équipe » : Mon équipe (défaut) / Tout le site / Personne
+  - [ ] Manager : lui-même + ses subordonnés ; Admin : son site ; Admin global : un site au choix — toujours avec les détails
+  - [ ] Employé, selon le réglage de son site : son manager et ses collègues, ou tout le site, ou rien (menu caché)
+  - [ ] Sans droit de gestion, présence seulement : heures, congé, férié, absence ; jamais le motif, le type de congé ni les demandes en attente
 - [ ] 20. Écran **Sites et fériés** (Admin global : créer un site avec fuseau ; Admin du site : gérer ses fériés par année)
+  - [ ] Admin du site : choisir la visibilité de l'équipe
 - [ ] 20b. Portée par site dans l’UI (R23)
   - [ ] Rôle « Admin global » dans la page Comptes ; menu Sites visible pour lui seulement
   - [ ] Champ site de la fiche : modifiable par l’Admin global seulement ; erreur de changement de site affichée clairement
