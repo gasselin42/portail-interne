@@ -369,18 +369,18 @@ export function CreateEmployeePage() {
 								className={inputClass}
 							>
 								<option value="">{sites.loading ? "Chargement…" : "Choisir…"}</option>
-									{(sites.data ?? []).map((site) => (
-										<option key={site.id} value={site.id}>
-											{site.name}
-										</option>
-									))}
-								</select>
-								{!canChooseSite && (
-									<p id="site-help" className="mt-1 text-xs text-slate-500">
-										Seul un Admin global peut choisir un autre site.
-									</p>
-								)}
-								{sites.error && <p className="mt-1 text-xs text-red-600">{sites.error}</p>}
+								{(sites.data ?? []).map((site) => (
+									<option key={site.id} value={site.id}>
+										{site.name}
+									</option>
+								))}
+							</select>
+							{!canChooseSite && (
+								<p id="site-help" className="mt-1 text-xs text-slate-500">
+									Seul un Admin global peut choisir un autre site.
+								</p>
+							)}
+							{sites.error && <p className="mt-1 text-xs text-red-600">{sites.error}</p>}
 						</div>
 					</div>
 

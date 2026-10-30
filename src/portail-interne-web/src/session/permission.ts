@@ -12,3 +12,7 @@ export function isAdmin(me: Me | null): boolean {
 export function isGlobalAdmin(me: Me | null): boolean {
 	return me !== null && me.role === Role.GlobalAdmin
 }
+
+export function canSeeTeam(me: Me | null): boolean {
+	return me !== null && me.canSeeTeam
+}

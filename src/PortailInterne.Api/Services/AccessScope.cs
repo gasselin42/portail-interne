@@ -64,6 +64,21 @@ public class AccessScope
 			.Select(s => s.TeamVisibility)
 			.FirstAsync();
 
+		if (visibility == TeamVisibility.Team)
+		{
+			var managerId = await _db.Employees
+				.Where(e => e.Id == CallerEmployeeId)
+				.Select(e => e.ManagerId)
+				.FirstAsync();
+
+			if (managerId is null) return false;
+
+			return await _db.Employees.AnyAsync(e => e.IsActive
+				&& e.Id != CallerEmployeeId
+				&& (e.Id == managerId || e.ManagerId == managerId));
+
+		}
+
 		return visibility != TeamVisibility.Nobody;
 	}
 }

@@ -20,6 +20,8 @@ import { LeavesPage } from "./pages/LeavesPage"
 import { ApprovalsPage } from "./pages/ApprovalsPage"
 import { CalendarPage } from "./pages/CalendarPage"
 import { EmployeeSchedulePage } from "./pages/EmployeeSchedulePage"
+import { RequireTeamView } from "./components/auth/RequireTeamView"
+import { TeamPage } from "./pages/TeamPage"
 
 export default function App() {
 	return (
@@ -56,6 +58,10 @@ export default function App() {
 									<Route path="/admin/accounts" element={<AdminAccountsPage />} />
 									<Route path="/admin/employees/new" element={<CreateEmployeePage />} />
 									<Route path="/admin/employees/:id/edit" element={<CreateEmployeePage />} />
+								</Route>
+
+								<Route element={<RequireTeamView />}>
+									<Route path="/team" element={<TeamPage />} />
 								</Route>
 
 								<Route path="*" element={<NotFoundPage />} />

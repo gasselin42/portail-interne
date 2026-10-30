@@ -6,9 +6,10 @@ import {
 	PeopleOutlined,
 	FactCheckOutlined,
 	ManageAccountsOutlined,
+	GroupsOutlined,
 } from "@mui/icons-material"
 import type { Me } from "../api/auth"
-import { canApprove, isAdmin } from "../session/permission"
+import { canApprove, canSeeTeam, isAdmin } from "../session/permission"
 
 export type NavItem = {
 	to: string
@@ -24,6 +25,7 @@ export const NAV_ITEMS: NavItem[] = [
 	{ to: "/", label: "Accueil", icon: HomeOutlined },
 	{ to: "/leaves", label: "Mes demandes", icon: EventAvailableOutlined },
 	{ to: "/calendar", label: "Calendrier", icon: CalendarMonthOutlined },
+	{ to: "/team", label: "Équipe", visible: canSeeTeam, icon: GroupsOutlined },
 	{ to: "/employees", label: "Annuaire", icon: PeopleOutlined },
 	{ to: "/approvals", label: "À approuver", icon: FactCheckOutlined, visible: canApprove },
 	{
