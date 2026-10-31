@@ -9,6 +9,7 @@ import {
 	DEPARTEMENT_LABELS,
 	getAdminEmployee,
 	updateEmployee,
+	ROLE_LABELS,
 } from "../api/admin"
 import { ErrorBanner } from "../components/feedback/Banner"
 import { TemporaryPasswordDialog } from "../components/dialogs/TemporaryPasswordDialog"
@@ -43,13 +44,18 @@ export function CreateEmployeePage() {
 	
 	const [enCours, setEnCours] = useState<boolean>(false)
 	const [erreur, setErreur] = useState<string | null>(null)
+	const errorRef = useRef<HTMLDivElement>(null)
 	
 	const [temporaryPassword, setTemporaryPassword] = useState<string>("")
 	const [passwordDialogOpen, setPasswordDialogOpen] = useState(false)
 	
 	const { me } = useSession()
 	const canChooseSite = isGlobalAdmin(me)
+	const canGrantGlobalAdmin = isGlobalAdmin(me)
+	const roleOptions = Object.values(Role).filter((id) => canGrantGlobalAdmin || id !== Role.GlobalAdmin)
 	const [siteId, setSiteId] = useState<number | null>(() => (isGlobalAdmin(me) ? null : (me?.siteId ?? null)))
+	const [originalSiteId, setOriginalSiteId] = useState<number | null>(null)
+	const siteChanged = originalSiteId !== null && siteId !== originalSiteId
 
 	const { id } = useParams()
 	const employeId = id ? Number(id) : null
@@ -74,6 +80,7 @@ export function CreateEmployeePage() {
 				setPhoneNumber(employee.phoneNumber)
 				setLeaveDays(employee.annualLeaveDays)
 				setSiteId(employee.siteId)
+				setOriginalSiteId(employee.siteId)
 				setManager(
 					employee.managerId !== null
 						? {
@@ -87,6 +94,10 @@ export function CreateEmployeePage() {
 			})
 			.catch((e) => setErreur(e instanceof Error ? e.message : "Employé introuvable"))
 	}, [enEdition, employeId])
+
+	useEffect(() => {
+		if (erreur) errorRef.current?.focus()
+	}, [erreur])
 
 	async function handleSubmit(e: SubmitEvent<HTMLFormElement>) {
 		e.preventDefault()
@@ -229,7 +240,9 @@ export function CreateEmployeePage() {
 				}
 			/>
 
-			{erreur && <ErrorBanner message={erreur} dismissible onDismiss={() => setErreur(null)} />}
+			<div ref={errorRef} tabIndex={-1} className="outline-none">
+				{erreur && <ErrorBanner message={erreur} dismissible onDismiss={() => setErreur(null)} />}
+			</div>
 
 			<section className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
 				<form noValidate onSubmit={handleSubmit} className="space-y-5">
@@ -365,7 +378,7 @@ export function CreateEmployeePage() {
 									setSiteId(e.target.value === "" ? null : Number(e.target.value))
 									setManager(null)
 								}}
-								aria-describedby={canChooseSite ? undefined : "site-help"}
+								aria-describedby={!canChooseSite ? "site-help" : siteChanged ? "site-warning" : undefined}
 								className={inputClass}
 							>
 								<option value="">{sites.loading ? "Chargement…" : "Choisir…"}</option>
@@ -378,6 +391,11 @@ export function CreateEmployeePage() {
 							{!canChooseSite && (
 								<p id="site-help" className="mt-1 text-xs text-slate-500">
 									Seul un Admin global peut choisir un autre site.
+								</p>
+							)}
+							{siteChanged && (
+								<p id="site-warning" className="mt-1 text-xs text-amber-700">
+									Changer de site retire le manager de cet employé. S'il gère d'autres employés, réassigne-les d'abord.
 								</p>
 							)}
 							{sites.error && <p className="mt-1 text-xs text-red-600">{sites.error}</p>}
@@ -431,9 +449,9 @@ export function CreateEmployeePage() {
 								className={inputClass}
 							>
 								<option value="">Choisir…</option>
-								{Object.entries(Role).map(([label, id]) => (
+								{roleOptions.map((id) => (
 									<option key={id} value={id}>
-										{label}
+										{ROLE_LABELS[id]}
 									</option>
 								))}
 							</select>

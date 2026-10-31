@@ -36,7 +36,7 @@ public class PreferencesController : ControllerBase
 	public async Task<ActionResult<PreferencesDto>> Put(PreferencesDto request)
 	{
 		if (!Enum.IsDefined(request.CalendarHourRange))
-			return BadRequest("Plage d'heures inconnue.");
+			return BadRequest(new { message = "Plage d'heures inconnue." });
 
 		var employeeIdClaim = User.FindFirstValue("employeeId");
 

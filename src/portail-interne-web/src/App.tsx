@@ -22,6 +22,8 @@ import { CalendarPage } from "./pages/CalendarPage"
 import { EmployeeSchedulePage } from "./pages/EmployeeSchedulePage"
 import { RequireTeamView } from "./components/auth/RequireTeamView"
 import { TeamPage } from "./pages/TeamPage"
+import { SitesPage } from "./pages/SitesPage"
+import { SitePage } from "./pages/SitePage"
 
 export default function App() {
 	return (
@@ -58,6 +60,8 @@ export default function App() {
 									<Route path="/admin/accounts" element={<AdminAccountsPage />} />
 									<Route path="/admin/employees/new" element={<CreateEmployeePage />} />
 									<Route path="/admin/employees/:id/edit" element={<CreateEmployeePage />} />
+									<Route path="/admin/sites" element={<SitesPage />} />
+									<Route path="/admin/sites/:id" element={<SitePage />} />
 								</Route>
 
 								<Route element={<RequireTeamView />}>

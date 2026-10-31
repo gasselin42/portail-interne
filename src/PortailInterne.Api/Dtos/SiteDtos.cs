@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using PortailInterne.Api.Models;
 
 namespace PortailInterne.Api.Dtos;
 
@@ -10,4 +11,9 @@ public class SaveSiteRequest
 
 	[Required(ErrorMessage = "Le fuseau horaire est obligatoire.")]
 	public string TimeZoneId { get; set; } = string.Empty;
+}
+
+public class SaveTeamVisibilityRequest
+{
+	public TeamVisibility TeamVisibility { get; set; }
 }

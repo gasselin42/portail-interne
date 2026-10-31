@@ -113,28 +113,28 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [x] Manager : lui-même + ses subordonnés ; Admin : son site ; Admin global : un site au choix — toujours avec les détails
   - [x] Employé, selon le réglage de son site : son manager et ses collègues, ou tout le site, ou rien (menu caché)
   - [x] Sans droit de gestion, présence seulement : heures, congé, férié, absence ; jamais le motif, le type de congé ni les demandes en attente
-- [ ] 20. Écran **Sites et fériés** (Admin global : créer un site avec fuseau ; Admin du site : gérer ses fériés par année)
-  - [ ] Admin du site : choisir la visibilité de l'équipe
-- [ ] 20b. Portée par site dans l’UI (R23)
-  - [ ] Rôle « Admin global » dans la page Comptes ; menu « Sites » pour lui (tous les sites), « Mon site » pour l’Admin du site (son site seulement)
-  - [ ] Champ site de la fiche : modifiable par l’Admin global seulement ; erreur de changement de site affichée clairement
-  - [ ] Annuaire : filtre par site (« Tous les sites » par défaut), gardé dans l’URL ; site affiché sur chaque carte
-- [ ] 21. État « Horaire non défini » visible partout où il s’applique (fiche employé, calendrier, vue équipe)
+- [x] 20. Écran **Sites et fériés** (Admin global : créer un site avec fuseau ; Admin du site : gérer ses fériés par année)
+  - [x] Admin du site : choisir la visibilité de l'équipe
+- [x] 20b. Portée par site dans l’UI (R23)
+  - [x] Rôle « Admin global » dans la page Comptes ; menu « Sites » pour lui (tous les sites), « Mon site » pour l’Admin du site (son site seulement)
+  - [x] Champ site de la fiche : modifiable par l’Admin global seulement ; erreur de changement de site affichée clairement
+  - [x] Annuaire : filtre par site (« Tous les sites » par défaut), gardé dans l’URL ; site affiché sur chaque carte
+- [x] 21. État « Horaire non défini » visible partout où il s’applique (fiche employé, calendrier, vue équipe)
 
 ## Validation manuelle
 
-- [ ] Horaire lundi–jeudi → vendredi, samedi, dimanche non travaillés au calendrier
-- [ ] La ligne « maintenant » avance seule, page laissée ouverte ; à minuit, le grisé passe au jour suivant
-- [ ] Nouvel horaire avec date future → l’ancien s’applique jusqu’à la veille, le nouveau ensuite
-- [ ] Noël → non travaillé pour tout le site, sans aucune action
-- [ ] Manager ajoute un ajustement le jour de Noël → l’employé travaille ce jour-là, les autres non
-- [ ] Employé demande à partir à 16h → en attente au calendrier → approuvé → horaire du jour = fin 16h
-- [ ] Congé du lundi au dimanche pour un employé à 3 jours/semaine → 3 jours comptés
-- [ ] Congé uniquement sur des jours non travaillés → refusé
-- [ ] Employé d’un site à Paris : « aujourd’hui » change à minuit heure de Paris, pas de Montréal
-- [ ] Un employé ne voit pas l’horaire des autres ; un manager seulement celui de son équipe
-- [ ] Admin de Montréal : ne voit pas les comptes de Paris ; l’annuaire, oui
-- [ ] Changer le site d’un employé qui a des subordonnés → refusé, message clair
+- [x] Horaire lundi–jeudi → vendredi, samedi, dimanche non travaillés au calendrier
+- [x] La ligne « maintenant » avance seule, page laissée ouverte ; à minuit, le grisé passe au jour suivant
+- [x] Nouvel horaire avec date future → l’ancien s’applique jusqu’à la veille, le nouveau ensuite
+- [x] Noël → non travaillé pour tout le site, sans aucune action
+- [x] Manager ajoute un ajustement le jour de Noël → l’employé travaille ce jour-là, les autres non
+- [x] Employé demande à partir à 16h → en attente au calendrier → approuvé → horaire du jour = fin 16h
+- [x] Congé du lundi au dimanche pour un employé à 3 jours/semaine → 3 jours comptés
+- [x] Congé uniquement sur des jours non travaillés → refusé
+- [x] Employé d’un site à Paris : « aujourd’hui » change à minuit heure de Paris, pas de Montréal
+- [x] Un employé ne voit pas l’horaire des autres ; un manager seulement celui de son équipe
+- [x] Admin de Montréal : ne voit pas les comptes de Paris ; l’annuaire, oui
+- [x] Changer le site d’un employé qui a des subordonnés → refusé, message clair
 
 ## Bonus
 

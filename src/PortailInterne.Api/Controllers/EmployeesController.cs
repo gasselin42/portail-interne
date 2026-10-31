@@ -24,13 +24,16 @@ public class EmployeesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<EmployeeListItemResponse>>> List([FromQuery] string? search)
+    public async Task<ActionResult<List<EmployeeListItemResponse>>> List([FromQuery] string? search, [FromQuery] int? siteId)
     {
         var query = _db.Employees
             .AsNoTracking()
             .Where(e => e.IsActive);
 
         query = EmployeeSearch.Apply(query, search);
+
+		if (siteId != null)
+			query = query.Where(e => e.SiteId == siteId);
 
         var employees = await query
             .OrderBy(e => e.LastNameKey)
@@ -42,6 +45,7 @@ public class EmployeesController : ControllerBase
                 FirstName = e.FirstName,
                 LastName = e.LastName,
                 Email = e.Email,
+				SiteName = e.Site.Name,
                 JobTitle = e.JobTitle,
                 Departement = e.Departement,
                 PhoneNumber = e.PhoneNumber ?? string.Empty,
@@ -55,7 +59,7 @@ public class EmployeesController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<EmployeeDetailResponse>> GetEmployeeById(int id)
     {
-        var employee = await _db.Employees.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id);
+        var employee = await _db.Employees.AsNoTracking().Include(e => e.Site).FirstOrDefaultAsync(e => e.Id == id);
 
         if (employee is null || !employee.IsActive)
             return NotFound();
@@ -66,6 +70,7 @@ public class EmployeesController : ControllerBase
             FirstName = employee.FirstName,
             LastName = employee.LastName,
             Email = employee.Email,
+			SiteName = employee.Site.Name,
             JobTitle = employee.JobTitle,
             Departement = employee.Departement,
             PhoneNumber = employee.PhoneNumber ?? string.Empty,

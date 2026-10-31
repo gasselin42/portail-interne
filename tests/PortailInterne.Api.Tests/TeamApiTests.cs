@@ -239,6 +239,54 @@ public class TeamApiTests
 		Assert.Equal(HttpStatusCode.Unauthorized, res.StatusCode);
 	}
 
+	[Fact]
+	public async Task L_admin_du_site_change_la_visibilite_et_elle_s_applique()
+	{
+		using var api = new ApiFactory().Start();
+		var siteId = api.Team.Sam.SiteId;
+		var alex = await api.LoginAsync("alex@test.local");
+		var sam = await api.LoginAsync("sam@test.local");
+
+		var res = await alex.PutAsJsonAsync($"/api/sites/{siteId}/team-visibility", new { teamVisibility = TeamVisibility.Nobody });
+		var afterNobody = await sam.GetAsync(Week);
+		var sites = (await alex.GetFromJsonAsync<List<Site>>("/api/sites"))!;
+
+		Assert.Equal(HttpStatusCode.NoContent, res.StatusCode);
+		Assert.Equal(HttpStatusCode.Forbidden, afterNobody.StatusCode);
+		Assert.Equal(TeamVisibility.Nobody, sites.Single(s => s.Id == siteId).TeamVisibility);
+	}
+
+	[Fact]
+	public async Task Reglage_de_visibilite_droits_et_validations()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var parisId = 0;
+		api.WithDb(db =>
+		{
+			var paris = new Site { Name = "Paris", TimeZoneId = "Europe/Paris" };
+			db.Sites.Add(paris);
+			db.SaveChanges();
+			parisId = paris.Id;
+		});
+		var alex = await api.LoginAsync("alex@test.local");
+		var gaby = await api.LoginAsync("gaby@test.local");
+		var mark = await api.LoginAsync("mark@test.local");
+		var body = new { teamVisibility = TeamVisibility.Site };
+
+		var alexOnParis = await alex.PutAsJsonAsync($"/api/sites/{parisId}/team-visibility", body);
+		var markOnOwnSite = await mark.PutAsJsonAsync($"/api/sites/{team.Mark.SiteId}/team-visibility", body);
+		var gabyOnParis = await gaby.PutAsJsonAsync($"/api/sites/{parisId}/team-visibility", body);
+		var unknownSite = await gaby.PutAsJsonAsync("/api/sites/999/team-visibility", body);
+		var unknownValue = await gaby.PutAsJsonAsync($"/api/sites/{parisId}/team-visibility", new { teamVisibility = 7 });
+
+		Assert.Equal(HttpStatusCode.Forbidden, alexOnParis.StatusCode);
+		Assert.Equal(HttpStatusCode.Forbidden, markOnOwnSite.StatusCode);
+		Assert.Equal(HttpStatusCode.NoContent, gabyOnParis.StatusCode);
+		Assert.Equal(HttpStatusCode.NotFound, unknownSite.StatusCode);
+		Assert.Equal(HttpStatusCode.BadRequest, unknownValue.StatusCode);
+	}
+
 	// ─── Aides ──────────────────────────────────────────────────────────────
 
 	private static void SetVisibility(ApiFactory api, TeamVisibility visibility) =>

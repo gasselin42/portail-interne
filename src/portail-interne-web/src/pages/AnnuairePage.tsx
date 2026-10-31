@@ -1,44 +1,36 @@
-import { useEffect, useState } from "react"
-import { Link } from "react-router-dom"
+import { useState } from "react"
+import { Link, useSearchParams } from "react-router-dom"
 import { DEPARTEMENT_LABELS } from "../api/admin"
-import { listEmployees, type EmployeeListItem } from "../api/employees"
-import { ErrorBanner, type PageError } from "../components/feedback/Banner"
+import { listEmployees } from "../api/employees"
+import { ErrorBanner } from "../components/feedback/Banner"
 import { ContactPage } from "@mui/icons-material"
 import { rowIconButton } from "../ui/buttons"
 import { PageHeader } from "../components/common/PageHeader"
 import { SearchBar } from "../components/common/SearchBar"
+import { useAsync } from "../hooks/useAsync"
+import { listSites } from "../api/sites"
+import { inputClass } from "../ui/fields"
 
 export function AnnuairePage() {
+	const [searchParams, setSearchParams] = useSearchParams()
 	const [search, setSearch] = useState("")
 	const [query, setQuery] = useState("")
 	const [searchRun, setSearchRun] = useState(0)
-	const [employees, setEmployees] = useState<EmployeeListItem[]>([])
-	const [loading, setLoading] = useState(true)
-	const [error, setError] = useState<PageError | null>(null)
 
-	useEffect(() => {
-		const controller = new AbortController()
+	let siteId: number | undefined = Number(searchParams.get("site"))
+	if (!(Number.isInteger(siteId) && siteId > 0)) siteId = undefined
+	
+	const {
+		data: employeesData,
+		loading: employeesLoading,
+		error: employeesError,
+		retry: employeesRetry
+	} = useAsync((signal) => listEmployees(query || undefined, siteId, signal), [query, siteId, searchRun])
+	const employees = employeesData ?? []
 
-		listEmployees(query || undefined, controller.signal)
-			.then(setEmployees)
-			.catch((e) => {
-				if (controller.signal.aborted) return
-				setError({
-					message: e instanceof Error ? e.message : "Erreur",
-					dismissible: false,
-				})
-			})
-			.finally(() => {
-				if (controller.signal.aborted) return
-				setLoading(false)
-			})
-		
-		return () => controller.abort()
-	}, [query, searchRun])
-
+	const { data: sites } = useAsync((signal) => listSites(signal), [])
+	
 	function handleSearch() {
-		setError(null)
-		setLoading(true)
 		setQuery(search.trim())
 		setSearchRun((n) => n + 1)
 	}
@@ -57,24 +49,42 @@ export function AnnuairePage() {
 				onSubmit={handleSearch}
 				label="Rechercher un employé"
 				placeholder="Nom, email, poste, département…"
-			/>
+			>
+				{sites && sites.length > 1 && (
+					<div className="w-48">
+						<select
+							aria-label="Site"
+							value={siteId ?? ""}
+							onChange={(e) => setSearchParams(e.target.value === "" ? {} : { site: e.target.value })}
+							className={inputClass}
+						>
+							<option value="">Tous les sites</option>
+							{sites.map((site) => (
+								<option key={site.id} value={site.id}>
+									{site.name}
+								</option>
+							))}
+						</select>
+					</div>
+				)}
+			</SearchBar>
 
-			{error && (
-				<ErrorBanner
-					message={error.message}
-					dismissible={error.dismissible}
-					onDismiss={() => setError(null)}
-				/>
-			)}
 
 			<section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/50">
-				{loading ? (
+				{employeesError ? (
+					<div className="p-4">
+						<ErrorBanner message={employeesError} onRetry={employeesRetry} />
+					</div>
+				) : employeesLoading ? (
 					<p className="px-6 py-12 text-center text-sm text-slate-500">
 						Chargement de l'annuaire...
 					</p>
-				) : error && !error.dismissible ? null : employees.length === 0 ? (
+				) : employees.length === 0 ? (
 					<p className="px-6 py-12 text-center text-sm text-slate-500">
-						{`Aucun employé ne correspond à « ${query} »`}
+						{query !== ""
+							? `Aucun employé ne correspond à « ${query} ».`
+							: "Aucun employé sur ce site."
+						}
 					</p>
 				) : (
 					<div className="overflow-x-auto">
@@ -96,6 +106,9 @@ export function AnnuairePage() {
 									<th className="px-5 py-3.5 text-sm font-semibold tracking-wide text-slate-500 uppercase">
 										Département
 									</th>
+									<th className="px-5 py-3.5 text-sm font-semibold tracking-wide text-slate-500 uppercase">
+										Site
+									</th>
 									<th className="w-0 px-5 py-3.5" />
 								</tr>
 							</thead>
@@ -113,6 +126,9 @@ export function AnnuairePage() {
 										<td className="px-5 py-3.5 text-sm text-slate-600">{employee.jobTitle}</td>
 										<td className="px-5 py-3.5 text-sm text-slate-600">
 											{DEPARTEMENT_LABELS[employee.departement]}
+										</td>
+										<td className="px-5 py-3.5 text-sm text-slate-600">
+											{employee.siteName}
 										</td>
 										<td className="w-0 px-5 py-3.5">
 											<Link

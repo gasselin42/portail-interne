@@ -5,6 +5,7 @@ type Result<T> = { key: string; data: T } | { key: string; error: string }
 /**
  * Charge des données avec annulation des requêtes périmées et « Réessayer ».
  * Quand deps change, les anciennes données ne sont jamais affichées pendant le rechargement.
+ * Les données chargées peuvent aussi être modifiées sur place après une action.
  */
 
 export function useAsync<T>(load: (signal: AbortSignal) => Promise<T>, deps: DependencyList) {
@@ -37,5 +38,7 @@ export function useAsync<T>(load: (signal: AbortSignal) => Promise<T>, deps: Dep
 			setResult(null)
 			setAttempt((n) => n + 1)
 		},
+		setData: (update: (data: T) => T) =>
+			setResult((r) => (r && "data" in r ? { key: r.key, data: update(r.data) } : r)),
 	}
 }

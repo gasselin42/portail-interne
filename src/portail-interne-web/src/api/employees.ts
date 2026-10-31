@@ -6,6 +6,7 @@ export type EmployeeListItem = {
 	firstName: string
 	lastName: string
 	email: string
+	siteName: string
 	jobTitle: string
 	departement: DepartementId
 	phoneNumber: string
@@ -43,8 +44,14 @@ export type EmployeeLookupResult = {
 	hasMore: boolean
 }
 
-export async function listEmployees(search?: string, signal?: AbortSignal): Promise<EmployeeListItem[]> {
-	const query = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : ""
+export async function listEmployees(search?: string, siteId?: number, signal?: AbortSignal): Promise<EmployeeListItem[]> {
+	const query = new URLSearchParams()
+
+	if (search?.trim())
+		query.set("search", encodeURIComponent(search.trim()))
+
+	if (siteId !== undefined)
+		query.set("siteId", String(siteId))
 
 	const res = await apiFetch(`/api/employees${query}`, { signal })
 

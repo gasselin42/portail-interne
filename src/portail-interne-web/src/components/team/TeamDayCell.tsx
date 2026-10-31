@@ -11,6 +11,9 @@ function scheduleClass(day: EffectiveDay): string {
 	if (day.source === DaySource.Ferie)
 		return "text-sm font-medium text-violet-700"
 
+	if (day.source === DaySource.NonDefini)
+		return "text-sm italic text-amber-700"
+
 	if (day.startTime === null)
 		return "text-sm text-slate-400"
 

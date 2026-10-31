@@ -7,9 +7,10 @@ import {
 	FactCheckOutlined,
 	ManageAccountsOutlined,
 	GroupsOutlined,
+	ApartmentOutlined,
 } from "@mui/icons-material"
 import type { Me } from "../api/auth"
-import { canApprove, canSeeTeam, isAdmin } from "../session/permission"
+import { canApprove, canSeeTeam, isAdmin, isGlobalAdmin } from "../session/permission"
 
 export type NavItem = {
 	to: string
@@ -35,6 +36,8 @@ export const NAV_ITEMS: NavItem[] = [
 		visible: isAdmin,
 		alsoActiveOn: ["/admin/employees"],
 	},
+	{ to: "/admin/sites", label: "Sites", visible: isGlobalAdmin, icon: ApartmentOutlined},
+	{ to: "/admin/sites", label: "Mon site", visible: (me) => isAdmin(me) && !isGlobalAdmin(me), icon: ApartmentOutlined},
 ]
 
 export function isNavItemActive(item: NavItem, pathname: string): boolean {

@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react"
 import { useSearchParams, Link, useOutletContext } from "react-router-dom"
 import { PageHeader } from "../components/common/PageHeader"
 import {
@@ -17,7 +16,7 @@ import {
 import { iconButton, primaryButton, secondaryButton } from "../ui/buttons"
 import { ChevronLeft, ChevronRight } from "@mui/icons-material"
 import { LeaveStatus } from "../api/leaves"
-import { ErrorBanner, type PageError } from "../components/feedback/Banner"
+import { ErrorBanner } from "../components/feedback/Banner"
 import { segmentsFor } from "../utils/calendar"
 import { LEAVE_BAND_STYLES } from "../ui/leaveBands"
 import { useMediaQuery } from "../hooks/useMediaQuery"
@@ -26,12 +25,9 @@ import { DayView } from "../components/calendar/DayView"
 import { SegmentedControl } from "../components/common/SegmentedControl"
 import { MonthView } from "../components/calendar/MonthView"
 import { leaveSwatchBackground } from "../ui/leaveBandBackground"
-import { getCalendar, type CalendarData } from "../api/calendar"
-import { getPreferences, type Preferences } from "../api/preferences"
-
-type CalendarResult =
-	| { from: string; to: string; data: CalendarData; preferences: Preferences }
-	| { from: string; to: string; error: PageError }
+import { getCalendar } from "../api/calendar"
+import { getPreferences } from "../api/preferences"
+import { useAsync } from "../hooks/useAsync"
 
 type View = "jour" | "semaine" | "mois"
 
@@ -95,8 +91,6 @@ function getRange(view: View, date: string): CalendarRange {
 
 export function CalendarPage() {
 	const [searchParams, setSearchParams] = useSearchParams()
-	const [result, setResult] = useState<CalendarResult | null>(null)
-	const [retry, setRetry] = useState(0)
 
 	const isDesktop = useMediaQuery("(min-width: 48rem)")
 
@@ -104,6 +98,7 @@ export function CalendarPage() {
 	const dateParam = searchParams.get("date")
 	const vueParam = searchParams.get("vue")
 	const date = dateParam && isIsoDate(dateParam) ? dateParam : today
+	const { preferencesVersion } = useOutletContext<{ preferencesVersion: number }>()
 
 	const view: View =
 		vueParam === "mois" || vueParam === "jour"
@@ -116,17 +111,16 @@ export function CalendarPage() {
 
 	const { from, to, days, shift } = getRange(view, date)
 
+	const { data, error, loading, retry } = useAsync((signal) => Promise.all([getCalendar(from, to, signal), getPreferences(signal)]), [from, to, preferencesVersion])
+	const [calendar, preferences] = data ?? [null, null]
+
+	const leaves = calendar?.leaves ?? null
+	const segments = view === "mois" ? segmentsFor(leaves ?? [], [date]) : segmentsFor(leaves ?? [], days)
+	const effectiveDays = calendar?.days ?? null
+	const range = preferences?.calendarHourRange
+
 	const containsToday =
 		view === "mois" ? startOfMonth(date) === startOfMonth(today) : from <= today && today <= to
-
-	const current = result?.from === from && result.to === to ? result : null
-	const leaves = current && "data" in current ? current.data.leaves : null
-	const effectiveDays = current && "data" in current ? current.data.days : null
-	const segments = view === "mois" ? segmentsFor(leaves ?? [], [date]) : segmentsFor(leaves ?? [], days)
-	const error = current && "error" in current ? current.error : null
-
-	const { preferencesVersion } = useOutletContext<{ preferencesVersion: number }>()
-	const range = current && "data" in current ? current.preferences.calendarHourRange : undefined
 
 	const title =
 		view === "mois"
@@ -141,31 +135,6 @@ export function CalendarPage() {
 			: view === "semaine"
 				? "Aucune absence cette semaine."
 				: "Aucune absence ce jour-là."
-
-	useEffect(() => {
-		const controller = new AbortController()
-
-		Promise.all([getCalendar(from, to, controller.signal), getPreferences(controller.signal)])
-			.then(([data, preferences]) => setResult({ from, to, data, preferences }))
-			.catch((e) => {
-				if (controller.signal.aborted) return
-				setResult({
-					from,
-					to,
-					error: {
-						message: e instanceof Error ? e.message : "Erreur",
-						dismissible: false,
-					},
-				})
-			})
-
-		return () => controller.abort()
-	}, [from, to, retry, preferencesVersion])
-
-	function handleRetry() {
-		setResult(null)
-		setRetry((n) => n + 1)
-	}
 
 	return (
 		<div className="mx-auto max-w-6xl px-6 py-10">
@@ -220,8 +189,8 @@ export function CalendarPage() {
 
 			<div className="mb-3 min-h-6">
 				{error ? (
-					<ErrorBanner message={error.message} onRetry={handleRetry} />
-				) : current === null ? (
+					<ErrorBanner message={error} onRetry={retry} />
+				) : loading ? (
 					<p role="status" className="text-center text-sm text-slate-500">
 						Chargement…
 					</p>

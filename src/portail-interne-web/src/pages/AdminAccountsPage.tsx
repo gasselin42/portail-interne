@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Link } from "react-router-dom"
 import WarningAmber from "@mui/icons-material/WarningAmber"
 import { LockReset, Edit } from "@mui/icons-material"
@@ -12,12 +12,13 @@ import {
 	type RoleId,
 	Role,
 } from "../api/admin"
-import { ErrorBanner, type PageError } from "../components/feedback/Banner"
+import { ErrorBanner } from "../components/feedback/Banner"
 import { ConfirmDialog } from "../components/dialogs/ConfirmDialog"
 import { TemporaryPasswordDialog } from "../components/dialogs/TemporaryPasswordDialog"
 import { primaryButton, rowIconButton, smallSecondaryButton } from "../ui/buttons"
 import { PageHeader } from "../components/common/PageHeader"
 import { SearchBar } from "../components/common/SearchBar"
+import { useAsync } from "../hooks/useAsync"
 
 function AccountActiveToggle({
 	checked,
@@ -60,9 +61,7 @@ export function AdminAccountsPage() {
 	const [search, setSearch] = useState("")
 	const [query, setQuery] = useState("")
 	const [searchRun, setSearchRun] = useState(0)
-	const [accounts, setAccounts] = useState<AccountListItem[]>([])
-	const [error, setError] = useState<PageError | null>(null)
-	const [loading, setLoading] = useState(true)
+	const [actionError, setActionError] = useState<string | null>(null)
 	const [togglingId, setTogglingId] = useState<number | null>(null)
 	const [resettingId, setResettingId] = useState<number | null>(null)
 	const [temporaryPassword, setTemporaryPassword] = useState<string | null>(null)
@@ -75,39 +74,21 @@ export function AdminAccountsPage() {
 		? `Un mot de passe temporaire sera généré pour ${selectedAccount.firstName} ${selectedAccount.lastName}. Son mot de passe actuel ne fonctionnera plus, et ${selectedAccount.firstName} devra en choisir un nouveau à sa prochaine connexion.`
 		: ""
 
-	useEffect(() => {
-		const controller = new AbortController()
-
-		listAccounts(query || undefined, controller.signal)
-			.then(setAccounts)
-			.catch((e) => {
-				if (controller.signal.aborted) return
-				setError({
-					message: e instanceof Error ? e.message : "Erreur",
-					dismissible: false,
-				})
-			})
-			.finally(() => {
-				if (controller.signal.aborted) return
-				setLoading(false)
-			})
-		
-		return () => controller.abort()
-	}, [query, searchRun])
+	const { data, error, loading, retry, setData } = useAsync((signal) => listAccounts(query || undefined, signal), [query, searchRun])
+	const accounts = data ?? []
 
 	function handleSearch() {
-		setError(null)
-		setLoading(true)
+		setActionError(null)
 		setQuery(search.trim())
 		setSearchRun((n) => n + 1)
 	}
 
 	async function handleToggle(account: AccountListItem, next: boolean) {
-		setError(null)
+		setActionError(null)
 		setTogglingId(account.userAccountId)
 		try {
 			await setAccountActive(account.userAccountId, next)
-			setAccounts((prev) =>
+			setData((prev) =>
 				prev.map((a) =>
 					a.userAccountId === account.userAccountId
 						? { ...a, accountIsActive: next, employeeIsActive: next }
@@ -115,17 +96,14 @@ export function AdminAccountsPage() {
 				),
 			)
 		} catch (e) {
-			setError({
-				message: e instanceof Error ? e.message : "Impossible de modifier le compte",
-				dismissible: true,
-			})
+			setActionError(e instanceof Error ? e.message : "Impossible de modifier le compte")
 		} finally {
 			setTogglingId(null)
 		}
 	}
 
 	async function handleResetPassword(account: AccountListItem) {
-		setError(null)
+		setActionError(null)
 		setResetForName(null)
 		setTemporaryPassword(null)
 		setPasswordDialogOpen(false)
@@ -134,16 +112,13 @@ export function AdminAccountsPage() {
 			const data = await resetAccountPassword(account.userAccountId)
 			setTemporaryPassword(data.temporaryPassword)
 			setResetForName(`${account.firstName} ${account.lastName}`)
-			setAccounts((prev) =>
+			setData((prev) =>
 				prev.map((a) =>
 					a.userAccountId === account.userAccountId ? { ...a, mustChangePassword: true } : a,
 				),
 			)
 		} catch (e) {
-			setError({
-				message: e instanceof Error ? e.message : "Impossible de réinitialiser le mot de passe",
-				dismissible: true,
-			})
+			setActionError(e instanceof Error ? e.message : "Impossible de réinitialiser le mot de passe")
 		} finally {
 			setResettingId(null)
 		}
@@ -182,23 +157,21 @@ export function AdminAccountsPage() {
 				placeholder="Nom, email, poste, rôle, département…"
 			/>
 
-			{error && (
-				<ErrorBanner
-					message={error.message}
-					dismissible={error.dismissible}
-					onDismiss={() => setError(null)}
-				/>
-			)}
+			{actionError &&
+				<ErrorBanner message={actionError} dismissible onDismiss={() => setActionError(null)} />
+			}
 
 			<section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/50">
-				{loading ? (
+				{error ? (
+					<div className="p-4">
+						<ErrorBanner message={error} onRetry={retry} />
+					</div>
+				) : loading ? (
 					<p className="px-6 py-12 text-center text-sm text-slate-500">Chargement des comptes...</p>
 				) : accounts.length === 0 ? (
-					!(error && !error.dismissible) && (
-						<p className="px-6 py-12 text-center text-sm text-slate-500">
-							{`Aucun compte ne correspond à « ${query} »`}
-						</p>
-					)
+					<p className="px-6 py-12 text-center text-sm text-slate-500">
+						{`Aucun compte ne correspond à « ${query} »`}
+					</p>
 				) : (
 					<div className="overflow-x-auto">
 						<table className="w-full min-w-[720px] border-collapse text-left">

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using PortailInterne.Api.Data;
 using PortailInterne.Api.Dtos;
 using PortailInterne.Api.Models;
+using PortailInterne.Api.Services;
 
 namespace PortailInterne.Api.Controllers;
 
@@ -13,10 +14,12 @@ namespace PortailInterne.Api.Controllers;
 public class SitesController : ControllerBase
 {
 	private readonly AppDbContext _db;
+	private readonly AccessScope _scope;
 
-	public SitesController(AppDbContext db)
+	public SitesController(AppDbContext db, AccessScope scope)
 	{
 		_db = db;
+		_scope = scope;
 	}
 
 	[HttpGet]
@@ -73,6 +76,26 @@ public class SitesController : ControllerBase
 
 		await _db.SaveChangesAsync();
 
+		return NoContent();
+	}
+
+	[Authorize(Roles = Roles.Admins)]
+	[HttpPut("{id:int}/team-visibility")]
+	public async Task<IActionResult> ChangeVisibility(int id, SaveTeamVisibilityRequest request)
+	{
+		if (!Enum.IsDefined(request.TeamVisibility))
+			return BadRequest(new { message = "Visibilité inconnue." });
+
+		var site = await _db.Sites.FirstOrDefaultAsync(s => s.Id == id);
+		if (site is null)
+			return NotFound();
+
+		if (!await _scope.CanAdministerSiteAsync(id))
+			return Forbid();
+
+		site.TeamVisibility = request.TeamVisibility;
+		await _db.SaveChangesAsync();
+	
 		return NoContent();
 	}
 }

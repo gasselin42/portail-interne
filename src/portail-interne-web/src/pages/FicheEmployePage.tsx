@@ -5,10 +5,12 @@ import { getEmployee, type EmployeeDetail } from "../api/employees"
 import { ErrorBanner, SuccessBanner } from "../components/feedback/Banner"
 import { EmployeePhoto } from "../components/employees/EmployeePhoto"
 import { useSession } from "../session/useSession"
-import { secondaryButton } from "../ui/buttons"
+import { secondaryButton, textLink } from "../ui/buttons"
 import { DeclareSickLeaveDialog } from "../components/leaves/DeclareSickLeaveDialog"
-import { formatRange } from "../utils/date"
+import { formatDate, formatRange, todayIso } from "../utils/date"
 import { ScheduleOutlined } from "@mui/icons-material"
+import { useAsync } from "../hooks/useAsync"
+import { listSchedules } from "../api/schedules"
 
 export function FicheEmployePage() {
 	const { id } = useParams()
@@ -37,6 +39,14 @@ export function FicheEmployePage() {
 			.catch((e) => setError(e instanceof Error ? e.message : "Erreur"))
 			.finally(() => setLoading(false))
 	}, [employeeId, idInvalide])
+
+	const { data: schedules } = useAsync(
+		(signal) => (employee?.canManage ? listSchedules(employee.id, signal) : Promise.resolve([])),
+		[employee?.id, employee?.canManage]
+	)
+
+	const hasCurrent = schedules?.some(s => s.effectiveFrom <= todayIso())
+	const nextStart = schedules?.map((s) => s.effectiveFrom).sort()[0] ?? null
 
 	return (
 		<div className="mx-auto max-w-2xl px-6 py-10">
@@ -100,6 +110,18 @@ export function FicheEmployePage() {
 								}
 							</div>
 						</div>
+
+						{employee.canManage && schedules && !hasCurrent && (
+							<p role="note" className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 mt-6 text-sm text-amber-800">
+								{nextStart
+									? `Aucun horaire en vigueur avant le ${formatDate(nextStart)}. `
+									: "Aucun horaire défini. "
+								}
+								<Link to={`/employees/${employee.id}/schedule`} className={`${textLink} text-amber-800 underline`}>
+									Définir l'horaire
+								</Link>
+							</p>
+						)}
 
 						{/* Informations, sous la rangée */}
 						<dl className="mt-8 grid gap-4 text-sm sm:grid-cols-2">

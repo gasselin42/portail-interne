@@ -129,6 +129,7 @@ public class AdminController : ControllerBase
         var employee = await _db.Employees
 			.AsNoTracking()
 			.Include(e => e.UserAccount)
+			.Include(e => e.Site)
 			.FirstOrDefaultAsync(e => e.Id == id);
 
         if (employee is null || employee.UserAccount is null || employee.UserAccount.Role is null)
@@ -148,6 +149,7 @@ public class AdminController : ControllerBase
             FirstName = employee.FirstName,
             LastName = employee.LastName,
             Email = employee.Email,
+			SiteName = employee.Site.Name,
             JobTitle = employee.JobTitle,
             Departement = employee.Departement,
             PhoneNumber = employee.PhoneNumber ?? string.Empty,

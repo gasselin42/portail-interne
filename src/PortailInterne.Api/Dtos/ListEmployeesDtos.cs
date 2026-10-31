@@ -8,6 +8,7 @@ public class EmployeeListItemResponse
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
+	public string SiteName { get; set; } = string.Empty;
     public string JobTitle { get; set; } = string.Empty;
     public Departement Departement { get; set; }
     public string PhoneNumber { get; set; } = string.Empty;
