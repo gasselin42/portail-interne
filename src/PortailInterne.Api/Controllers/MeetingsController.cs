@@ -35,17 +35,14 @@ public class MeetingsController : ControllerBase
 		var title = request.Title.Trim();
 		var description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
 
-		var (participants, participantsError) = await LoadParticipantsAsync(request);
+		var (participants, participantsError) = await LoadParticipantsAsync(request.Kind!.Value, request, _scope.CallerEmployeeId);
 		if (participantsError is not null)
 			return BadRequest(new { message = participantsError });
 
 		if (!IsValidColor(request.Color))
 			return BadRequest(new { message = "Couleur inconnue." });
 
-		var organizer = await _db.Employees
-			.Where(e => e.Id == _scope.CallerEmployeeId)
-			.Select(e => new PersonInfo(e.Id, e.FirstName, e.LastName, e.Site.TimeZoneId))
-			.FirstAsync();
+		var organizer = await LoadPersonAsync(_scope.CallerEmployeeId);
 
 		var start = request.StartAt!.Value;
 		var end = request.EndAt!.Value;
@@ -62,26 +59,12 @@ public class MeetingsController : ControllerBase
 
 		List<PersonInfo> everyone = [organizer, .. participants];
 
-		var conflicts = await FindConflictsAsync(everyone, start, end, isTeamMeeting);
+		var overlaps = await LoadOverlapsAsync(everyone, start, end);
+		var conflicts = FindConflicts(overlaps, everyone, isTeamMeeting);
 		var outsideHours = await FindOutsideHoursAsync(participants, start, end);
 
 		if ((conflicts.Count > 0 || outsideHours.Count > 0) && !request.ConfirmConflicts)
-		{
-			List<string> messages = [];
-
-			if (conflicts.Count > 0)
-				messages.Add($"Conflit d'horaire pour {conflicts.Count} {(conflicts.Count == 1 ? "personne" : "personnes")}.");
-
-			if (outsideHours.Count > 0)
-				messages.Add($"{outsideHours.Count} {(outsideHours.Count == 1 ? "personne est hors de son" : "personnes sont hors de leur")} horaire.");
-
-			return Conflict(new MeetingConflictResponse
-			{
-				Message = string.Join(" ", messages),
-				Conflicts = conflicts,
-				OutsideHours = outsideHours
-			});
-		}
+			return Conflict(BuildConflictResponse(conflicts, outsideHours));
 
 		var meeting = new Meeting
 		{
@@ -101,11 +84,172 @@ public class MeetingsController : ControllerBase
 
 		_db.Meetings.Add(meeting);
 
-		AddInvitations(meeting, organizer, participants);
+		AddInvitations(meeting, organizer, participants, conflicts, overlaps);
+		AddPriorityNotices(meeting, overlaps, everyone);
 
 		await _db.SaveChangesAsync();
 
-		return Created($"api/meetings/{meeting.Id}", ToResponse(meeting, request.Color));
+		return Created($"api/meetings/{meeting.Id}", MeetingMapping.ToResponse(meeting, request.Color));
+	}
+
+	[HttpGet("{id:int}")]
+	public async Task<ActionResult<MeetingDetailResponse>> Get(int id)
+	{
+		var meeting = await _db.Meetings
+			.AsNoTracking()
+			.Include(m => m.Organizer)
+			.Include(m => m.Participants)
+				.ThenInclude(p => p.Employee)
+			.FirstOrDefaultAsync(m => m.Id == id);
+
+		if (meeting is null)
+			return NotFound();
+
+		var canEdit = await CanEditAsync(meeting);
+		var isParticipant = meeting.Participants.Any(p => p.EmployeeId == _scope.CallerEmployeeId);
+		if (!(canEdit || isParticipant))
+			return NotFound();
+
+		var response = new MeetingDetailResponse
+		{
+			Meeting = MeetingMapping.ToResponse(meeting, meeting.Participants.FirstOrDefault(p => p.EmployeeId == _scope.CallerEmployeeId)?.Color),
+			Organizer = new MeetingPerson { EmployeeId = meeting.OrganizerId, FirstName = meeting.Organizer.FirstName, LastName = meeting.Organizer.LastName },
+			Participants = meeting.Participants
+						.Where(p => p.EmployeeId != meeting.OrganizerId)
+						.OrderBy(p => p.Employee.LastName)
+						.ThenBy(p => p.Employee.FirstName)
+						.ThenBy(p => p.EmployeeId)
+						.Select(p => new MeetingPerson { EmployeeId = p.EmployeeId, FirstName = p.Employee.FirstName, LastName = p.Employee.LastName })
+						.ToList(),
+			CanEdit = canEdit
+		};
+
+		return Ok(response);
+	}
+
+	[HttpPut("{id:int}")]
+	public async Task<ActionResult<MeetingResponse>> Update(int id, UpdateMeetingRequest request)
+	{
+		var meeting = await _db.Meetings
+			.Include(m => m.Organizer)
+			.Include(m => m.Participants)
+				.ThenInclude(p => p.Employee)
+					.ThenInclude(e => e.Site)
+			.FirstOrDefaultAsync(m => m.Id == id);
+
+		if (meeting is null)
+			return NotFound();
+		
+		if (!await CanEditAsync(meeting))
+		{
+			if (meeting.Participants.Any(p => p.EmployeeId == _scope.CallerEmployeeId))
+				return Forbid();
+			else
+				return NotFound();
+		}
+		
+		if (meeting.StartAt <= _time.GetUtcNow().UtcDateTime)
+			return BadRequest(new { message = "Ce meeting a déjà commencé." });
+
+		if (string.IsNullOrWhiteSpace(request.Title))
+			return BadRequest(new { message = "Le titre est obligatoire." });
+
+		var title = request.Title.Trim();
+		var description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
+
+		var organizer = await LoadPersonAsync(meeting.OrganizerId);
+		var (participants, error) = await LoadParticipantsAsync(meeting.Kind, request, meeting.OrganizerId);
+
+		if (error is not null)
+			return BadRequest(new { message = error });
+		
+		var start = request.StartAt!.Value;
+		var end = request.EndAt!.Value;
+
+		var timesError = ValidateTimes(start, end, organizer.Zone);
+		if (timesError is not null)
+			return BadRequest(new { message = timesError });
+
+		var leaveError = await FindLeaveErrorAsync(start, end, organizer, participants);
+		if (leaveError is not null)
+			return BadRequest(new { message = leaveError });
+
+		List<PersonInfo> everyone = [organizer, .. participants];
+
+		var overlaps = await LoadOverlapsAsync(everyone, start, end, meeting.Id);
+		var conflicts = FindConflicts(overlaps, everyone, meeting.IsTeamMeeting);
+		var outsideHours = await FindOutsideHoursAsync(participants, start, end);
+
+		if ((conflicts.Count > 0 || outsideHours.Count > 0) && !request.ConfirmConflicts)
+			return Conflict(BuildConflictResponse(conflicts, outsideHours));
+
+		var actor = (organizer.Id == _scope.CallerEmployeeId) ? organizer : await LoadPersonAsync(_scope.CallerEmployeeId);
+
+		var newIds = participants.Select(p => p.Id).ToHashSet();
+		var before = new MeetingBefore(
+			meeting.Title,
+			meeting.StartAt,
+			meeting.EndAt,
+			meeting.Participants.Where(p => p.EmployeeId != meeting.OrganizerId).Select(p => p.EmployeeId).ToHashSet(),
+			meeting.Participants.Where(p => p.EmployeeId != meeting.OrganizerId && !newIds.Contains(p.EmployeeId)).ToList());
+
+		meeting.Title = title;
+		meeting.Description = description;
+		meeting.StartAt = start;
+		meeting.EndAt = end;
+		meeting.IsFlexible = request.IsFlexible;
+
+		meeting.Participants.RemoveAll(before.Removed.Contains);
+
+		foreach (var newId in newIds)
+		{
+			if (!meeting.Participants.Any(p => p.EmployeeId == newId))
+				meeting.Participants.Add(new MeetingParticipant { EmployeeId = newId });
+		}
+
+		AddUpdateNotices(meeting, before, actor, organizer, participants, conflicts, overlaps, everyone);
+		
+		await _db.SaveChangesAsync();
+		return Ok(MeetingMapping.ToResponse(meeting, meeting.Participants.FirstOrDefault(p => p.EmployeeId == _scope.CallerEmployeeId)?.Color));
+	}
+
+	[HttpDelete("{id:int}")]
+	public async Task<IActionResult> Delete(int id)
+	{
+		var meeting = await _db.Meetings
+			.Include(m => m.Organizer)
+			.Include(m => m.Participants)
+				.ThenInclude(p => p.Employee)
+					.ThenInclude(e => e.Site)
+			.FirstOrDefaultAsync(m => m.Id == id);
+
+		if (meeting is null)
+			return NotFound();
+		
+		if (!await CanEditAsync(meeting))
+		{
+			if (meeting.Participants.Any(p => p.EmployeeId == _scope.CallerEmployeeId))
+				return Forbid();
+			else
+				return NotFound();
+		}
+		
+		if (meeting.StartAt <= _time.GetUtcNow().UtcDateTime)
+			return BadRequest(new { message = "Ce meeting a déjà commencé." });
+		
+		var actor = await LoadPersonAsync(_scope.CallerEmployeeId);
+		var participants = meeting.Participants.Where(p => p.EmployeeId != _scope.CallerEmployeeId);
+
+		foreach (var participant in participants)
+		{
+			var participantZone = TimeZoneInfo.FindSystemTimeZoneById(participant.Employee.Site.TimeZoneId);
+			AddNotification(participant.EmployeeId, NotificationType.MeetingCancelled, meeting.StartAt, participantZone, $"{actor.FullName} a annulé « {meeting.Title} », {MeetingTexts.FormatWhen(meeting.StartAt, participantZone)}.");
+		}
+
+		_db.Meetings.Remove(meeting);
+		await _db.SaveChangesAsync();
+
+		return NoContent();
 	}
 
 	[HttpPut("{id:int}/color")]
@@ -126,16 +270,27 @@ public class MeetingsController : ControllerBase
 		return NoContent();
 	}
 
-	private async Task<(List<PersonInfo> Participants, string? Error)> LoadParticipantsAsync(CreateMeetingRequest request)
+	private async Task<bool> CanEditAsync(Meeting meeting)
+	{
+		return meeting.OrganizerId == _scope.CallerEmployeeId || (meeting.Kind == MeetingKind.Meeting && await _scope.CanAdministerSiteAsync(meeting.Organizer.SiteId));
+	}
+
+	private Task<PersonInfo> LoadPersonAsync(int employeeId) =>
+		_db.Employees
+			.Where(e => e.Id == employeeId)
+			.Select(e => new PersonInfo(e.Id, e.FirstName, e.LastName, e.Site.TimeZoneId))
+			.FirstAsync();
+
+	private async Task<(List<PersonInfo> Participants, string? Error)> LoadParticipantsAsync(MeetingKind kind, MeetingFormRequest request, int organizerId)
 	{	
-		if (request.Kind == MeetingKind.PersonalBlock)
+		if (kind == MeetingKind.PersonalBlock)
 		{
 			if (request.ParticipantIds.Count > 0)
 				return ([], "Un bloc personnel n'a pas de participants.");
 			return ([], null);
 		}
 		
-		var participantsIds = request.ParticipantIds.Where(p => p != _scope.CallerEmployeeId).Distinct().ToList();
+		var participantsIds = request.ParticipantIds.Where(p => p != organizerId).Distinct().ToList();
 		if (participantsIds.Count == 0)
 			return ([], "Ajoute au moins un participant.");
 
@@ -194,7 +349,7 @@ public class MeetingsController : ControllerBase
 
 		var organizerDates = MeetingTime.LocalDates(start, end, organizer.Zone);
 		if (leaves.Any(l => l.EmployeeId == organizer.Id && Overlaps(l, organizerDates)))
-			return "Tu es en congé ce jour-là.";
+			return $"{(organizer.Id == _scope.CallerEmployeeId ? "Tu es" : $"{organizer.FullName} est")} en congé ce jour-là.";
 
 		var onLeave = participants
 			.Where(p =>
@@ -203,6 +358,7 @@ public class MeetingsController : ControllerBase
 				return leaves.Any(l => l.EmployeeId == p.Id && Overlaps(l, dates));
 			})
 			.Select(p => p.FullName)
+			.Order()
 			.ToList();
 
 		if (onLeave.Count > 0)
@@ -211,18 +367,32 @@ public class MeetingsController : ControllerBase
 		return null;
 	}
 
-	private async Task<List<MeetingConflict>> FindConflictsAsync(List<PersonInfo> everyone, DateTime start, DateTime end, bool isTeamMeeting)
+	private async Task<List<Overlap>> LoadOverlapsAsync(List<PersonInfo> everyone, DateTime start, DateTime end, int? excludeMeetingId = null)
 	{
 		var everyoneIds = everyone.Select(e => e.Id).ToList();
 
-		var overlapping = await _db.MeetingParticipants
+		return await _db.MeetingParticipants
 			.Where(p => everyoneIds.Contains(p.EmployeeId)
 				&& p.Meeting.StartAt < end
-				&& p.Meeting.EndAt > start)
-			.Select(p => new { p.EmployeeId, p.Meeting.IsTeamMeeting, p.Meeting.IsFlexible })
+				&& p.Meeting.EndAt > start
+				&& p.MeetingId != excludeMeetingId)
+			.Select(p => new Overlap(
+				p.EmployeeId,
+				p.MeetingId,
+				p.Meeting.Title,
+				p.Meeting.Kind,
+				p.Meeting.StartAt,
+				p.Meeting.OrganizerId,
+				p.Meeting.Organizer.Site.TimeZoneId,
+				p.Meeting.IsTeamMeeting,
+				p.Meeting.IsFlexible
+			))
 			.ToListAsync();
+	}
 
-		return overlapping
+	private static List<MeetingConflict> FindConflicts(List<Overlap> overlaps, List<PersonInfo> everyone, bool isTeamMeeting)
+	{
+		return overlaps
 			.Where(o => !(isTeamMeeting && o.IsFlexible))
 			.GroupBy(o => o.EmployeeId)
 			.Select(g =>
@@ -272,38 +442,140 @@ public class MeetingsController : ControllerBase
 		return outsideHours;
 	}
 
-	private void AddInvitations(Meeting meeting, PersonInfo organizer, List<PersonInfo> participants)
+	private static MeetingConflictResponse BuildConflictResponse(List<MeetingConflict> conflicts, List<MeetingOutsideHours> outsideHours)
+	{
+		List<string> messages = [];
+
+		if (conflicts.Count > 0)
+			messages.Add($"Conflit d'horaire pour {conflicts.Count} {(conflicts.Count == 1 ? "personne" : "personnes")}.");
+
+		if (outsideHours.Count > 0)
+			messages.Add($"{outsideHours.Count} {(outsideHours.Count == 1 ? "personne est hors de son" : "personnes sont hors de leur")} horaire.");
+
+		return new MeetingConflictResponse
+		{
+			Message = string.Join(" ", messages),
+			Conflicts = conflicts,
+			OutsideHours = outsideHours
+		};
+	}
+
+	private void AddInvitations(Meeting meeting, PersonInfo actor, List<PersonInfo> participants, List<MeetingConflict> conflicts, List<Overlap> overlaps)
 	{
 		foreach (var p in participants)
 		{
 			var participantZone = p.Zone;
-			var participantStart = TimeZoneInfo.ConvertTimeFromUtc(meeting.StartAt, participantZone);
+			NotificationType type;
+			string note;
 
-			_db.Notifications.Add(new Notification
+			if (conflicts.Any(c => c.EmployeeId == p.Id))
 			{
-				RecipientId = p.Id,
-				Type = NotificationType.MeetingInvitation,
-				Message = $"{organizer.FullName} t'invite à « {meeting.Title} », {MeetingTexts.FormatWhen(meeting.StartAt, participantZone)}.",
-				Link = $"/calendar?vue=jour&date={participantStart:yyyy-MM-dd}",
-			});
+				type = NotificationType.MeetingConflict;
+				note = " Ça chevauche un autre de tes événements." + (meeting.IsTeamMeeting ? " Meeting d'équipe : il a priorité." : "");
+			}
+			else if (meeting.IsTeamMeeting && overlaps.Any(o => o.EmployeeId == p.Id && o.IsFlexible))
+			{
+				type = NotificationType.FlexibleBlockOverlapped;
+				note = " Il chevauche ton bloc souple, qui reste en place.";
+			}
+			else
+			{
+				type = NotificationType.MeetingInvitation;
+				note = "";
+			}
+
+			AddNotification(p.Id, type, meeting.StartAt, participantZone, $"{actor.FullName} t'invite à « {meeting.Title} », {MeetingTexts.FormatWhen(meeting.StartAt, participantZone)}.{note}");
 		}
 	}
 
-	private static MeetingResponse ToResponse(Meeting meeting, string? color)
+	private void AddPriorityNotices(Meeting meeting, List<Overlap> overlaps, List<PersonInfo> everyone)
 	{
-		return new MeetingResponse
+		if (!meeting.IsTeamMeeting) return;
+
+		var groups = overlaps
+			.Where(o => o.Kind == MeetingKind.Meeting
+					&& !o.IsTeamMeeting
+					&& o.OrganizerId != meeting.OrganizerId
+					&& o.OrganizerId != o.EmployeeId)
+			.GroupBy(o => o.MeetingId)
+			.ToList();
+		
+		foreach (var g in groups)
 		{
-			Id = meeting.Id,
-			Kind = meeting.Kind,
-			Title = meeting.Title,
-			Description = meeting.Description,
-			StartAt = meeting.StartAt,
-			EndAt = meeting.EndAt,
-			OrganizerId = meeting.OrganizerId,
-			IsTeamMeeting = meeting.IsTeamMeeting,
-			IsFlexible = meeting.IsFlexible,
-			Color = color ?? MeetingColors.Default
-		};
+			var names = g
+				.Select(o => everyone.First(e => e.Id == o.EmployeeId).FullName)
+				.Order()
+				.ToList();
+
+			var first = g.First(); // Le 1er meeting du groupe, ils sont tous identiques de toute façon
+			var zone = TimeZoneInfo.FindSystemTimeZoneById(first.OrganizerTimeZoneId);
+
+			AddNotification(first.OrganizerId, NotificationType.MeetingConflict, first.StartAt, zone, $"{string.Join(" et ", names)} {(names.Count == 1 ? "a" : "ont")} un meeting d'équipe prioritaire pendant « {first.Title} », {MeetingTexts.FormatWhen(first.StartAt, zone)}.");
+		}
+	}
+
+	private void AddUpdateNotices(Meeting meeting, MeetingBefore before, PersonInfo actor, PersonInfo organizer,
+		List<PersonInfo> participants, List<MeetingConflict> conflicts, List<Overlap> overlaps, List<PersonInfo> everyone)
+	{
+		var timeChanged = meeting.StartAt != before.Start || meeting.EndAt != before.End;
+		var titleChanged = meeting.Title != before.Title;
+
+		// 1. Retirés : l'ancien titre et l'ancienne heure, ceux qu'ils connaissaient
+		foreach (var p in before.Removed)
+		{
+			var zone = TimeZoneInfo.FindSystemTimeZoneById(p.Employee.Site.TimeZoneId);
+			AddNotification(p.EmployeeId, NotificationType.MeetingCancelled, before.Start, zone,
+				$"{actor.FullName} t'a retiré de « {before.Title} », {MeetingTexts.FormatWhen(before.Start, zone)}.");
+		}
+
+		// 2. Ajoutés : une invitation, comme à la création
+		var added = participants.Where(p => !before.Ids.Contains(p.Id)).ToList();
+		AddInvitations(meeting, actor, added, conflicts, overlaps);
+
+		// 3. Conservés : seulement si l'heure ou le titre change
+		if (timeChanged || titleChanged)
+		{
+			foreach (var p in participants.Where(p => before.Ids.Contains(p.Id)))
+			{
+				var when = MeetingTexts.FormatWhen(meeting.StartAt, p.Zone);
+				string text;
+
+				if (titleChanged && timeChanged)
+					text = $"{actor.FullName} a renommé « {before.Title} » en « {meeting.Title} » et modifié son horaire : {when}.";
+				else if (titleChanged)
+					text = $"{actor.FullName} a renommé « {before.Title} » en « {meeting.Title} ».";
+				else
+					text = $"{actor.FullName} a modifié l'horaire de « {meeting.Title} » : {when}.";
+
+				if (timeChanged && conflicts.Any(c => c.EmployeeId == p.Id))
+					text += " Ça chevauche un autre de tes événements." + (meeting.IsTeamMeeting ? " Meeting d'équipe : il a priorité." : "");
+
+				AddNotification(p.Id, NotificationType.MeetingUpdated, meeting.StartAt, p.Zone, text);
+			}
+		}
+
+		// 4. Organisateur : prévenu quand un Admin agit à sa place
+		if (actor.Id != organizer.Id)
+			AddNotification(organizer.Id, NotificationType.MeetingUpdated, meeting.StartAt, organizer.Zone,
+				$"{actor.FullName} a modifié ton meeting « {meeting.Title} », {MeetingTexts.FormatWhen(meeting.StartAt, organizer.Zone)}.");
+
+		// 5. Priorité : seulement les chevauchements nouveaux
+		var newOverlaps = timeChanged
+			? overlaps
+			: overlaps.Where(o => !before.Ids.Contains(o.EmployeeId) && o.EmployeeId != meeting.OrganizerId).ToList();
+		AddPriorityNotices(meeting, newOverlaps, everyone);
+	}
+
+	private void AddNotification(int recipientId, NotificationType type, DateTime start, TimeZoneInfo zone, string message)
+	{
+		var localStart = TimeZoneInfo.ConvertTimeFromUtc(start, zone);
+		_db.Notifications.Add(new Notification
+		{
+			RecipientId = recipientId,
+			Type = type,
+			Message = message,
+			Link = $"/calendar?vue=jour&date={localStart:yyyy-MM-dd}",
+		});
 	}
 
 	private static bool IsOnSlot(DateTime t)
@@ -316,6 +588,19 @@ public class MeetingsController : ControllerBase
 		public string FullName => $"{FirstName} {LastName}";
 		public TimeZoneInfo Zone => TimeZoneInfo.FindSystemTimeZoneById(TimeZoneId);
 	}
+
+	private record Overlap(
+		int EmployeeId,
+		int MeetingId,
+		string Title,
+		MeetingKind Kind,
+		DateTime StartAt,
+		int OrganizerId,
+		string OrganizerTimeZoneId,
+		bool IsTeamMeeting,
+		bool IsFlexible);
+
+	private record MeetingBefore(string Title, DateTime Start, DateTime End, HashSet<int> Ids, List<MeetingParticipant> Removed);
 
 	private static bool IsValidColor(string? color) => color is null || MeetingColors.All.Contains(color);
 

@@ -8,7 +8,9 @@ namespace PortailInterne.Api.Tests;
 /// <summary>
 /// POST /api/meetings : blocs personnels (étape 3, R21, R22) meetings de groupe (étape 4, R7)
 /// et PUT /api/meetings/{id}/color : couleur par personne (étape 4b, R22) ; congé approuvé = refus (étape 5, R6) ;
-/// conflits d'horaire : 409 puis confirmation (étape 6, R7, R17, R21) ; hors horaire effectif d'un participant (étape 6b, R15, R16).
+/// conflits d'horaire : 409 puis confirmation (étape 6, R7, R17, R21) ; hors horaire effectif d'un participant (étape 6b, R15, R16) ;
+/// notifications de conflit et de priorité (étape 7, R7, R21) ; GET /api/meetings/{id} : détail (étape 8) ;
+/// PUT et DELETE /api/meetings/{id} : modifier et annuler (étape 9).
 /// « Maintenant » = mercredi 14 octobre 2026, 16 h UTC (midi à Montréal, UTC−4).
 /// </summary>
 public class MeetingsApiTests
@@ -708,6 +710,580 @@ public class MeetingsApiTests
 	}
 
 	[Fact]
+	public async Task Sans_confirmation_aucune_notification()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		api.WithDb(db => db.Meetings.Add(Shared(team.Alex, [team.Jane])));
+		var mark = await api.LoginAsync("mark@test.local");
+
+		var res = await mark.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id, team.Sam.Id]));
+
+		Assert.Equal(HttpStatusCode.Conflict, res.StatusCode);
+		api.WithDb(db => Assert.Empty(db.Notifications));
+	}
+
+	[Fact]
+	public async Task Meeting_ordinaire_confirme_la_personne_en_conflit_recoit_une_seule_notification()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		api.WithDb(db => db.Meetings.Add(Shared(team.Alex, [team.Jane])));
+		var sam = await api.LoginAsync("sam@test.local"); // ni manager ni Admin
+
+		await sam.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id, team.Mark.Id], confirmConflicts: true));
+
+		api.WithDb(db =>
+		{
+			var jane = db.Notifications.Single(n => n.RecipientId == team.Jane.Id);
+			Assert.Equal(NotificationType.MeetingConflict, jane.Type);
+			Assert.Equal("Sam Test t'invite à « Revue », jeudi 15 octobre à 10 h. Ça chevauche un autre de tes événements.", jane.Message);
+
+			var mark = db.Notifications.Single(n => n.RecipientId == team.Mark.Id);
+			Assert.Equal(NotificationType.MeetingInvitation, mark.Type);
+			Assert.Equal("Sam Test t'invite à « Revue », jeudi 15 octobre à 10 h.", mark.Message);
+
+			// Meeting ordinaire : l'organisateur du meeting chevauché n'est pas prévenu
+			Assert.DoesNotContain(db.Notifications, n => n.RecipientId == team.Alex.Id);
+		});
+	}
+
+	[Fact]
+	public async Task Meeting_d_equipe_confirme_priorite_annoncee_et_organisateur_du_meeting_chevauche_prevenu()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		api.WithDb(db => db.Meetings.Add(Shared(team.Alex, [team.Jane, team.Sam], title: "Point projet")));
+		var mark = await api.LoginAsync("mark@test.local"); // manager : meeting d'équipe
+
+		await mark.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id, team.Sam.Id], confirmConflicts: true));
+
+		api.WithDb(db =>
+		{
+			foreach (var id in new[] { team.Jane.Id, team.Sam.Id })
+			{
+				var notification = db.Notifications.Single(n => n.RecipientId == id);
+				Assert.Equal(NotificationType.MeetingConflict, notification.Type);
+				Assert.Equal("Mark Test t'invite à « Revue », jeudi 15 octobre à 10 h. Ça chevauche un autre de tes événements. Meeting d'équipe : il a priorité.", notification.Message);
+			}
+
+			// Une seule notification pour le meeting chevauché, avec les deux noms, sans le titre du meeting d'équipe
+			var alex = db.Notifications.Single(n => n.RecipientId == team.Alex.Id);
+			Assert.Equal(NotificationType.MeetingConflict, alex.Type);
+			Assert.Contains("Jane Test", alex.Message);
+			Assert.Contains("Sam Test", alex.Message);
+			Assert.EndsWith(" ont un meeting d'équipe prioritaire pendant « Point projet », jeudi 15 octobre à 10 h.", alex.Message);
+			Assert.DoesNotContain("Revue", alex.Message);
+			Assert.Equal("/calendar?vue=jour&date=2026-10-15", alex.Link);
+
+			Assert.DoesNotContain(db.Notifications, n => n.RecipientId == team.Mark.Id);
+		});
+	}
+
+	[Fact]
+	public async Task L_organisateur_du_meeting_chevauche_est_prevenu_dans_son_fuseau()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		api.WithDb(db =>
+		{
+			var paris = new Site { Name = "Paris", TimeZoneId = "Europe/Paris" };
+			db.Sites.Add(paris);
+			db.SaveChanges();
+			db.Employees.Find(team.Alex.Id)!.SiteId = paris.Id;
+			db.Meetings.Add(Shared(team.Alex, [team.Jane], title: "Point projet"));
+		});
+		var mark = await api.LoginAsync("mark@test.local");
+
+		// 10 h à Montréal = 16 h à Paris
+		await mark.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id], confirmConflicts: true));
+
+		api.WithDb(db => Assert.Equal(
+			"Jane Test a un meeting d'équipe prioritaire pendant « Point projet », jeudi 15 octobre à 16 h.",
+			db.Notifications.Single(n => n.RecipientId == team.Alex.Id).Message));
+	}
+
+	[Fact]
+	public async Task Personne_n_est_prevenu_en_double_ni_pour_un_meeting_d_equipe_chevauche()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		api.WithDb(db => db.Meetings.AddRange(
+			Existing(team.Jane, "2026-10-15T14:00:00Z", "2026-10-15T15:00:00Z"),        // Jane organise elle-même
+			Shared(team.Mark, [team.Sam]),                                                // organisé par Mark, qui crée le nouveau
+			Shared(team.Alex, [team.Gaby], isTeamMeeting: true)));                        // déjà d'équipe
+		var mark = await api.LoginAsync("mark@test.local");
+
+		await mark.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id, team.Sam.Id, team.Gaby.Id], confirmConflicts: true));
+
+		api.WithDb(db =>
+		{
+			// Seulement les trois invitations « conflit »
+			Assert.Equal(new[] { team.Jane.Id, team.Sam.Id, team.Gaby.Id }.Order(), db.Notifications.Select(n => n.RecipientId).ToList().Order());
+			Assert.All(db.Notifications, n => Assert.Equal(NotificationType.MeetingConflict, n.Type));
+		});
+	}
+
+	[Fact]
+	public async Task Bloc_souple_chevauche_par_un_meeting_d_equipe_conserve_et_proprietaire_notifie()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		api.WithDb(db => db.Meetings.Add(Existing(team.Sam, "2026-10-15T14:00:00Z", "2026-10-15T16:00:00Z", kind: MeetingKind.PersonalBlock, isFlexible: true)));
+		var mark = await api.LoginAsync("mark@test.local");
+
+		var res = await mark.PostAsJsonAsync("/api/meetings", Group([team.Sam.Id])); // aucune confirmation requise
+
+		Assert.Equal(HttpStatusCode.Created, res.StatusCode);
+		api.WithDb(db =>
+		{
+			var sam = db.Notifications.Single();
+			Assert.Equal(NotificationType.FlexibleBlockOverlapped, sam.Type);
+			Assert.Equal("Mark Test t'invite à « Revue », jeudi 15 octobre à 10 h. Il chevauche ton bloc souple, qui reste en place.", sam.Message);
+			Assert.Equal(2, db.Meetings.Count()); // le bloc est toujours là
+		});
+	}
+
+	[Fact]
+	public async Task Le_detail_donne_l_organisateur_les_participants_tries_et_la_couleur_de_l_appelant()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var sam = await api.LoginAsync("sam@test.local");
+		var jane = await api.LoginAsync("jane@test.local");
+		var id = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Group([team.Mark.Id, team.Jane.Id], color: "pink")));
+
+		var forSam = (await sam.GetFromJsonAsync<MeetingDetailResponse>($"/api/meetings/{id}"))!;
+		var forJane = (await jane.GetFromJsonAsync<MeetingDetailResponse>($"/api/meetings/{id}"))!;
+
+		Assert.Equal("Revue", forJane.Meeting.Title);
+		Assert.Equal((team.Sam.Id, "Sam", "Test"), (forJane.Organizer.EmployeeId, forJane.Organizer.FirstName, forJane.Organizer.LastName));
+		Assert.Equal([team.Jane.Id, team.Mark.Id], forJane.Participants.Select(p => p.EmployeeId)); // même nom : par prénom
+		Assert.Equal("pink", forSam.Meeting.Color);
+		Assert.Equal(MeetingColors.Default, forJane.Meeting.Color);
+		Assert.True(forSam.CanEdit);
+		Assert.False(forJane.CanEdit);
+	}
+
+	[Fact]
+	public async Task Un_admin_du_site_de_l_organisateur_voit_et_peut_modifier_sans_etre_invite()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var sam = await api.LoginAsync("sam@test.local");
+		var id = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id], color: "pink")));
+
+		foreach (var email in new[] { "alex@test.local", "gaby@test.local" }) // Admin du site, Admin global
+		{
+			var admin = await api.LoginAsync(email);
+			var detail = (await admin.GetFromJsonAsync<MeetingDetailResponse>($"/api/meetings/{id}"))!;
+
+			Assert.True(detail.CanEdit);
+			Assert.Equal(MeetingColors.Default, detail.Meeting.Color); // jamais la couleur d'un autre
+		}
+	}
+
+	[Fact]
+	public async Task Un_admin_invite_garde_sa_propre_couleur()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var sam = await api.LoginAsync("sam@test.local");
+		var alex = await api.LoginAsync("alex@test.local");
+		var id = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Group([team.Alex.Id])));
+		await alex.PutAsJsonAsync($"/api/meetings/{id}/color", new { color = "teal" });
+
+		var detail = (await alex.GetFromJsonAsync<MeetingDetailResponse>($"/api/meetings/{id}"))!;
+
+		Assert.Equal("teal", detail.Meeting.Color);
+	}
+
+	[Fact]
+	public async Task Detail_introuvable_pour_qui_n_y_a_pas_acces()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var sam = await api.LoginAsync("sam@test.local");
+		var meetingId = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id])));
+		var blockId = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Block(start: "2026-10-16T14:00:00Z", end: "2026-10-16T16:00:00Z")));
+		api.WithDb(db =>
+		{
+			var paris = new Site { Name = "Paris", TimeZoneId = "Europe/Paris" };
+			db.Sites.Add(paris);
+			db.SaveChanges();
+			db.Employees.Find(team.Alex.Id)!.SiteId = paris.Id; // Admin, mais d'un autre site
+		});
+		var mark = await api.LoginAsync("mark@test.local");
+		var alex = await api.LoginAsync("alex@test.local");
+		var gaby = await api.LoginAsync("gaby@test.local");
+
+		Assert.Equal(HttpStatusCode.NotFound, (await mark.GetAsync($"/api/meetings/{meetingId}")).StatusCode);  // non invité
+		Assert.Equal(HttpStatusCode.NotFound, (await alex.GetAsync($"/api/meetings/{meetingId}")).StatusCode);  // Admin d'un autre site
+		Assert.Equal(HttpStatusCode.NotFound, (await gaby.GetAsync($"/api/meetings/{blockId}")).StatusCode);    // bloc : propriétaire seulement
+		Assert.Equal(HttpStatusCode.NotFound, (await sam.GetAsync("/api/meetings/999")).StatusCode);            // inconnu
+	}
+
+	[Fact]
+	public async Task Le_proprietaire_voit_son_bloc()
+	{
+		using var api = new ApiFactory().Start();
+		var sam = await api.LoginAsync("sam@test.local");
+		var id = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Block(color: "teal")));
+
+		var detail = (await sam.GetFromJsonAsync<MeetingDetailResponse>($"/api/meetings/{id}"))!;
+
+		Assert.Equal(MeetingKind.PersonalBlock, detail.Meeting.Kind);
+		Assert.Equal("teal", detail.Meeting.Color);
+		Assert.Empty(detail.Participants);
+		Assert.True(detail.CanEdit);
+	}
+
+	[Fact]
+	public async Task L_organisateur_annule_le_meeting_disparait_et_les_participants_sont_prevenus()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var sam = await api.LoginAsync("sam@test.local");
+		var id = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id, team.Mark.Id])));
+
+		var res = await sam.DeleteAsync($"/api/meetings/{id}");
+
+		Assert.Equal(HttpStatusCode.NoContent, res.StatusCode);
+		api.WithDb(db =>
+		{
+			Assert.Empty(db.Meetings);
+			Assert.Empty(db.MeetingParticipants);
+			var cancelled = db.Notifications.Where(n => n.Type == NotificationType.MeetingCancelled).ToList();
+			Assert.Equal(new[] { team.Mark.Id, team.Jane.Id }.Order(), cancelled.Select(n => n.RecipientId).Order());
+			Assert.All(cancelled, n =>
+			{
+				Assert.Equal("Sam Test a annulé « Revue », jeudi 15 octobre à 10 h.", n.Message);
+				Assert.Equal("/calendar?vue=jour&date=2026-10-15", n.Link);
+			});
+		});
+	}
+
+	[Fact]
+	public async Task Un_admin_du_site_annule_a_la_place_de_l_organisateur_qui_est_prevenu()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var sam = await api.LoginAsync("sam@test.local");
+		var alex = await api.LoginAsync("alex@test.local");
+		var id = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id])));
+
+		var res = await alex.DeleteAsync($"/api/meetings/{id}");
+
+		Assert.Equal(HttpStatusCode.NoContent, res.StatusCode);
+		api.WithDb(db =>
+		{
+			var cancelled = db.Notifications.Where(n => n.Type == NotificationType.MeetingCancelled).ToList();
+			Assert.Equal(new[] { team.Sam.Id, team.Jane.Id }.Order(), cancelled.Select(n => n.RecipientId).Order());
+			Assert.All(cancelled, n => Assert.StartsWith("Alex Test a annulé « Revue »", n.Message));
+		});
+	}
+
+	[Fact]
+	public async Task Annuler_sans_le_droit_refuse_et_le_meeting_reste()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var sam = await api.LoginAsync("sam@test.local");
+		var meetingId = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id])));
+		var blockId = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Block(start: "2026-10-16T14:00:00Z", end: "2026-10-16T16:00:00Z")));
+		var jane = await api.LoginAsync("jane@test.local");
+		var mark = await api.LoginAsync("mark@test.local");
+		var alex = await api.LoginAsync("alex@test.local");
+
+		Assert.Equal(HttpStatusCode.Forbidden, (await jane.DeleteAsync($"/api/meetings/{meetingId}")).StatusCode); // participante
+		Assert.Equal(HttpStatusCode.NotFound, (await mark.DeleteAsync($"/api/meetings/{meetingId}")).StatusCode);  // non invité
+		Assert.Equal(HttpStatusCode.NotFound, (await alex.DeleteAsync($"/api/meetings/{blockId}")).StatusCode);    // bloc d'un autre
+		Assert.Equal(HttpStatusCode.NotFound, (await sam.DeleteAsync("/api/meetings/999")).StatusCode);            // inconnu
+		api.WithDb(db => Assert.Equal(2, db.Meetings.Count()));
+	}
+
+	[Theory]
+	[InlineData("2026-10-14T15:00:00Z", "2026-10-14T17:00:00Z")] // en cours
+	[InlineData("2026-10-14T16:00:00Z", "2026-10-14T17:00:00Z")] // commence maintenant
+	[InlineData("2026-10-13T14:00:00Z", "2026-10-13T15:00:00Z")] // passé
+	public async Task Un_meeting_commence_ne_s_annule_plus(string start, string end)
+	{
+		using var api = new ApiFactory().Start();
+		var meeting = Existing(api.Team.Sam, start, end);
+		api.WithDb(db => db.Meetings.Add(meeting));
+		var sam = await api.LoginAsync("sam@test.local");
+
+		var res = await sam.DeleteAsync($"/api/meetings/{meeting.Id}");
+
+		Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+		Assert.Equal("Ce meeting a déjà commencé.", await ErrorMessage(res));
+		api.WithDb(db => Assert.Single(db.Meetings));
+	}
+
+	[Fact]
+	public async Task Annuler_son_bloc_ne_notifie_personne()
+	{
+		using var api = new ApiFactory().Start();
+		var sam = await api.LoginAsync("sam@test.local");
+		var id = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Block()));
+
+		var res = await sam.DeleteAsync($"/api/meetings/{id}");
+
+		Assert.Equal(HttpStatusCode.NoContent, res.StatusCode);
+		api.WithDb(db =>
+		{
+			Assert.Empty(db.Meetings);
+			Assert.Empty(db.Notifications);
+		});
+	}
+
+	[Fact]
+	public async Task Modifier_titre_et_horaire_met_a_jour_et_previent_les_participants_restants()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var sam = await api.LoginAsync("sam@test.local");
+		var id = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id], color: "pink")));
+
+		// Vendredi 16 octobre, 14 h → 15 h à Montréal
+		var res = await sam.PutAsJsonAsync($"/api/meetings/{id}", Edit([team.Jane.Id], title: "  Revue Q4 ", description: "   ", start: "2026-10-16T18:00:00Z", end: "2026-10-16T19:00:00Z"));
+		var updated = (await res.Content.ReadFromJsonAsync<MeetingResponse>())!;
+
+		Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+		Assert.Equal("Revue Q4", updated.Title);
+		Assert.Null(updated.Description);
+		Assert.Equal(new DateTime(2026, 10, 16, 18, 0, 0, DateTimeKind.Utc), updated.StartAt);
+		Assert.Equal("pink", updated.Color);
+		api.WithDb(db =>
+		{
+			var jane = db.Notifications.Single(n => n.Type == NotificationType.MeetingUpdated);
+			Assert.Equal(team.Jane.Id, jane.RecipientId);
+			Assert.Equal("Sam Test a renommé « Revue » en « Revue Q4 » et modifié son horaire : vendredi 16 octobre à 14 h.", jane.Message);
+			Assert.Equal("/calendar?vue=jour&date=2026-10-16", jane.Link);
+		});
+	}
+
+	[Theory]
+	[InlineData("Revue Q4", "2026-10-15T14:00:00Z", "2026-10-15T15:00:00Z", "Sam Test a renommé « Revue » en « Revue Q4 ».")]
+	[InlineData("Revue", "2026-10-16T18:00:00Z", "2026-10-16T19:00:00Z", "Sam Test a modifié l'horaire de « Revue » : vendredi 16 octobre à 14 h.")]
+	[InlineData("Revue", "2026-10-15T14:00:00Z", "2026-10-15T15:30:00Z", "Sam Test a modifié l'horaire de « Revue » : jeudi 15 octobre à 10 h.")] // fin seulement
+	public async Task Le_message_dit_ce_qui_a_change(string title, string start, string end, string expected)
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var sam = await api.LoginAsync("sam@test.local");
+		var id = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id])));
+
+		await sam.PutAsJsonAsync($"/api/meetings/{id}", Edit([team.Jane.Id], title: title, start: start, end: end));
+
+		api.WithDb(db => Assert.Equal(expected, db.Notifications.Single(n => n.Type == NotificationType.MeetingUpdated).Message));
+	}
+
+	[Fact]
+	public async Task Changer_seulement_la_description_ne_derange_personne()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var sam = await api.LoginAsync("sam@test.local");
+		var id = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id])));
+
+		var res = await sam.PutAsJsonAsync($"/api/meetings/{id}", Edit([team.Jane.Id], description: "Ordre du jour"));
+
+		Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+		Assert.Equal("Ordre du jour", (await res.Content.ReadFromJsonAsync<MeetingResponse>())!.Description);
+		api.WithDb(db => Assert.Equal(NotificationType.MeetingInvitation, db.Notifications.Single().Type)); // seulement l'invitation d'origine
+	}
+
+	[Fact]
+	public async Task Les_participants_retires_sont_prevenus_les_ajoutes_invites_et_les_restants_gardent_leur_couleur()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var sam = await api.LoginAsync("sam@test.local");
+		var jane = await api.LoginAsync("jane@test.local");
+		var id = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id, team.Mark.Id])));
+		await jane.PutAsJsonAsync($"/api/meetings/{id}/color", new { color = "teal" });
+
+		var res = await sam.PutAsJsonAsync($"/api/meetings/{id}", Edit([team.Jane.Id, team.Alex.Id]));
+
+		Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+		api.WithDb(db =>
+		{
+			var rows = db.MeetingParticipants.Where(p => p.MeetingId == id).ToList();
+			Assert.Equal(new[] { team.Sam.Id, team.Jane.Id, team.Alex.Id }.Order(), rows.Select(p => p.EmployeeId).Order());
+			Assert.Equal("teal", rows.Single(p => p.EmployeeId == team.Jane.Id).Color);
+
+			var mark = db.Notifications.Single(n => n.Type == NotificationType.MeetingCancelled);
+			Assert.Equal(team.Mark.Id, mark.RecipientId);
+			Assert.Equal("Sam Test t'a retiré de « Revue », jeudi 15 octobre à 10 h.", mark.Message);
+
+			var alex = db.Notifications.Single(n => n.RecipientId == team.Alex.Id);
+			Assert.Equal(NotificationType.MeetingInvitation, alex.Type);
+			Assert.Equal("Sam Test t'invite à « Revue », jeudi 15 octobre à 10 h.", alex.Message);
+
+			Assert.DoesNotContain(db.Notifications, n => n.Type == NotificationType.MeetingUpdated); // ni heure ni titre changés
+		});
+	}
+
+	[Fact]
+	public async Task Un_admin_modifie_a_la_place_de_l_organisateur_qui_reste_organisateur_et_est_prevenu()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var sam = await api.LoginAsync("sam@test.local");
+		var alex = await api.LoginAsync("alex@test.local");
+		var id = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id])));
+
+		// Sam dans la liste : ignoré, il reste organisateur
+		var res = await alex.PutAsJsonAsync($"/api/meetings/{id}", Edit([team.Jane.Id, team.Sam.Id], start: "2026-10-16T18:00:00Z", end: "2026-10-16T19:00:00Z"));
+
+		Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+		Assert.Equal(team.Sam.Id, (await res.Content.ReadFromJsonAsync<MeetingResponse>())!.OrganizerId);
+		api.WithDb(db =>
+		{
+			Assert.Equal(2, db.MeetingParticipants.Count(p => p.MeetingId == id));
+			var updates = db.Notifications.Where(n => n.Type == NotificationType.MeetingUpdated).ToList();
+			Assert.Equal("Alex Test a modifié ton meeting « Revue », vendredi 16 octobre à 14 h.", updates.Single(n => n.RecipientId == team.Sam.Id).Message);
+			Assert.Equal("Alex Test a modifié l'horaire de « Revue » : vendredi 16 octobre à 14 h.", updates.Single(n => n.RecipientId == team.Jane.Id).Message);
+			Assert.DoesNotContain(db.Notifications, n => n.RecipientId == team.Alex.Id);
+		});
+	}
+
+	[Fact]
+	public async Task Decaler_son_meeting_ne_le_met_pas_en_conflit_avec_lui_meme()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var sam = await api.LoginAsync("sam@test.local");
+		var id = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id])));
+
+		// 10 h → 11 h devient 10 h 15 → 11 h 15
+		var res = await sam.PutAsJsonAsync($"/api/meetings/{id}", Edit([team.Jane.Id], start: "2026-10-15T14:15:00Z", end: "2026-10-15T15:15:00Z"));
+
+		Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+	}
+
+	[Fact]
+	public async Task Une_modification_en_conflit_donne_409_sans_rien_changer_puis_la_confirmation_l_applique()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var sam = await api.LoginAsync("sam@test.local");
+		var id = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id])));
+		api.WithDb(db => db.Meetings.Add(Existing(team.Jane, "2026-10-16T18:00:00Z", "2026-10-16T19:00:00Z")));
+
+		var first = await sam.PutAsJsonAsync($"/api/meetings/{id}", Edit([team.Jane.Id], start: "2026-10-16T18:00:00Z", end: "2026-10-16T19:00:00Z"));
+
+		Assert.Equal(HttpStatusCode.Conflict, first.StatusCode);
+		api.WithDb(db => Assert.Equal(new DateTime(2026, 10, 15, 14, 0, 0, DateTimeKind.Utc), db.Meetings.Find(id)!.StartAt));
+
+		var confirmed = await sam.PutAsJsonAsync($"/api/meetings/{id}", Edit([team.Jane.Id], start: "2026-10-16T18:00:00Z", end: "2026-10-16T19:00:00Z", confirmConflicts: true));
+
+		Assert.Equal(HttpStatusCode.OK, confirmed.StatusCode);
+		api.WithDb(db => Assert.Equal(
+			"Sam Test a modifié l'horaire de « Revue » : vendredi 16 octobre à 14 h. Ça chevauche un autre de tes événements.",
+			db.Notifications.Single(n => n.Type == NotificationType.MeetingUpdated).Message));
+	}
+
+	[Fact]
+	public async Task Deplacer_un_meeting_d_equipe_previent_l_organisateur_du_meeting_chevauche()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var mark = await api.LoginAsync("mark@test.local"); // manager : meeting d'équipe
+		var id = await CreatedId(await mark.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id])));
+		api.WithDb(db =>
+		{
+			var meeting = Shared(team.Alex, [team.Jane], title: "Point projet");
+			meeting.StartAt = new DateTime(2026, 10, 16, 18, 0, 0, DateTimeKind.Utc);
+			meeting.EndAt = new DateTime(2026, 10, 16, 19, 0, 0, DateTimeKind.Utc);
+			db.Meetings.Add(meeting);
+		});
+
+		await mark.PutAsJsonAsync($"/api/meetings/{id}", Edit([team.Jane.Id], start: "2026-10-16T18:00:00Z", end: "2026-10-16T19:00:00Z", confirmConflicts: true));
+		// Renommer ensuite : le chevauchement n'est pas nouveau, Alex n'est pas prévenu une deuxième fois
+		await mark.PutAsJsonAsync($"/api/meetings/{id}", Edit([team.Jane.Id], title: "Revue Q4", start: "2026-10-16T18:00:00Z", end: "2026-10-16T19:00:00Z", confirmConflicts: true));
+
+		api.WithDb(db => Assert.Equal(
+			"Jane Test a un meeting d'équipe prioritaire pendant « Point projet », vendredi 16 octobre à 14 h.",
+			db.Notifications.Single(n => n.RecipientId == team.Alex.Id).Message));
+	}
+
+	[Fact]
+	public async Task Modifier_sans_le_droit_ou_trop_tard_refuse()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var sam = await api.LoginAsync("sam@test.local");
+		var meetingId = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id])));
+		var blockId = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Block(start: "2026-10-16T14:00:00Z", end: "2026-10-16T16:00:00Z")));
+		var started = Existing(team.Sam, "2026-10-14T15:00:00Z", "2026-10-14T17:00:00Z");
+		api.WithDb(db => db.Meetings.Add(started));
+		var jane = await api.LoginAsync("jane@test.local");
+		var mark = await api.LoginAsync("mark@test.local");
+		var alex = await api.LoginAsync("alex@test.local");
+
+		Assert.Equal(HttpStatusCode.Forbidden, (await jane.PutAsJsonAsync($"/api/meetings/{meetingId}", Edit([team.Jane.Id]))).StatusCode);
+		Assert.Equal(HttpStatusCode.NotFound, (await mark.PutAsJsonAsync($"/api/meetings/{meetingId}", Edit([team.Jane.Id]))).StatusCode);
+		Assert.Equal(HttpStatusCode.NotFound, (await alex.PutAsJsonAsync($"/api/meetings/{blockId}", Edit([]))).StatusCode);
+		Assert.Equal(HttpStatusCode.NotFound, (await sam.PutAsJsonAsync("/api/meetings/999", Edit([team.Jane.Id]))).StatusCode);
+
+		var late = await sam.PutAsJsonAsync($"/api/meetings/{started.Id}", Edit([], start: "2026-10-16T14:00:00Z", end: "2026-10-16T15:00:00Z"));
+		Assert.Equal("Ce meeting a déjà commencé.", await ErrorMessage(late));
+	}
+
+	[Fact]
+	public async Task Une_modification_invalide_ne_touche_a_rien()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var sam = await api.LoginAsync("sam@test.local");
+		var id = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id, team.Mark.Id])));
+		api.WithDb(db => db.Employees.Find(team.Mark.Id)!.IsActive = false);
+
+		var inactive = await sam.PutAsJsonAsync($"/api/meetings/{id}", Edit([team.Jane.Id, team.Mark.Id]));
+		var empty = await sam.PutAsJsonAsync($"/api/meetings/{id}", Edit([]));
+		var past = await sam.PutAsJsonAsync($"/api/meetings/{id}", Edit([team.Jane.Id], start: "2026-10-13T14:00:00Z", end: "2026-10-13T15:00:00Z"));
+
+		Assert.Equal("Un des participants est introuvable ou inactif.", await ErrorMessage(inactive));
+		Assert.Equal("Ajoute au moins un participant.", await ErrorMessage(empty));
+		Assert.Equal("Cet horaire est déjà passé.", await ErrorMessage(past));
+		api.WithDb(db => Assert.Equal(3, db.MeetingParticipants.Count(p => p.MeetingId == id)));
+	}
+
+	[Fact]
+	public async Task Un_admin_qui_deplace_sur_un_conge_de_l_organisateur_le_voit_nomme()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var sam = await api.LoginAsync("sam@test.local");
+		var alex = await api.LoginAsync("alex@test.local");
+		var id = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id])));
+		api.WithDb(db => db.LeaveRequests.Add(Leave(team.Sam, day: 16)));
+
+		var res = await alex.PutAsJsonAsync($"/api/meetings/{id}", Edit([team.Jane.Id], start: "2026-10-16T18:00:00Z", end: "2026-10-16T19:00:00Z"));
+
+		Assert.Equal("Sam Test est en congé ce jour-là.", await ErrorMessage(res));
+	}
+
+	[Fact]
+	public async Task Le_proprietaire_modifie_son_bloc_qui_reste_sans_participants()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var sam = await api.LoginAsync("sam@test.local");
+		var id = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Block()));
+
+		var flexible = await sam.PutAsJsonAsync($"/api/meetings/{id}", Edit([], title: "Projet Y", isFlexible: true));
+		var withPeople = await sam.PutAsJsonAsync($"/api/meetings/{id}", Edit([team.Jane.Id]));
+
+		Assert.Equal(HttpStatusCode.OK, flexible.StatusCode);
+		Assert.True((await flexible.Content.ReadFromJsonAsync<MeetingResponse>())!.IsFlexible);
+		Assert.Equal("Un bloc personnel n'a pas de participants.", await ErrorMessage(withPeople));
+		api.WithDb(db => Assert.Empty(db.Notifications));
+	}
+
+	[Fact]
 	public async Task Connexion_requise()
 	{
 		using var api = new ApiFactory().Start();
@@ -737,6 +1313,26 @@ public class MeetingsApiTests
 		IsTeamMeeting = isTeamMeeting,
 		IsFlexible = isFlexible,
 		Participants = [new MeetingParticipant { EmployeeId = owner.Id }],
+	};
+
+	/// <summary>Un meeting déjà en base, jeudi 15 octobre de 10 h à 11 h à Montréal, avec son organisateur et des participants.</summary>
+	private static Meeting Shared(
+		Employee organizer,
+		Employee[] participants,
+		string title = "Existant",
+		bool isTeamMeeting = false) => new()
+	{
+		Kind = MeetingKind.Meeting,
+		Title = title,
+		StartAt = new DateTime(2026, 10, 15, 14, 0, 0, DateTimeKind.Utc),
+		EndAt = new DateTime(2026, 10, 15, 15, 0, 0, DateTimeKind.Utc),
+		OrganizerId = organizer.Id,
+		IsTeamMeeting = isTeamMeeting,
+		Participants =
+		[
+			new MeetingParticipant { EmployeeId = organizer.Id },
+			.. participants.Select(p => new MeetingParticipant { EmployeeId = p.Id }),
+		],
 	};
 
 	/// <summary>Un congé en octobre 2026, approuvé par défaut.</summary>
@@ -778,6 +1374,9 @@ public class MeetingsApiTests
 		CreatedById = employee.Id,
 	};
 
+	private static async Task<int> CreatedId(HttpResponseMessage res) =>
+		(await res.Content.ReadFromJsonAsync<MeetingResponse>())!.Id;
+
 	private static async Task<string> ErrorMessage(HttpResponseMessage res) =>
 		(await res.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>()).GetProperty("message").GetString()!;
 
@@ -796,6 +1395,25 @@ public class MeetingsApiTests
 		endAt = end,
 		isFlexible,
 		color,
+		participantIds,
+		confirmConflicts,
+	};
+
+	/// <summary>Le corps d'un PUT : par défaut, le même créneau que <see cref="Group"/>.</summary>
+	private static object Edit(
+		int[] participantIds,
+		string title = "Revue",
+		string? description = null,
+		string start = "2026-10-15T14:00:00Z",
+		string end = "2026-10-15T15:00:00Z",
+		bool isFlexible = false,
+		bool confirmConflicts = false) => new
+	{
+		title,
+		description,
+		startAt = start,
+		endAt = end,
+		isFlexible,
 		participantIds,
 		confirmConflicts,
 	};

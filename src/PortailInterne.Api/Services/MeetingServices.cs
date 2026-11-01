@@ -1,5 +1,6 @@
 using System.Globalization;
 using PortailInterne.Api.Dtos;
+using PortailInterne.Api.Models;
 
 namespace PortailInterne.Api.Services;
 
@@ -55,5 +56,25 @@ public static class MeetingTime
 		}
 
 		return null;
+	}
+}
+
+public static class MeetingMapping
+{
+	public static MeetingResponse ToResponse(Meeting meeting, string? color)
+	{
+		return new MeetingResponse
+		{
+			Id = meeting.Id,
+			Kind = meeting.Kind,
+			Title = meeting.Title,
+			Description = meeting.Description,
+			StartAt = meeting.StartAt,
+			EndAt = meeting.EndAt,
+			OrganizerId = meeting.OrganizerId,
+			IsTeamMeeting = meeting.IsTeamMeeting,
+			IsFlexible = meeting.IsFlexible,
+			Color = color ?? MeetingColors.Default
+		};
 	}
 }

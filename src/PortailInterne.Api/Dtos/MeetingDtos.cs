@@ -11,11 +11,8 @@ public enum OutsideHoursReason
 	Absence,       // une absence approuvée chevauche le meeting
 }
 
-public class CreateMeetingRequest
+public class MeetingFormRequest
 {
-	[Required(ErrorMessage = "Le type est obligatoire.")]
-	public MeetingKind? Kind { get; set; }
-
 	[Required(ErrorMessage = "Le titre est obligatoire.")]
 	[MaxLength(200, ErrorMessage = "Le titre doit avoir 200 caractères au maximum.")]
 	public string Title { get; set; } = string.Empty;
@@ -31,11 +28,18 @@ public class CreateMeetingRequest
 
 	public bool IsFlexible { get; set; }
 
-	public string? Color { get; set; }
-
 	public List<int> ParticipantIds { get; set; } = [];
 	public bool ConfirmConflicts { get; set; }
 }
+
+public class CreateMeetingRequest : MeetingFormRequest
+{
+	[Required(ErrorMessage = "Le type est obligatoire.")]
+	public MeetingKind? Kind { get; set; }
+	public string? Color { get; set; }
+}
+
+public class UpdateMeetingRequest : MeetingFormRequest { }
 
 public class SaveMeetingColorRequest
 {
@@ -54,6 +58,21 @@ public class MeetingResponse
 	public bool IsTeamMeeting { get; set; }
 	public bool IsFlexible { get; set; }
 	public string Color { get; set; } = string.Empty;
+}
+
+public class MeetingDetailResponse
+{
+	public MeetingResponse Meeting { get; set; } = null!;
+	public MeetingPerson Organizer { get; set; } = null!;
+	public List<MeetingPerson> Participants { get; set; } = [];
+	public bool CanEdit { get; set; }
+}
+
+public class MeetingPerson
+{
+	public int EmployeeId { get; set; }
+	public string FirstName { get; set; } = string.Empty;
+	public string LastName { get; set; } = string.Empty;
 }
 
 public class MeetingConflict

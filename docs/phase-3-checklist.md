@@ -35,12 +35,12 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [x] 5. Règle R6 : refuser si un participant a un **congé approuvé** sur le créneau
 - [x] 6. Détection de conflits d’horaire (chevauchement avec d’autres meetings)
 - [x] 6b. Avertir si le meeting sort de l’horaire effectif d’un participant (non travaillé, férié, départ anticipé), conversion UTC → fuseau du site (R15)
-- [ ] 7. Priorité meeting d’équipe + création des notifications aux personnes en conflit (R7)
-  - [ ] Bloc souple chevauché par un meeting d’équipe : pas de conflit, bloc conservé, notification légère au propriétaire (R21)
-  - [ ] Meeting ordinaire sur un bloc souple : conflit normal
-- [ ] 8. Détail meeting + liste des participants
-- [ ] 9. Modifier / annuler (organisateur ou Admin — règles à figer)
-- [ ] 10. Nouveau format de l’endpoint calendrier sur `[from, to]` : une entrée par jour (horaire effectif, congés) + la liste des meetings
+- [x] 7. Priorité meeting d’équipe + création des notifications aux personnes en conflit (R7)
+  - [x] Bloc souple chevauché par un meeting d’équipe : pas de conflit, bloc conservé, notification légère au propriétaire (R21)
+  - [x] Meeting ordinaire sur un bloc souple : conflit normal
+- [x] 8. Détail meeting + liste des participants
+- [x] 9. Modifier / annuler (organisateur ou Admin du site ; bloc : propriétaire ; verrouillé dès le début)
+- [x] 10. Nouveau format de l’endpoint calendrier sur `[from, to]` : une entrée par jour (horaire effectif, congés) + la liste des meetings
 - [ ] 10b. Endpoint **libre / occupé** : créneaux occupés de plusieurs employés sur une plage, sans titre, motif ni participants (R17) ; les blocs souples sont marqués « occupé souple » (R21)
   - [ ] Participants de plusieurs sites : créneaux renvoyés en UTC, affichés dans le fuseau de la personne qui regarde
 - [ ] 10c. Absence (R24) qui chevauche un meeting, prévue ou réelle (départ, retour tardif) : meeting conservé ; organisateur et employé notifiés (« Sam manquera le début de … ») ; manager notifié d’un départ non prévu ou d’un retour non confirmé

@@ -36,4 +36,10 @@ public class SiteClock
 		var now = _clock.NowIn(timeZoneId);
 		return (DateOnly.FromDateTime(now), TimeOnly.FromDateTime(now));
 	}
+
+	public async Task<TimeZoneInfo> TimeZoneForAsync(int employeeId)
+	{
+		var timeZoneId = await _db.Employees.AsNoTracking().Where(e => e.Id == employeeId).Select(e => e.Site.TimeZoneId).FirstAsync();
+		return TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+	}
 }
