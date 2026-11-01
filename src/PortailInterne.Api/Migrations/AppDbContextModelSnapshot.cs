@@ -364,6 +364,104 @@ namespace PortailInterne.Api.Migrations
                     b.ToTable("LeaveRequests");
                 });
 
+            modelBuilder.Entity("PortailInterne.Api.Models.Meeting", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("EndAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsFlexible")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsTeamMeeting")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("OrganizerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("StartAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizerId");
+
+                    b.HasIndex("StartAt", "EndAt");
+
+                    b.ToTable("Meetings");
+                });
+
+            modelBuilder.Entity("PortailInterne.Api.Models.MeetingParticipant", b =>
+                {
+                    b.Property<int>("MeetingId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Color")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("MeetingId", "EmployeeId");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("MeetingParticipants");
+                });
+
+            modelBuilder.Entity("PortailInterne.Api.Models.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Link")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RecipientId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecipientId", "ReadAt");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("PortailInterne.Api.Models.ScheduleAdjustment", b =>
                 {
                     b.Property<int>("Id")
@@ -623,6 +721,47 @@ namespace PortailInterne.Api.Migrations
                     b.Navigation("ReviewedBy");
                 });
 
+            modelBuilder.Entity("PortailInterne.Api.Models.Meeting", b =>
+                {
+                    b.HasOne("PortailInterne.Api.Models.Employee", "Organizer")
+                        .WithMany()
+                        .HasForeignKey("OrganizerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Organizer");
+                });
+
+            modelBuilder.Entity("PortailInterne.Api.Models.MeetingParticipant", b =>
+                {
+                    b.HasOne("PortailInterne.Api.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PortailInterne.Api.Models.Meeting", "Meeting")
+                        .WithMany("Participants")
+                        .HasForeignKey("MeetingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("Meeting");
+                });
+
+            modelBuilder.Entity("PortailInterne.Api.Models.Notification", b =>
+                {
+                    b.HasOne("PortailInterne.Api.Models.Employee", "Recipient")
+                        .WithMany()
+                        .HasForeignKey("RecipientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Recipient");
+                });
+
             modelBuilder.Entity("PortailInterne.Api.Models.ScheduleAdjustment", b =>
                 {
                     b.HasOne("PortailInterne.Api.Models.Employee", "CreatedBy")
@@ -691,6 +830,11 @@ namespace PortailInterne.Api.Migrations
             modelBuilder.Entity("PortailInterne.Api.Models.Employee", b =>
                 {
                     b.Navigation("UserAccount");
+                });
+
+            modelBuilder.Entity("PortailInterne.Api.Models.Meeting", b =>
+                {
+                    b.Navigation("Participants");
                 });
 
             modelBuilder.Entity("PortailInterne.Api.Models.WorkSchedule", b =>

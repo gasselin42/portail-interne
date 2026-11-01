@@ -1,6 +1,6 @@
 # Checklist de la phase 3.5 — Meetings récurrents
 
-Référence produit : [PROJET.md](../PROJET.md) §5.3, §6, §7, §8, §9 (R6–R8, R15, R18).
+Référence produit : [PROJET.md](../PROJET.md) §5.3, §6, §7, §8, §9 (R6–R8, R15, R18, R27).
 
 Stack figée : **ASP.NET Core Web API + React + SQLite**.  
 Coche au fur et à mesure. Le code n’est fourni que sur demande.
@@ -30,6 +30,11 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [ ] 7. Endpoint calendrier et libre / occupé : occurrences incluses, mélangées aux meetings simples
 - [ ] 8. Notifications : participants avertis d’une série créée, modifiée ou annulée
 - [ ] 9. Autorisation : organisateur ou Admin pour modifier ; participants en lecture
+- [ ] 9b. Endpoint **Trouver un créneau** (R27) : participants + durée → 3 premiers créneaux sur 14 jours
+  - [ ] Tranches de 15 min, jamais dans le passé, dans l’horaire effectif de chacun (son fuseau)
+  - [ ] Exclut congés, absences, meetings, occurrences et blocs fermes ; bloc souple ignoré seulement pour un meeting d’équipe
+  - [ ] Sans résultat : indiquer qui bloque le plus (« sans Sam : 4 créneaux »)
+  - [ ] Série récurrente : créneau libre sur les 4 premières occurrences
 
 ## Frontend (React)
 
@@ -39,6 +44,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [ ] 11. Icône de récurrence sur les occurrences (grille horaire et vue mois)
 - [ ] 12. Boîte de dialogue au moment de modifier ou d’annuler : **Cette occurrence / Les suivantes / Toutes**
 - [ ] 13. Détail d’une occurrence : règle de la série affichée, lien vers la série
+- [ ] 14. Bouton **Trouver un créneau** dans l’écran de création : 3 propositions dans le fuseau de l’organisateur ; un clic remplit date et heures
 
 ## Validation manuelle
 
@@ -49,6 +55,8 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [ ] 10h reste 10h avant et après le passage à l’heure normale (novembre)
 - [ ] Une série « 10 occurrences » s’arrête bien après la 10e
 - [ ] Mensuelle le 31 : comportement conforme à la règle figée
+- [ ] Trouver un créneau avec un collègue de Paris : les propositions tombent dans les heures de travail des deux sites
+- [ ] Personne de libre sur 14 jours : message qui nomme la personne qui bloque le plus
 
 ## Bonus
 

@@ -16,6 +16,9 @@ public class AppDbContext : DbContext
 	public DbSet<ScheduleAdjustment> ScheduleAdjustments => Set<ScheduleAdjustment>();
 	public DbSet<Absence> Absences => Set<Absence>();
 	public DbSet<EmployeePreferences> EmployeePreferences => Set<EmployeePreferences>();
+	public DbSet<Meeting> Meetings => Set<Meeting>();
+	public DbSet<MeetingParticipant> MeetingParticipants => Set<MeetingParticipant>();
+	public DbSet<Notification> Notifications => Set<Notification>();
 
 	public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
 	{
@@ -198,6 +201,64 @@ public class AppDbContext : DbContext
 				new Holiday { Id = 17, SiteId = 1, Date = new DateOnly(2027, 10, 11), Name = "Action de grâce" },
 				new Holiday { Id = 18, SiteId = 1, Date = new DateOnly(2027, 12, 25), Name = "Noël" },
 			]);
+		});
+
+		// --- Meetings ---
+		modelBuilder.Entity<Meeting>(entity =>
+		{
+			entity.Property(m => m.Title).HasMaxLength(200);
+			entity.Property(m => m.Description).HasMaxLength(2000);
+			entity.HasIndex(m => new { m.StartAt, m.EndAt });
+
+			entity.Property(m => m.StartAt)
+				.HasConversion(v => v, v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
+
+			entity.Property(m => m.EndAt)
+				.HasConversion(v => v, v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
+
+			entity.HasOne(m => m.Organizer)
+                .WithMany()
+                .HasForeignKey(m => m.OrganizerId)
+                .OnDelete(DeleteBehavior.Restrict);
+		});
+
+		// --- MeetingParticipants ---
+		modelBuilder.Entity<MeetingParticipant>(entity =>
+		{
+			entity.Property(p => p.Color).HasMaxLength(20);
+			entity.HasIndex(p => p.EmployeeId );
+
+			entity.HasKey(p => new { p.MeetingId, p.EmployeeId });
+
+			entity.HasOne(p => p.Meeting)
+				.WithMany(m => m.Participants)
+				.HasForeignKey(p => p.MeetingId)
+				.OnDelete(DeleteBehavior.Cascade);
+			
+			entity.HasOne(p => p.Employee)
+                .WithMany()
+                .HasForeignKey(p => p.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+		});
+
+		// --- Notifications ---
+		modelBuilder.Entity<Notification>(entity =>
+		{
+			entity.Property(n => n.Message).HasMaxLength(500);
+			entity.Property(n => n.Link).HasMaxLength(200);
+
+			entity.Property(n => n.CreatedAt)
+				.HasConversion(v => v, v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
+
+			entity.Property(n => n.ReadAt)
+				.HasConversion(v => v, v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : v);
+		
+			entity.HasOne(n => n.Recipient)
+				.WithMany()
+				.HasForeignKey(n => n.RecipientId)
+				.OnDelete(DeleteBehavior.Cascade);
+
+			entity.HasIndex(n => new { n.RecipientId, n.ReadAt });
 		});
     }
 

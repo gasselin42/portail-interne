@@ -10,23 +10,31 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 ## Préparation
 
 - [ ] Relire le périmètre de la phase 3 dans `PROJET.md` (inclus / exclu)
-- [ ] Figer le modèle : `Meeting` + `MeetingParticipant` (+ `ResponseStatus?`)
-- [ ] Clarifier « meeting d’équipe » (`IsTeamMeeting`) et la priorité en cas de conflit (R7)
-- [ ] Relire R21 (bloc souple) et R22 (couleur par personne) ; figer la palette (environ 8 couleurs, lisibles en mode sombre, sans les couleurs des congés)
+- [x] Figer le modèle : `Meeting` + `MeetingParticipant` (+ `ResponseStatus?`)
+  - `Meeting` : `Kind` (Meeting / PersonalBlock), titre, description, `StartAt` / `EndAt` en `DateTime` UTC, organisateur, `IsTeamMeeting`, `IsFlexible`, `CreatedAt`
+  - `MeetingParticipant` : clé (`MeetingId`, `EmployeeId`), `Color?` ; l’organisateur a aussi sa ligne
+  - Un événement tient dans une journée (fuseau de l’organisateur), par tranches de 15 min ; annuler = supprimer + notifier ; `ResponseStatus` = bonus, plus tard
+- [x] Clarifier « meeting d’équipe » (`IsTeamMeeting`) et la priorité en cas de conflit (R7)
+  - Meeting d’équipe = organisé par un manager (≥ 1 subordonné actif) ou un Admin ; fixé à la création, pas de case à cocher
+  - Conflit = avertissement + confirmation, jamais un blocage (sauf congé approuvé, R6) ; chevaucher un meeting d’équipe = avertissement renforcé
+  - Participants : tout employé actif, tous sites ; bouton « Ajouter mon équipe » pour un manager
+  - Modifier / annuler : organisateur ou Admin du site de l’organisateur
+- [x] Relire R21 (bloc souple) et R22 (couleur par personne) ; figer la palette (environ 8 couleurs, lisibles en mode sombre, sans les couleurs des congés)
+  - Palette : `blue` (défaut), `indigo`, `cyan`, `teal`, `fuchsia`, `pink`, `orange`, `stone`
 - [ ] Décider le canal de notif initial : table `Notification` in-app (emails = plus tard)
 - [ ] Garder la récurrence (phase 3.5) en tête : le calendrier doit pouvoir mélanger meetings simples et occurrences calculées
 
 ## Backend (API)
 
-- [ ] 1. Modèles `Meeting` / `MeetingParticipant` (+ migration)
-  - [ ] `IsFlexible` sur le meeting (bloc personnel seulement) ; `Color?` par personne
-- [ ] 2. Modèle `Notification` (si pas déjà) + migration
-- [ ] 3. Créer un **bloc personnel** (sans participants), ferme ou souple
-- [ ] 4. Créer un meeting de groupe (liste de participants ; jamais souple)
-- [ ] 4b. Changer la couleur d’un événement dans son propre calendrier (palette fixe validée par l’API, R22)
-- [ ] 5. Règle R6 : refuser si un participant a un **congé approuvé** sur le créneau
-- [ ] 6. Détection de conflits d’horaire (chevauchement avec d’autres meetings)
-- [ ] 6b. Avertir si le meeting sort de l’horaire effectif d’un participant (non travaillé, férié, départ anticipé), conversion UTC → fuseau du site (R15)
+- [x] 1. Modèles `Meeting` / `MeetingParticipant` (+ migration)
+  - [x] `IsFlexible` sur le meeting (bloc personnel seulement) ; `Color?` par personne
+- [x] 2. Modèle `Notification` (si pas déjà) + migration
+- [x] 3. Créer un **bloc personnel** (sans participants), ferme ou souple
+- [x] 4. Créer un meeting de groupe (liste de participants ; jamais souple)
+- [x] 4b. Changer la couleur d’un événement dans son propre calendrier (palette fixe validée par l’API, R22)
+- [x] 5. Règle R6 : refuser si un participant a un **congé approuvé** sur le créneau
+- [x] 6. Détection de conflits d’horaire (chevauchement avec d’autres meetings)
+- [x] 6b. Avertir si le meeting sort de l’horaire effectif d’un participant (non travaillé, férié, départ anticipé), conversion UTC → fuseau du site (R15)
 - [ ] 7. Priorité meeting d’équipe + création des notifications aux personnes en conflit (R7)
   - [ ] Bloc souple chevauché par un meeting d’équipe : pas de conflit, bloc conservé, notification légère au propriétaire (R21)
   - [ ] Meeting ordinaire sur un bloc souple : conflit normal
@@ -70,6 +78,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 
 - [ ] Réponse participant (Accepté / Décliné)
 - [ ] Tests API (R6, R7, R21, isolation)
+- [ ] Convertisseur UTC sur les `DateTime` déjà en base (`CreatedAt`, `ReviewedAt`…) : le JSON doit finir par `Z`, sinon une heure affichée serait décalée (comme `StartAt` / `EndAt` des meetings)
 
 ## Notes / blocages
 
