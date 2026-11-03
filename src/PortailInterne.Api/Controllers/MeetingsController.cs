@@ -170,7 +170,10 @@ public class MeetingsController : ControllerBase
 		if (timesError is not null)
 			return BadRequest(new { message = timesError });
 
-		var leaveError = await FindLeaveErrorAsync(start, end, organizer, participants);
+		var timeChanged = start != meeting.StartAt || end != meeting.EndAt;
+		var newcomers = participants.Where(p => !meeting.Participants.Any(m => m.EmployeeId == p.Id)).ToList();
+
+		var leaveError = await FindLeaveErrorAsync(start, end, timeChanged ? organizer : null, timeChanged ? participants : newcomers);
 		if (leaveError is not null)
 			return BadRequest(new { message = leaveError });
 
@@ -178,7 +181,7 @@ public class MeetingsController : ControllerBase
 
 		var overlaps = await LoadOverlapsAsync(everyone, start, end, meeting.Id);
 		var conflicts = FindConflicts(overlaps, everyone, meeting.IsTeamMeeting);
-		var outsideHours = await FindOutsideHoursAsync(participants, start, end);
+		var outsideHours = await FindOutsideHoursAsync(timeChanged ? participants : newcomers, start, end);
 
 		if ((conflicts.Count > 0 || outsideHours.Count > 0) && !request.ConfirmConflicts)
 			return Conflict(BuildConflictResponse(conflicts, outsideHours));
@@ -337,9 +340,11 @@ public class MeetingsController : ControllerBase
 		return null;
 	}
 
-	private async Task<string?> FindLeaveErrorAsync(DateTime start, DateTime end, PersonInfo organizer, List<PersonInfo> participants)
+	private async Task<string?> FindLeaveErrorAsync(DateTime start, DateTime end, PersonInfo? organizer, List<PersonInfo> participants)
 	{
-		var everyoneIds = participants.Select(p => p.Id).Append(organizer.Id).ToList();
+		var everyoneIds = participants.Select(p => p.Id).ToList();
+		if (organizer is not null)
+			everyoneIds.Add(organizer.Id);
 
 		var leaves = await _db.LeaveRequests
 			.Where(l => l.Status == LeaveStatus.Approuve
@@ -347,9 +352,12 @@ public class MeetingsController : ControllerBase
 				&& everyoneIds.Contains(l.EmployeeId))
 			.ToListAsync();
 
-		var organizerDates = MeetingTime.LocalDates(start, end, organizer.Zone);
-		if (leaves.Any(l => l.EmployeeId == organizer.Id && Overlaps(l, organizerDates)))
-			return $"{(organizer.Id == _scope.CallerEmployeeId ? "Tu es" : $"{organizer.FullName} est")} en congé ce jour-là.";
+		if (organizer is not null)
+		{
+			var organizerDates = MeetingTime.LocalDates(start, end, organizer.Zone);
+			if (leaves.Any(l => l.EmployeeId == organizer.Id && Overlaps(l, organizerDates)))
+				return $"{(organizer.Id == _scope.CallerEmployeeId ? "Tu es" : $"{organizer.FullName} est")} en congé ce jour-là.";
+		}
 
 		var onLeave = participants
 			.Where(p =>
@@ -568,14 +576,7 @@ public class MeetingsController : ControllerBase
 
 	private void AddNotification(int recipientId, NotificationType type, DateTime start, TimeZoneInfo zone, string message)
 	{
-		var localStart = TimeZoneInfo.ConvertTimeFromUtc(start, zone);
-		_db.Notifications.Add(new Notification
-		{
-			RecipientId = recipientId,
-			Type = type,
-			Message = message,
-			Link = $"/calendar?vue=jour&date={localStart:yyyy-MM-dd}",
-		});
+		_db.Notifications.Add(MeetingTexts.Notification(recipientId, type, start, zone, message));
 	}
 
 	private static bool IsOnSlot(DateTime t)

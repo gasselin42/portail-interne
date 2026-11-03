@@ -26,8 +26,12 @@ builder.Services.AddScoped<MustChangePasswordFilter>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<AccessScope>();
 
-builder.Services.AddScoped<EffectiveScheduleService>();
 builder.Services.AddScoped<LeaveUsageService>();
+builder.Services.AddScoped<EffectiveScheduleService>();
+builder.Services.AddScoped<AbsenceNotifier>();
+
+builder.Services.AddScoped<AbsenceWatcher>();
+builder.Services.AddHostedService<AbsenceWatcherService>();
 
 builder.Services.AddControllers(options =>
 {

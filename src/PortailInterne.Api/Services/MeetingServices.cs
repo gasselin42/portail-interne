@@ -12,6 +12,29 @@ public static class MeetingTexts
 		var local = TimeZoneInfo.ConvertTimeFromUtc(start, timeZone);
 		return local.ToString("dddd d MMMM", fr) + " à " + (local.Minute == 0 ? $"{local.Hour} h" : $"{local.Hour} h {local.Minute:00}");
 	}
+
+	public static Notification Notification(int recipientId, NotificationType type, DateTime start, TimeZoneInfo zone, string message)
+	{
+		var localStart = TimeZoneInfo.ConvertTimeFromUtc(start, zone);
+		return new Notification
+		{
+			RecipientId = recipientId,
+			Type = type,
+			Message = message,
+			Link = $"/calendar?vue=jour&date={localStart:yyyy-MM-dd}"
+		};
+	}
+
+	public static string MissedPart(DateTime absenceStart, DateTime absenceEnd, DateTime meetingStart, DateTime meetingEnd, string title)
+	{
+		var coversStart = absenceStart <= meetingStart;
+		var coversEnd = absenceEnd >= meetingEnd;
+
+		if (coversStart && coversEnd) return $"« {title} »";
+		if (coversStart) return $"le début de « {title} »";
+		if (coversEnd) return $"la fin de « {title} »";
+		return $"une partie de « {title} »";
+	}
 }
 
 public static class MeetingTime
@@ -56,6 +79,14 @@ public static class MeetingTime
 		}
 
 		return null;
+	}
+
+	public static DateTime ToUtc(DateOnly date, TimeOnly time, TimeZoneInfo zone)
+	{
+		var local = date.ToDateTime(time);
+		if (zone.IsInvalidTime(local))
+			local = local.AddHours(1);
+		return TimeZoneInfo.ConvertTimeToUtc(local, zone);
 	}
 }
 

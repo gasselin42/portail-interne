@@ -23,12 +23,14 @@ public class LeavesController : ControllerBase
 	private readonly AccessScope _scope;
 	private readonly LeaveUsageService _leaveUsage;
 	private readonly EffectiveScheduleService _schedule;
+	private readonly AbsenceNotifier _notifier;
+	private readonly TimeProvider _time;
 
     private const int MaxSickLeaveBackdateDays = 14;
 
 	private static readonly CultureInfo FrenchCanada = new("fr-CA");
 
-    public LeavesController(AppDbContext db, IAppClock clock, SiteClock siteClock, AccessScope scope, LeaveUsageService leaveUsage, EffectiveScheduleService schedule)
+    public LeavesController(AppDbContext db, IAppClock clock, SiteClock siteClock, AccessScope scope, LeaveUsageService leaveUsage, EffectiveScheduleService schedule, AbsenceNotifier notifier, TimeProvider time)
     {
         _db = db;
         _clock = clock;
@@ -36,6 +38,8 @@ public class LeavesController : ControllerBase
 		_scope = scope;
 		_leaveUsage = leaveUsage;
 		_schedule = schedule;
+		_notifier = notifier;
+		_time = time;
     }
 
     [HttpPost]
@@ -143,6 +147,7 @@ public class LeavesController : ControllerBase
         };
 
         _db.LeaveRequests.Add(leave);
+		await NotifyLeaveAsync(leave, employeeId);
         await _db.SaveChangesAsync();
 
 		var response = new LeaveRequestResponse
@@ -318,8 +323,8 @@ public class LeavesController : ControllerBase
 
 		if (request.Status == LeaveStatus.Approuve)
 		{
+			await NotifyLeaveAsync(leave, employeeId);
 			var overlap = await FindOverlapAsync(leave.EmployeeId, leave.StartDate, leave.EndDate, [LeaveStatus.Approuve], leave.Id);
-
 			if (overlap is not null)
 				return Conflict(new { message = $"Cet employé a déjà un congé approuvé {DescribePeriod(overlap.StartDate, overlap.EndDate)} qui chevauche cette demande." });
 		}
@@ -449,6 +454,25 @@ public class LeavesController : ControllerBase
 			.ThenBy(l => l.Id)
 			.FirstOrDefaultAsync();
 	}
+
+	/// <summary>
+	/// Prévient des meetings que l'employé manquera pendant son congé (journées entières dans son fuseau),
+	/// à partir de maintenant : un congé de maladie rétroactif n'annonce pas de meetings passés.
+	/// </summary>
+	private async Task NotifyLeaveAsync(LeaveRequest leave, int actorId)
+	{
+		var zone = await _siteClock.TimeZoneForAsync(leave.EmployeeId);
+		var start = MeetingTime.ToUtc(DateOnly.FromDateTime(leave.StartDate), TimeOnly.MinValue, zone);
+		var end = MeetingTime.ToUtc(DateOnly.FromDateTime(leave.EndDate).AddDays(1), TimeOnly.MinValue, zone);
+		var now = _time.GetUtcNow().UtcDateTime;
+
+		if (start < now)
+			start = now;
+
+		if (start < end)
+			await _notifier.NotifyLeaveAsync(leave.EmployeeId, start, end, actorId);
+	}
+
 
 	/// <summary>« le 14 oct. 2026 » ou « du 14 oct. 2026 au 16 oct. 2026 ».</summary>
 	private static string DescribePeriod(DateTime start, DateTime end)

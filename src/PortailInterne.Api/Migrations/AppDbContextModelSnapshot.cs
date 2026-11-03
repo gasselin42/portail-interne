@@ -38,6 +38,9 @@ namespace PortailInterne.Api.Migrations
                     b.Property<TimeOnly?>("EndedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("LateReturnNotified")
+                        .HasColumnType("INTEGER");
+
                     b.Property<TimeOnly?>("PlannedEnd")
                         .HasColumnType("TEXT");
 
@@ -60,6 +63,9 @@ namespace PortailInterne.Api.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("UnconfirmedReturnNotified")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");

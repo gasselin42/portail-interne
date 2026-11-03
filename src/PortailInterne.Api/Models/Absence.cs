@@ -11,6 +11,8 @@ public class Absence
 	public TimeOnly? StartedAt { get; set; }
 	public TimeOnly? EndedAt { get; set; }
 	public bool ReturnConfirmed { get; set; }
+	public bool LateReturnNotified { get; set; }
+	public bool UnconfirmedReturnNotified { get; set; }
 	public string? Reason { get; set; }
 	public LeaveStatus Status { get; set; }
 	public int CreatedById { get; set; }

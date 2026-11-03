@@ -41,15 +41,17 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [x] 8. Détail meeting + liste des participants
 - [x] 9. Modifier / annuler (organisateur ou Admin du site ; bloc : propriétaire ; verrouillé dès le début)
 - [x] 10. Nouveau format de l’endpoint calendrier sur `[from, to]` : une entrée par jour (horaire effectif, congés) + la liste des meetings
-- [ ] 10b. Endpoint **libre / occupé** : créneaux occupés de plusieurs employés sur une plage, sans titre, motif ni participants (R17) ; les blocs souples sont marqués « occupé souple » (R21)
-  - [ ] Participants de plusieurs sites : créneaux renvoyés en UTC, affichés dans le fuseau de la personne qui regarde
-- [ ] 10c. Absence (R24) qui chevauche un meeting, prévue ou réelle (départ, retour tardif) : meeting conservé ; organisateur et employé notifiés (« Sam manquera le début de … ») ; manager notifié d’un départ non prévu ou d’un retour non confirmé
+- [x] 10b. Endpoint **libre / occupé** : créneaux occupés de plusieurs employés sur une plage, sans titre, motif ni participants (R17) ; les blocs souples sont marqués « occupé souple » (R21)
+  - [x] Participants de plusieurs sites : créneaux renvoyés en UTC (jours et heures de travail dans le fuseau de chaque employé)
+- [x] 10c. Absence (R24) qui chevauche un meeting, prévue ou réelle (départ, retour tardif) : meeting conservé ; organisateur et employé notifiés (« Sam manquera le début de … ») ; manager notifié d’un départ non prévu ou d’un retour non confirmé
+- [x] 10d. Congé approuvé qui chevauche un meeting : meeting conservé ; employé participant → organisateur notifié ; employé organisateur → participants notifiés (et son manager pour un meeting d’équipe) ; modifier un meeting sans changer l’heure ne revérifie les congés et les heures de travail que des participants ajoutés
 - [ ] 11. Endpoints notifications : lister / marquer lu (minimum viable)
 
 ## Frontend (React)
 
 - [ ] 12. Écran **Créer un événement** (titre, créneau, participants optionnels, flag équipe, souple si aucun participant, couleur)
   - [ ] Libre / occupé des participants sur la journée choisie, d’un coup d’œil
+  - [ ] Participants de plusieurs sites : créneaux affichés dans le fuseau de la personne qui regarde
 - [ ] 13. Écran **Détail meeting**
 - [ ] 14. Calendrier enrichi (meetings + congés, légende claire)
   - [ ] Meetings placés dans la grille selon leur durée ; chevauchements affichés côte à côte
