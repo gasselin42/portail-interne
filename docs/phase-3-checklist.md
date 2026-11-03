@@ -45,7 +45,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [x] Participants de plusieurs sites : créneaux renvoyés en UTC (jours et heures de travail dans le fuseau de chaque employé)
 - [x] 10c. Absence (R24) qui chevauche un meeting, prévue ou réelle (départ, retour tardif) : meeting conservé ; organisateur et employé notifiés (« Sam manquera le début de … ») ; manager notifié d’un départ non prévu ou d’un retour non confirmé
 - [x] 10d. Congé approuvé qui chevauche un meeting : meeting conservé ; employé participant → organisateur notifié ; employé organisateur → participants notifiés (et son manager pour un meeting d’équipe) ; modifier un meeting sans changer l’heure ne revérifie les congés et les heures de travail que des participants ajoutés
-- [ ] 11. Endpoints notifications : lister / marquer lu (minimum viable)
+- [x] 11. Endpoints notifications : lister / marquer lu (minimum viable)
 
 ## Frontend (React)
 
