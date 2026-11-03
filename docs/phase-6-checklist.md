@@ -32,6 +32,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [ ] Annulation de ses meetings futurs avec participants (participants notifiés) ; suppression de ses blocs personnels futurs
   - [ ] Annulation de ses demandes en attente (congés, ajustements, absences)
   - [ ] Délégations où elle est remplaçante : terminées (le manager concerné est notifié)
+  - [ ] Coordonnées personnelles et contacts d’urgence supprimés (R28)
   - [ ] Rejouable sans effet en double si elle tourne deux fois
 - [ ] 8. Tests API : remplaçant (période, pas ses propres demandes), notification à l’Admin, départ (connexion, meetings, demandes)
 

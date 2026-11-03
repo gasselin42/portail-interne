@@ -39,6 +39,7 @@ L’IA m’a servi de mentor : elle propose les étapes et des pistes, puis rév
 | Phase 2 | Congés, approbation, calendrier personnel (semaine, jour, mois), soldes | ✅ Terminé |
 | Phase 2.5 | Horaires de travail, jours fériés par site, calendrier en grille horaire | ✅ Terminé |
 | Phase 3 | Réunions individuelles et de groupe, détection de conflits, libre / occupé | ⏳ À venir |
+| Phase 3.1 | Coordonnées professionnelles et personnelles, page « Mon profil » | ⏳ À venir |
 | Phase 3.5 | Réunions récurrentes, « Trouver un créneau » | ⏳ À venir |
 | Phase 4 | Réservation de salles et d’équipements | ⏳ À venir |
 | Phase 5 | Portail de demandes TI, base de connaissances, notifications en temps réel | ⏳ À venir |

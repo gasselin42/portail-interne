@@ -5,7 +5,7 @@ Référence produit : [PROJET.md](../PROJET.md) §6 (Jalon — Démo publique), 
 Stack figée : **ASP.NET Core Web API + React + SQLite**.  
 Coche au fur et à mesure. Le code n’est fourni que sur demande.
 
-**Quand :** après n’importe quelle phase ; recommandé après la phase 3 (les meetings rendent la démo parlante), puis mis à jour à chaque phase.
+**Quand :** après la phase 3.1 (coordonnées personnelles séparées de l’annuaire) ; les meetings de la phase 3 rendent la démo parlante. Mise à jour à chaque phase.
 
 ## Préparation
 

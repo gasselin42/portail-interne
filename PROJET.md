@@ -34,7 +34,7 @@ Objectif pédagogique : pratiquer un vrai produit .NET volumineux, découpé en 
 ## 3. Stack technique (décidée)
 
 | Élément | Choix | Notes |
-|--------|--------|-------|
+|---------|-------|-------|
 | Backend | **ASP.NET Core Web API** | Controllers JSON, pas de vues Razor |
 | Frontend | **React** (Vite recommandé) | SPA séparée qui consomme l’API |
 | Auth | **JWT** (Bearer) | Tranché pour la phase 1 ; cookies possibles plus tard |
@@ -88,9 +88,10 @@ Les rôles Manager / Agent IT seront introduits aux phases concernées.
 ### 5.1 Annuaire interne
 
 - Liste des employés actifs (nom, poste, équipe/département, contact).
-- Recherche (nom, équipe, poste).
+- Recherche (nom, équipe, poste) ; filtre par langue parlée.
 - L’annuaire montre **tous les sites** ; un filtre par site permet de n’afficher qu’un site (gardé dans l’URL).
 - Fiche employé (détails de contact, manager optionnel).
+- Coordonnées **professionnelles** publiques (numéro du site + poste, cellulaire pro, prénom d’usage, langues parlées, local, date d’embauche) et **personnelles** privées (cellulaire, email perso, adresse, anniversaire, contacts d’urgence), saisies par l’employé dans « Mon profil » (R28).
 - Lien naturel avec congés, meetings, tickets IT (qui est qui).
 
 ### 5.2 Congés et absences
@@ -282,6 +283,28 @@ Phase 5 : **temps réel** (SignalR) — la cloche se met à jour sans recharger 
 
 ---
 
+### Phase 3.1 — Coordonnées et profil
+
+**Objectif :** séparer ce que tout le monde peut voir de ce qui reste privé, avant que des visiteurs voient l’annuaire dans la démo publique.
+
+**Inclus :**
+- Numéro principal du site + poste de l’employé ; cellulaire professionnel optionnel (les numéros existants y sont migrés)
+- Cellulaire et email personnels, adresse domiciliaire, 0 à 2 contacts d’urgence, dans des tables à part (R28)
+- Prénom d’usage, langues parlées (filtre de l’annuaire), local, date d’embauche (ancienneté sur la fiche)
+- Anniversaire privé par défaut ; widget « Anniversaires de la semaine » à l’accueil pour ceux qui l’affichent
+- Page **Mon profil** : l’employé consulte sa fiche et modifie ses coordonnées personnelles
+
+**Exclu :** infos de paie, pièces d’identité, informations médicales
+
+**Critères de done :**
+- [ ] L’annuaire affiche « 514 555-1234, poste 2045 » et jamais une coordonnée personnelle
+- [ ] Un employé modifie son contact d’urgence dans Mon profil
+- [ ] Son manager voit le contact d’urgence, pas son cellulaire personnel ; un collègue ne voit ni l’un ni l’autre
+- [ ] « Alex » s’affiche partout pour Alexandra ; chercher « Alexandra » ou « Alex » la trouve
+- [ ] Filtrer l’annuaire sur « anglais » ne montre que les employés qui le parlent
+
+---
+
 ### Phase 3.5 — Meetings récurrents
 
 **Objectif :** planifier une fois une réunion qui revient (ex. réunion d’équipe chaque lundi).
@@ -370,7 +393,7 @@ Phase 5 : **temps réel** (SignalR) — la cloche se met à jour sans recharger 
 
 **Objectif :** une personne qui découvre le projet (ex. recruteur) le teste en ligne en 30 secondes, sans rien installer.
 
-Peut se faire après n’importe quelle phase ; recommandé après la phase 3 (meetings), puis mis à jour à chaque phase.
+Après la phase 3.1 (aucune coordonnée personnelle visible dans l’annuaire) ; les meetings de la phase 3 rendent la démo parlante. Mise à jour à chaque phase.
 
 **Inclus :**
 - Hébergement en ligne (HTTPS) de l’API et de React
@@ -423,6 +446,13 @@ Peut se faire après n’importe quelle phase ; recommandé après la phase 3 (m
 ### Phase 3
 - **CalendarEvent / Meeting** : Id, Title, Description?, StartAt, EndAt, OrganizerId, IsTeamMeeting, IsFlexible (bloc personnel seulement), CreatedAt
 - **MeetingParticipant** : MeetingId, EmployeeId, ResponseStatus?, Color? (choisie par chaque personne, organisateur compris)
+
+### Phase 3.1
+- `Site.MainPhoneNumber?`, `Site.CountryCode` (ISO 3166) ; numéros enregistrés en E.164 ; `Employee.PhoneExtension?` ; `Employee.PhoneNumber` renommé `WorkMobilePhone?` (données conservées)
+- `Employee.PreferredName?` (+ clé de recherche), `Employee.OfficeLocation?`, `Employee.HireDate` (DateOnly)
+- **EmployeeLanguage** : EmployeeId, LanguageCode (ISO 639-1, liste fixe) — clé composée
+- **EmployeePrivateInfo** : EmployeeId (clé), PersonalMobilePhone?, PersonalEmail?, AddressLine1?, AddressLine2?, City?, Region?, PostalCode?, Country?, BirthMonth?, BirthDay?, ShowBirthday, UpdatedAt
+- **EmergencyContact** : Id, EmployeeId, Name, Relationship, PhoneNumber, SortOrder (1 ou 2)
 
 ### Phase 3.5
 - **MeetingSeries** : Id, OrganizerId, Title, Description?, IsTeamMeeting, TimeZoneId, FirstStartLocal, DurationMinutes, Frequency (Daily/Weekly/Monthly), Interval, DaysOfWeek?, Until? / Count?, CreatedAt
@@ -493,6 +523,11 @@ Les écrans sont côté **React**. L’API expose les routes `/api/...` correspo
 12. Détail meeting
 13. Calendrier enrichi (meetings + congés) + libre / occupé à la création
 
+### Phase 3.1
+13d. Mon profil (fiche, prénom d’usage, langues, coordonnées personnelles, adresse, anniversaire, contacts d’urgence)
+13f. Accueil : widget « Anniversaires de la semaine »
+13e. Formulaire employé et fiche : poste, cellulaire pro, section personnelle (Admin du site) ; numéro principal dans l’écran Sites
+
 ### Phase 3.5
 13a. Créer un meeting récurrent (règle + aperçu en clair : « Chaque lundi à 10h, jusqu’au 31 déc. »)
 13b. Modifier / annuler : cette occurrence, les suivantes ou toute la série
@@ -549,6 +584,7 @@ Les écrans sont côté **React**. L’API expose les routes `/api/...` correspo
 | R25 | Remplaçant d’approbation : un manager désigne un remplaçant pour une période (employé actif du même site, jamais lui-même) ; pendant la période, le remplaçant approuve les demandes de l’équipe, sauf les siennes ; un Admin du site peut toujours approuver (R23) ; sans remplaçant, une demande qui arrive pendant un congé approuvé du manager, ou pour un employé dont le manager est parti, notifie les Admins du site ; la décision garde qui a approuvé « au nom de » qui ; le manager garde ses droits pendant la période |
 | R26 | Date de départ (heure locale du site, ≥ aujourd’hui, fixée par un Admin du site, modifiable ou annulable avant la date) : dès cette date, connexion refusée (R4), retrait des meetings futurs (organisateurs notifiés), annulation de ses meetings futurs avec participants (participants notifiés) et de ses demandes en attente ; à la saisie, avertissement listant ses subordonnés et ses meetings organisés ; tant que ses subordonnés n’ont pas de nouveau manager, leurs demandes notifient les Admins du site (R25) |
 | R27 | Trouver un créneau : pour des participants et une durée, propose les 3 premiers créneaux sur les 14 prochains jours, par tranches de 15 min, jamais dans le passé, à l’intérieur de l’horaire effectif de chacun (dans son fuseau), sans congé, absence, meeting ni bloc ferme ; un bloc souple n’est ignoré que pour un meeting d’équipe (R21) ; sans résultat, message clair indiquant qui bloque le plus (« sans Sam : 4 créneaux ») |
+| R28 | Coordonnées : **professionnelles** (email, numéro du site + poste, cellulaire professionnel, prénom d’usage, langues parlées, local, date d’embauche) visibles dans l’annuaire ; **personnelles** (cellulaire et email personnels, adresse domiciliaire, anniversaire, 0 à 2 contacts d’urgence) dans des tables à part, jamais renvoyées par l’annuaire ; lecture : l’employé, les Admins de son site (R23) et l’Admin global ; son manager direct voit seulement les contacts d’urgence (jamais l’adresse) ; modification : l’employé (« Mon profil ») ou un Admin de son site ; supprimées à la date de départ (R26) ; le prénom d’usage remplace le prénom partout où un nom est affiché, la recherche trouve les deux ; l’anniversaire (jour et mois, sans l’année) n’est montré aux collègues que si l’employé l’a choisi (29 février : affiché le 28 les années non bissextiles) |
 
 ---
 
@@ -563,6 +599,7 @@ portail-interne/
 │   ├── phase-2-checklist.md
 │   ├── phase-2.5-checklist.md
 │   ├── phase-3-checklist.md
+│   ├── phase-3.1-checklist.md
 │   ├── phase-3.5-checklist.md
 │   ├── phase-4-checklist.md
 │   ├── phase-5-checklist.md
@@ -640,10 +677,14 @@ portail-interne/
 | 2026-10-31 | Phase 3 : tout le monde crée des meetings avec tout employé actif (tous sites) ; meeting d’équipe = organisé par un manager (≥ 1 subordonné actif) ou un Admin, fixé à la création (`IsTeamMeeting`), aucune case à cocher ; bouton « Ajouter mon équipe » pour un manager
 | 2026-10-31 | Conflit sur un meeting ordinaire : avertissement, l’organisateur confirme, personnes en conflit notifiées ; chevauchement d’un meeting d’équipe = avertissement renforcé (« prioritaire ») ; congé approuvé = refus (R6) ; modifier / annuler = organisateur ou Admin du site de l’organisateur
 | 2026-10-31 | Ajouts : « Trouver un créneau » (phase 3.5, R27) ; base de connaissances IT et notifications temps réel SignalR (phase 5) ; nouvelle phase 6 — Continuité (remplaçant d’approbation optionnel + notification à l’Admin du site R25, date de départ R26) ; jalon Démo publique (recommandé après la phase 3)
+| 2026-11-01 | Phase 3.1 — Coordonnées : pro publiques (numéro du site + poste, cellulaire pro) vs personnelles privées en tables à part (R28) ; l’employé les saisit dans « Mon profil » ; manager = contacts d’urgence seulement ; anciens numéros migrés en cellulaire pro ; adresse domiciliaire privée (jamais visible du manager) ; prénom d’usage, langues parlées, local, date d’embauche ; anniversaire privé par défaut avec widget d’accueil ; pas de pronoms ni d’infos médicales ; numéros formatés pendant la saisie selon le pays (`libphonenumber-js` / `libphonenumber-csharp`), enregistrés en E.164 ; avant la démo publique
 | 2026-11-01 | Meeting hors de l’horaire effectif d’un participant (jour non travaillé, férié, hors des heures, absence approuvée) : avertissement dans le même 409 que les conflits, levé par `confirmConflicts` ; participants seulement (jamais l’organisateur ni un bloc personnel) ; horaire non défini = aucun avertissement
 | 2026-11-01 | Notifications de conflit (R7, R21) : une seule notification par participant — l’invitation devient « conflit » (avec « Meeting d’équipe : il a priorité. » si d’équipe) ou « bloc souple chevauché » ; meeting d’équipe sur un meeting ordinaire d’un participant : l’organisateur de ce meeting ordinaire est prévenu (« Jane Test a un meeting d’équipe prioritaire pendant « Point projet » »), sans le titre du meeting d’équipe (R17)
 | 2026-11-01 | Détail d’un meeting : organisateur, participants et Admin du site de l’organisateur ; bloc personnel : propriétaire seulement ; sinon 404 sans révéler l’existence (R17)
 | 2026-11-01 | Modifier / annuler (étape 9) : organisateur ou Admin du site (bloc : propriétaire seulement) ; verrouillé dès que le meeting commence ; annuler = suppression définitive, participants notifiés ; modification revalidée comme une création (409 à confirmer, le meeting lui-même ignoré) ; participants restants notifiés seulement si l’heure ou le titre change, ajoutés invités, retirés prévenus, organisateur prévenu quand un Admin agit à sa place
+| 2026-11-01 | Libre / occupé (étape 10b) : consultable par tout employé pour tout employé actif ; par jour, heures de travail ou « non travaillé » (congé, férié et jour de repos confondus) ou « non défini » ; créneaux « occupé » (meeting, bloc ferme), « occupé souple » (bloc souple), « absent » (absence approuvée) ; jamais de titre, de participants, de type de congé ni de motif (R17) ; tout en UTC
+| 2026-11-02 | Absence qui chevauche un meeting (étape 10c, R24) : meetings de groupe seulement (blocs ignorés), jamais annulés ; notifiés à l’approbation (ou à la création approuvée d’office), au « Je pars » imprévu ou en avance, et au retour tardif ; une absence approuvée puis annulée prévient aussi ; destinataires : l’organisateur, et l’employé seulement si quelqu’un d’autre (manager, Admin, système) a agi ; manager prévenu d’un départ imprévu et d’un retour non confirmé ; retour tardif et non confirmé détectés par une tâche de fond, une seule fois par absence
+| 2026-11-02 | Congé approuvé qui chevauche un meeting (étape 10d) : meeting conservé ; employé participant → organisateur notifié ; employé organisateur → participants notifiés, et son manager pour un meeting d’équipe ; une modification qui garde la même heure ne revérifie les congés et les heures de travail que des participants ajoutés (sinon l’organisateur en congé ne pouvait même plus corriger un titre) ; les congés passés (maladie rétroactive) ne notifient rien ; employé prévenu aussi, puisque c’est toujours quelqu’un d’autre qui approuve
 | 2026-10-12 | Ajout de la phase 3.5 — Meetings récurrents (occurrences calculées, exceptions stockées, R18)
 
 ---
@@ -656,6 +697,7 @@ portail-interne/
 | Phase 2 — Congés + calendrier | ✅ Terminée |
 | Phase 2.5 — Horaires de travail | ✅ Terminée |
 | Phase 3 — Meetings | ⏳ |
+| Phase 3.1 — Coordonnées et profil | ⏳ |
 | Phase 3.5 — Meetings récurrents | ⏳ |
 | Phase 4 — Ressources | ⏳ |
 | Phase 5 — Helpdesk IT | ⏳ |
