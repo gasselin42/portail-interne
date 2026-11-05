@@ -49,9 +49,9 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 
 ## Frontend (React)
 
-- [ ] 12. Écran **Créer un événement** (titre, créneau, participants optionnels, flag équipe, souple si aucun participant, couleur)
-  - [ ] Libre / occupé des participants sur la journée choisie, d’un coup d’œil
-  - [ ] Participants de plusieurs sites : créneaux affichés dans le fuseau de la personne qui regarde
+- [x] 12. Écran **Créer un événement** (titre, créneau, participants optionnels, flag équipe, souple si aucun participant, couleur)
+  - [x] Libre / occupé des participants sur la journée choisie, d’un coup d’œil
+  - [x] Participants de plusieurs sites : créneaux affichés dans le fuseau de la personne qui regarde
 - [ ] 13. Écran **Détail meeting**
 - [ ] 14. Calendrier enrichi (meetings + congés, légende claire)
   - [ ] Meetings placés dans la grille selon leur durée ; chevauchements affichés côte à côte

@@ -28,6 +28,7 @@ import { leaveSwatchBackground } from "../ui/leaveBandBackground"
 import { getCalendar } from "../api/calendar"
 import { getPreferences } from "../api/preferences"
 import { useAsync } from "../hooks/useAsync"
+import { MeetingDialog } from "../components/meetings/MeetingDialog"
 
 type View = "jour" | "semaine" | "mois"
 
@@ -45,7 +46,6 @@ const LEGEND = [
 	{ status: LeaveStatus.Approuve, unpaid: true, label: "Approuvé sans solde" },
 	{ status: LeaveStatus.EnAttente, unpaid: true, label: "En attente sans solde" },
 ]
-
 
 type CalendarRange = {
 	from: string
@@ -97,6 +97,7 @@ export function CalendarPage() {
 	const today = todayIso()
 	const dateParam = searchParams.get("date")
 	const vueParam = searchParams.get("vue")
+	const newEventOpen = searchParams.get("nouvel-evenement") === "1"
 	const date = dateParam && isIsoDate(dateParam) ? dateParam : today
 	const { preferencesVersion } = useOutletContext<{ preferencesVersion: number }>()
 
@@ -136,6 +137,9 @@ export function CalendarPage() {
 				? "Aucune absence cette semaine."
 				: "Aucune absence ce jour-là."
 
+	const openNew = () => setSearchParams((prev) => { prev.set("nouvel-evenement", "1"); return prev })
+	const closeNew = () => setSearchParams((prev) => { prev.delete("nouvel-evenement"); return prev })
+
 	return (
 		<div className="mx-auto max-w-6xl px-6 py-10">
 			<PageHeader
@@ -143,9 +147,18 @@ export function CalendarPage() {
 				title="Calendrier"
 				description="Vois tes absences, en attente ou approuvées."
 				actions={
-					<Link to="/leaves?nouvelle=1" className={primaryButton}>
-						Nouvelle demande
-					</Link>
+					<>
+						<button
+							type="button"
+							onClick={openNew}
+							className={primaryButton}
+						>
+							Nouvel événement
+						</button>
+						<Link to="/leaves?nouvelle=1" className={secondaryButton}>
+							Nouvelle demande
+						</Link>
+					</>
 				}
 			/>
 
@@ -229,6 +242,7 @@ export function CalendarPage() {
 					</li>
 				))}
 			</ul>
+			<MeetingDialog open={newEventOpen} initialDate={date} onClose={closeNew} onCreated={closeNew} />
 		</div>
 	)
 }
