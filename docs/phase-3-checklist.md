@@ -52,12 +52,16 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [x] 12. Écran **Créer un événement** (titre, créneau, participants optionnels, flag équipe, souple si aucun participant, couleur)
   - [x] Libre / occupé des participants sur la journée choisie, d’un coup d’œil
   - [x] Participants de plusieurs sites : créneaux affichés dans le fuseau de la personne qui regarde
-- [ ] 13. Écran **Détail meeting**
-- [ ] 14. Calendrier enrichi (meetings + congés, légende claire)
-  - [ ] Meetings placés dans la grille selon leur durée ; chevauchements affichés côte à côte
-  - [ ] Couleur choisie par l’employé ; bloc souple chevauché affiché pâli à côté du meeting
-  - [ ] Libre / occupé : « occupé souple » visuellement distinct, sans dépendre de la couleur seule
-  - [ ] Vue mois : « 10h Titre », 3 au maximum puis « + N autres »
+- [x] 13. Écran **Détail meeting**
+  - [x] Ouverture depuis la grille ou la vue mois (`?evenement=ID`), détail complet
+  - [x] Couleur personnelle modifiable (R22)
+  - [x] Annuler (organisateur ou Admin), notification aux participants
+  - [x] Modifier avec le même formulaire, avertissement 409 et confirmation
+- [x] 14. Calendrier enrichi (meetings + congés, légende claire)
+  - [x] Meetings placés dans la grille selon leur durée ; chevauchements affichés côte à côte
+  - [x] Couleur choisie par l’employé ; bloc souple chevauché affiché pâli à côté du meeting
+  - [x] Libre / occupé : « occupé souple » visuellement distinct, sans dépendre de la couleur seule
+  - [x] Vue mois : « 10h Titre », 3 au maximum puis « + N autres »
 - [ ] 14b. **Densité** de la grille horaire (Compacte / Normale / Aérée), préférence stockée dans l’API comme la plage d’heures : plus de place par heure quand il y a plusieurs réunions ou tâches
 - [ ] 15. Affichage des erreurs métier (congé, conflit) côté UI
 - [ ] 16. Centre de notifs simple (badge / liste) — même si la phase 5 le pousse plus loin

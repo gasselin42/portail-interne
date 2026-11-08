@@ -7,14 +7,14 @@ const REASON_LABELS: Record<OutsideHoursReasonId, string> = {
 	[OutsideHoursReason.Absence]: "absence prévue",
 }
 
-export function MeetingConflictPanel({ conflict, myId }: {conflict: MeetingConflictResponse, myId: number | undefined}) {
+export function MeetingConflictPanel({ conflict, myId, isEditing }: {conflict: MeetingConflictResponse, myId: number | undefined, isEditing: boolean}) {
 	function personName(employeeId: number, firstName: string, lastName: string): string {
 		return employeeId === myId ? "Toi" : (firstName + " " + lastName)
 	}
 	
 	return (
 		<div role="status" className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-			<p className="font-semibold">Avant de créer cet événement</p>
+			<p className="font-semibold">Avant de {isEditing ? "modifier" : "créer"} cet événement</p>
 			{conflict.conflicts.length > 0 &&
 				<>
 					<p className="mt-3">Déjà un événement à cette heure :</p>
@@ -43,7 +43,7 @@ export function MeetingConflictPanel({ conflict, myId }: {conflict: MeetingConfl
 					</ul>
 				</>
 			}
-			<p className="mt-3">Tu peux changer le créneau ou créer l'événement quand même.</p>
+			<p className="mt-3">Tu peux changer le créneau ou {isEditing ? "modifier" : "créer"} l'événement quand même.</p>
 		</div>
 	)
 }

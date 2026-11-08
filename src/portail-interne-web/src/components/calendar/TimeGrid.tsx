@@ -1,17 +1,32 @@
 import { Fragment, useLayoutEffect, useRef } from "react"
-import { HOUR_HEIGHT, timeToPx } from "../../utils/timeGrid"
+import { HOUR_HEIGHT, layoutOverlaps, timeToPx } from "../../utils/timeGrid"
 import type { EffectiveDay } from "../../api/calendar"
 import { DayColumn } from "./DayColumn"
 import type { CalendarHourRangeId } from "../../api/preferences"
 import { hourRange } from "../../utils/timeGrid"
 import { useNow } from "../../hooks/useNow"
 import { todayIso } from "../../utils/date"
+import type { MeetingResponse } from "../../api/meetings"
+import { meetingSlice } from "../../utils/meetings"
 
-export function TimeGrid({ days, range }: { days: EffectiveDay[], range: CalendarHourRangeId }) {
+type Props = {
+	days: EffectiveDay[]
+	range: CalendarHourRangeId
+	meetings: MeetingResponse[]
+	onOpenMeeting?: (id: number) => void
+}
+
+export function TimeGrid({ days, range, meetings, onOpenMeeting }: Props) {
 	const scrollRef = useRef<HTMLDivElement>(null)
 	const scrolledFor = useRef<string | null>(null)
 
-	const { start, end } = hourRange(days, range)
+	const meetingsByDay = days.map((day) => 
+		layoutOverlaps(meetings.flatMap((m) => {
+			const slice = meetingSlice(m, day.date)
+			return slice ? [{ meeting: m, ...slice }] : []
+		})))
+
+	const { start, end } = hourRange(days, range, meetingsByDay.flat())
 	const now = useNow()
 	const today = todayIso()
 	const total = (end - start) * HOUR_HEIGHT
@@ -46,7 +61,7 @@ export function TimeGrid({ days, range }: { days: EffectiveDay[], range: Calenda
 					</Fragment>
 				))}
 				<div className="relative grid h-full" style={{ gridTemplateColumns: `repeat(${days.length}, 1fr)`}}>
-					{days.map((day) => {
+					{days.map((day, i) => {
 						const pastPx = day.date < today
 							? total
 							: day.date === today
@@ -54,7 +69,15 @@ export function TimeGrid({ days, range }: { days: EffectiveDay[], range: Calenda
 								: 0
 	
 						return (
-							<DayColumn key={day.date} day={day} startHour={start} pastPx={pastPx} showNow={day.date === today && nowVisible} />
+							<DayColumn
+								key={day.date}
+								day={day}
+								startHour={start}
+								pastPx={pastPx}
+								showNow={day.date === today && nowVisible}
+								meetings={meetingsByDay[i]}
+								onOpenMeeting={onOpenMeeting}
+							/>
 						)
 					})}
 				</div>

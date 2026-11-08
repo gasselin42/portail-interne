@@ -29,6 +29,8 @@ import { getCalendar } from "../api/calendar"
 import { getPreferences } from "../api/preferences"
 import { useAsync } from "../hooks/useAsync"
 import { MeetingDialog } from "../components/meetings/MeetingDialog"
+import type { MeetingColor, MeetingResponse } from "../api/meetings"
+import { MeetingDetailDialog } from "../components/meetings/MeetingDetailDialog"
 
 type View = "jour" | "semaine" | "mois"
 
@@ -40,12 +42,14 @@ const DESKTOP_VIEWS: { value: View, label: string }[] = [
 
 const MOBILE_VIEWS = DESKTOP_VIEWS.filter((option) => option.value !== "semaine")
 
-const LEGEND = [
+const LEAVE_LEGEND = [
 	{ status: LeaveStatus.Approuve, unpaid: false, label: "Approuvé" },
 	{ status: LeaveStatus.EnAttente, unpaid: false, label: "En attente" },
 	{ status: LeaveStatus.Approuve, unpaid: true, label: "Approuvé sans solde" },
 	{ status: LeaveStatus.EnAttente, unpaid: true, label: "En attente sans solde" },
 ]
+
+const MEETING_LEGEND_STYLE = "h-3 w-6 rounded-sm border-2 border-dashed border-blue-500 bg-blue-100"
 
 type CalendarRange = {
 	from: string
@@ -98,6 +102,11 @@ export function CalendarPage() {
 	const dateParam = searchParams.get("date")
 	const vueParam = searchParams.get("vue")
 	const newEventOpen = searchParams.get("nouvel-evenement") === "1"
+	const meetingParam = searchParams.get("evenement")
+
+	// Le test ignore une URL trafiquée comme ?evenement=abc
+	const openedMeetingId = meetingParam && /^\d+$/.test(meetingParam) ? Number(meetingParam) : null
+
 	const date = dateParam && isIsoDate(dateParam) ? dateParam : today
 	const { preferencesVersion } = useOutletContext<{ preferencesVersion: number }>()
 
@@ -112,12 +121,13 @@ export function CalendarPage() {
 
 	const { from, to, days, shift } = getRange(view, date)
 
-	const { data, error, loading, retry } = useAsync((signal) => Promise.all([getCalendar(from, to, signal), getPreferences(signal)]), [from, to, preferencesVersion])
+	const { data, error, loading, retry, setData } = useAsync((signal) => Promise.all([getCalendar(from, to, signal), getPreferences(signal)]), [from, to, preferencesVersion])
 	const [calendar, preferences] = data ?? [null, null]
 
 	const leaves = calendar?.leaves ?? null
 	const segments = view === "mois" ? segmentsFor(leaves ?? [], [date]) : segmentsFor(leaves ?? [], days)
 	const effectiveDays = calendar?.days ?? null
+	const meetings = calendar?.meetings ?? []
 	const range = preferences?.calendarHourRange
 
 	const containsToday =
@@ -139,6 +149,28 @@ export function CalendarPage() {
 
 	const openNew = () => setSearchParams((prev) => { prev.set("nouvel-evenement", "1"); return prev })
 	const closeNew = () => setSearchParams((prev) => { prev.delete("nouvel-evenement"); return prev })
+
+	const openMeeting = (id: number) => setSearchParams((prev) => { prev.set("evenement", String(id)); return prev })
+	const closeMeeting = () => setSearchParams((prev) => { prev.delete("evenement"); return prev })
+
+	function handleCreated(meeting: MeetingResponse) {
+		closeNew()
+		setData(([c, p]) => [{ ...c, meetings: [...c.meetings, meeting] }, p])
+	}
+
+	function handleColorChanged(id: number, color: MeetingColor) {
+		setData(([c, p]) => [{ ...c, meetings: c.meetings.map((m) => m.id === id ? { ...m, color } : m) }, p])
+	}
+
+	function handleCancelled(id: number) {
+		closeMeeting()
+		setData(([c, p]) => [{ ...c, meetings: c.meetings.filter((m) => m.id !== id) }, p])
+	}
+
+	function handleUpdated(meeting: MeetingResponse) {
+		closeMeeting()
+		setData(([c, p]) => [{ ...c, meetings: c.meetings.map((m) => m.id === meeting.id ? meeting : m) }, p])
+	}
 
 	return (
 		<div className="mx-auto max-w-6xl px-6 py-10">
@@ -163,7 +195,7 @@ export function CalendarPage() {
 			/>
 
 			<div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-				<h2 aria-live="polite" className="text-lg font-semibold text-slate-900">
+				<h2 aria-live="polite" className="text-lg font-semibold text-slate-900 first-letter:uppercase">
 					{title}
 				</h2>
 				<div className="flex items-center gap-1">
@@ -214,35 +246,63 @@ export function CalendarPage() {
 				) : null}
 			</div>
 
-			{view === "jour" && <DayView segments={segments} effectiveDay={effectiveDays?.[0]} range={range} />}
-			{view === "semaine" && <WeekView days={days} segments={segments} today={today} effectiveDays={effectiveDays ?? undefined} range={range} />}
+			{view === "jour" && <DayView segments={segments} effectiveDay={effectiveDays?.[0]} meetings={meetings} range={range} onOpenMeeting={openMeeting} />}
+			{view === "semaine" && <WeekView days={days} segments={segments} today={today} effectiveDays={effectiveDays ?? undefined} meetings={meetings} range={range} onOpenMeeting={openMeeting} />}
 			{view === "mois" && (
 				<MonthView
 					days={days}
 					leaves={leaves ?? []}
+					meetings={meetings}
 					today={today}
 					date={date}
 					compact={!isDesktop}
 					onSelectDay={(day) =>
 						setSearchParams(isDesktop ? { vue: "jour", date: day } : { vue: "mois", date: day })
 					}
+					onOpenMeeting={openMeeting}
 				/>
 			)}
-			{view === "mois" && !isDesktop && <DayView segments={segments} />}
+			{view === "mois" && !isDesktop && (
+				<DayView
+					segments={segments}
+					effectiveDay={effectiveDays?.find((d) => d.date === date)}
+					meetings={meetings}
+					range={range}
+					onOpenMeeting={openMeeting}
+				/> 
+			)}
 
-			<ul aria-label="Légende" className="mt-3 flex gap-4 gap-y-1 text-xs text-slate-600">
-				{LEGEND.map(({ status, unpaid, label }) => (
-					<li key={label} className="flex items-center gap-1.5">
-						<span
-							aria-hidden="true"
-							className={`inline-block h-3 w-6 rounded-sm ${LEAVE_BAND_STYLES[status]}`}
-							style={{ background: leaveSwatchBackground(status === LeaveStatus.Approuve, unpaid) }}
-						/>
-						{label}
-					</li>
-				))}
-			</ul>
-			<MeetingDialog open={newEventOpen} initialDate={date} onClose={closeNew} onCreated={closeNew} />
+			<div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+				<span className="font-medium text-slate-700">Congés :</span>
+				<ul aria-label="Légende des congés" className="flex flex-wrap gap-4 gap-y-1 text-xs text-slate-600">
+					{LEAVE_LEGEND.map(({ status, unpaid, label }) => (
+						<li key={label} className="flex items-center gap-1.5">
+							<span
+								aria-hidden="true"
+								className={`inline-block h-3 w-6 rounded-sm ${LEAVE_BAND_STYLES[status]}`}
+								style={{ background: leaveSwatchBackground(status === LeaveStatus.Approuve, unpaid) }}
+							/>
+							{label}
+						</li>
+					))}
+				</ul>
+			</div>
+			<div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+				<span className="font-medium text-slate-700">Événements :</span>
+				<ul aria-label="Légende des événements" className="flex flex-wrap gap-4 gap-y-1 text-xs text-slate-600">
+					{["Bloc souple", "Bloc souple chevauché"].map((label) => (
+						<li key={label} className="flex items-center gap-1.5">
+							<span
+								aria-hidden="true"
+								className={`${MEETING_LEGEND_STYLE} ${label === "Bloc souple chevauché" ? "opacity-50" : ""}`}
+							/>
+							{label}
+						</li>
+					))}
+				</ul>
+			</div>
+			<MeetingDialog open={newEventOpen} initialDate={date} onClose={closeNew} onSaved={handleCreated} />
+			<MeetingDetailDialog meetingId={openedMeetingId} onClose={closeMeeting} onColorChanged={handleColorChanged} onCancelled={handleCancelled} onUpdated={handleUpdated} />
 		</div>
 	)
 }

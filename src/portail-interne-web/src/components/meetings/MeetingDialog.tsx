@@ -1,20 +1,31 @@
 import { useState, type SubmitEvent } from "react"
-import { type MeetingColor, MeetingKind, type MeetingKindId, type MeetingResponse, MEETING_COLORS, createMeeting, type CreateMeetingRequest, type MeetingConflictResponse } from "../../api/meetings"
 import { Modal } from "../dialogs/Modal"
 import { ErrorBanner } from "../feedback/Banner"
 import { focusRing, primaryButton, secondaryButton } from "../../ui/buttons"
 import { inputClass, labelClass } from "../../ui/fields"
 import { SegmentedControl } from "../common/SegmentedControl"
 import { zonedToUtc } from "../../utils/date"
-import { earliestStart, endOptions, firstBookableDate, formatOptionTime, startOptions } from "../../utils/meetings"
+import { earliestStart, endOptions, firstBookableDate, formatOptionTime, meetingTimes, startOptions } from "../../utils/meetings"
 import { useSession } from "../../session/useSession"
 import type { EmployeeOption } from "../../api/employees"
 import { EmployeeCombobox } from "../employees/EmployeeCombobox"
 import { Avatar } from "../employees/Avatar"
 import { CloseOutlined } from "@mui/icons-material"
-import { MEETING_COLOR_STYLES } from "../../ui/meetingColors"
 import { MeetingConflictPanel } from "./MeetingConflictPanel"
 import { AvailabilityStrip } from "./AvailabilityStrip"
+import { ColorPicker } from "./ColorPicker"
+import { 
+	type MeetingColor,
+	MeetingKind,
+	type MeetingKindId,
+	type MeetingResponse,
+	createMeeting,
+	type CreateMeetingRequest,
+	type MeetingConflictResponse,
+	type MeetingDetailResponse,
+	updateMeeting,
+	type MeetingFormRequest
+} from "../../api/meetings"
 
 type Props = FormProps & {
 	open: boolean
@@ -23,7 +34,8 @@ type Props = FormProps & {
 type FormProps = {
 	initialDate: string
 	onClose: () => void
-	onCreated: (meeting: MeetingResponse) => void
+	onSaved: (meeting: MeetingResponse) => void
+	meeting?: MeetingDetailResponse
 }
 
 const KIND_OPTIONS: { value: MeetingKindId; label: string }[] = [
@@ -31,27 +43,29 @@ const KIND_OPTIONS: { value: MeetingKindId; label: string }[] = [
 	{ value: MeetingKind.PersonalBlock, label: "Bloc personnel" },
 ]
 
-export function MeetingDialog({ open, initialDate, onClose, onCreated }: Props) {
+export function MeetingDialog({ open, initialDate, onClose, onSaved, meeting }: Props) {
 	return (
-		<Modal open={open} title="Nouvel événement" onClose={onClose} size="xl">
-			<MeetingForm initialDate={initialDate} onClose={onClose} onCreated={onCreated} />
+		<Modal open={open} title={meeting !== undefined ? "Modifier l'événement" : "Nouvel événement"} onClose={onClose} size="xl">
+			<MeetingForm initialDate={initialDate} onClose={onClose} onSaved={onSaved} meeting={meeting} />
 		</Modal>
 	)
 }
 
-function MeetingForm({ initialDate, onClose, onCreated }: FormProps) {
+function MeetingForm({ initialDate, onClose, onSaved, meeting }: FormProps) {
 	const startDate = initialDate < firstBookableDate() ? firstBookableDate() : initialDate
 	const startTime = Math.max(540, earliestStart(startDate))
 
-	const [kind, setKind] = useState<MeetingKindId>(MeetingKind.Meeting)
-	const [title, setTitle] = useState("")
-	const [description, setDescription] = useState("")
-	const [date, setDate] = useState<string>(startDate)
-	const [start, setStart] = useState(startTime)
-	const [end, setEnd] = useState(Math.min(startTime + 60, 1440))
-	const [participants, setParticipants] = useState<EmployeeOption[]>([])
-	const [isFlexible, setIsFlexible] = useState(false)
-	const [color, setColor] = useState<MeetingColor>("blue")
+	const times = meeting ? meetingTimes(meeting.meeting) : null
+
+	const [kind, setKind] = useState<MeetingKindId>(meeting?.meeting.kind ?? MeetingKind.Meeting)
+	const [title, setTitle] = useState(meeting?.meeting.title ?? "")
+	const [description, setDescription] = useState(meeting?.meeting.description ?? "")
+	const [date, setDate] = useState<string>(times?.date ?? startDate)
+	const [start, setStart] = useState(times?.start ?? startTime)
+	const [end, setEnd] = useState(times?.end ?? Math.min(startTime + 60, 1440))
+	const [participants, setParticipants] = useState<EmployeeOption[]>(meeting?.participants.map((p) => ({ id: p.employeeId, firstName: p.firstName, lastName: p.lastName })) ?? [])
+	const [isFlexible, setIsFlexible] = useState(meeting?.meeting.isFlexible ?? false)
+	const [color, setColor] = useState<MeetingColor>(meeting?.meeting.color ?? "blue")
 	const [error, setError] = useState<string | null>(null)
 	const [busy, setBusy] = useState(false)
 
@@ -59,17 +73,19 @@ function MeetingForm({ initialDate, onClose, onCreated }: FormProps) {
 
 	const [conflict, setConflict] = useState<{ response: MeetingConflictResponse; requestKey: string } | null>(null)
 
-	// La requête telle que le formulaire la décrit maintenant (sans la confirmation).
-	const draft: Omit<CreateMeetingRequest, "confirmConflicts"> = {
-		kind,
+	// Les champs communs à la création et à la modification (sans la confirmation).
+	const form: Omit<MeetingFormRequest, "confirmConflicts"> = {
 		title: title.trim(),
 		description: description.trim() || null,
 		startAt: zonedToUtc(date, start),
 		endAt: zonedToUtc(date, end),
 		isFlexible: kind === MeetingKind.PersonalBlock && isFlexible,
 		participantIds: kind === MeetingKind.PersonalBlock ? [] : participants.map(p => p.id),
-		color
 	}
+
+	// La requête de création, telle que le formulaire la décrit maintenant.
+	const draft: Omit<CreateMeetingRequest, "confirmConflicts"> = { ...form, kind, color }
+
 	const draftKey = JSON.stringify(draft)
 
 	// L'avertissement ne vaut que pour la requête exacte qui l'a reçu.
@@ -88,25 +104,34 @@ function MeetingForm({ initialDate, onClose, onCreated }: FormProps) {
 			
 			setBusy(true)
 
-			const result = await createMeeting({
-				...draft,
-				confirmConflicts: pendingConflict !== null
-			})
+			const result = meeting
+				? await updateMeeting(meeting.meeting.id, { ...form, confirmConflicts: pendingConflict !== null })
+				: await createMeeting({
+					...draft,
+					confirmConflicts: pendingConflict !== null
+				})
 
-			if (result.status === "created")
-				onCreated(result.meeting)
-			else
+			if (result.status === "conflict")
 				setConflict({response: result.conflict, requestKey: draftKey})
+			else
+				onSaved(result.meeting)
 		} catch (e) {
-			setError(e instanceof Error ? e.message : "Impossible de créer l'événement.")
+			setError(e instanceof Error ? e.message : "Impossible d'enregistrer l'événement.")
 		} finally {
 			setBusy(false)
 		}
 	}
 
+	// L'organisateur : celui de l'événement en modification, toi en création.
+	const organizer: EmployeeOption | null = meeting
+		? { id: meeting.organizer.employeeId, firstName: meeting.organizer.firstName, lastName: meeting.organizer.lastName }
+		: me
+			? { id: me.employeeId, firstName: me.firstName, lastName: me.lastName }
+			: null
+
 	function addParticipant(employee: EmployeeOption | null) {
 		if (employee === null) return
-		if (me?.employeeId === employee.id || participants.some((p) => p.id === employee.id)) return
+		if (organizer?.id === employee.id || participants.some((p) => p.id === employee.id)) return
 		setParticipants([...participants, employee])
 	}
 
@@ -116,8 +141,7 @@ function MeetingForm({ initialDate, onClose, onCreated }: FormProps) {
 		setEnd(Math.min(newStart + duration, 1440))
 	}
 
-	const meTab: EmployeeOption[] = me !== null ? [{ id: me?.employeeId, firstName: me?.firstName, lastName: me?.lastName}] : []
-	const people: EmployeeOption[] = [...meTab, ...participants]
+	const people: EmployeeOption[] = [...(organizer ? [organizer] : []), ...participants]
 
 	return (
 		<>
@@ -140,6 +164,7 @@ function MeetingForm({ initialDate, onClose, onCreated }: FormProps) {
 									options={KIND_OPTIONS}
 									value={kind}
 									onChange={(k) => setKind(k)}
+									disabled={meeting !== undefined}
 								/>
 							</div>
 						</div>
@@ -228,7 +253,7 @@ function MeetingForm({ initialDate, onClose, onCreated }: FormProps) {
 							</select>
 						</div>
 					</div>
-					<div className="mt-5 grid gap-5 sm:grid-cols-2 items-start">
+					<div className={`mt-5 grid gap-5 items-start ${meeting === undefined ? "sm:grid-cols-2" : ""}`}>
 						<div>
 							{kind === MeetingKind.Meeting && (
 								<>
@@ -287,27 +312,11 @@ function MeetingForm({ initialDate, onClose, onCreated }: FormProps) {
 								</>
 							)}
 						</div>
-						<div>
-							<fieldset className="flex flex-1">
-								<legend className={labelClass}>Couleur</legend>
-								<div className="flex flex-1 flex-wrap gap-2 justify-center mt-1">
-									{MEETING_COLORS.map((c) => (
-										<label key={c} title={MEETING_COLOR_STYLES[c].label}>
-										<input
-											type="radio"
-											name="color"
-											value={c}
-											checked={color === c}
-											onChange={() => setColor(c)}
-											aria-label={MEETING_COLOR_STYLES[c].label}
-											className="peer sr-only"
-										/>
-										<span className={`block size-8 rounded-full ${MEETING_COLOR_STYLES[c].swatch} ring-offset-2 peer-checked:ring-2 peer-checked:ring-slate-900 peer-focus-visible:ring-2 peer-focus-visible:ring-sky-400`} />
-									</label>
-									))}
-								</div>
-							</fieldset>
-						</div>
+						{meeting === undefined &&
+							<div>
+								<ColorPicker legend="Couleur" value={color} onChange={setColor} />
+							</div>
+						}
 					</div>
 				</section>
 				<div className="mt-5">
@@ -319,7 +328,7 @@ function MeetingForm({ initialDate, onClose, onCreated }: FormProps) {
 						onPick={moveStart}
 					/>
 				</div>
-				{pendingConflict && <MeetingConflictPanel conflict={pendingConflict} myId={me?.employeeId} />}
+				{pendingConflict && <MeetingConflictPanel conflict={pendingConflict} myId={me?.employeeId} isEditing={meeting !== undefined} />}
 				<div className="mt-6 flex justify-end gap-3">
 					<button type="button" onClick={onClose} disabled={busy} className={secondaryButton}>
 						Annuler
@@ -327,10 +336,13 @@ function MeetingForm({ initialDate, onClose, onCreated }: FormProps) {
 					<button type="submit" disabled={busy} className={primaryButton}>
 						<span className="grid">
 							<span className={`col-start-1 row-start-1 ${busy ? "invisible" : ""}`}>
-								{pendingConflict ? "Créer quand même" : "Créer"}
+								{meeting
+									? pendingConflict ? "Enregistrer quand même" : "Enregistrer"
+									: pendingConflict ? "Créer quand même" : "Créer"
+								}
 							</span>
 							<span className={`col-start-1 row-start-1 ${busy ? "" : "invisible"}`}>
-								Création…
+								{meeting ? "Enregistrement…" : "Création…"}
 							</span>
 						</span>
 					</button>

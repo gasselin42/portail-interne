@@ -1,3 +1,4 @@
+import type { MeetingResponse } from "../api/meetings"
 import { addDays, formatTime, nowTime, todayIso, utcToZoned } from "./date"
 
 export function minutesToTime(minutes: number): string {
@@ -52,4 +53,17 @@ export function minutesOnDate(iso: string, date: string): number {
 	if (dayTime.date < date) return 0
 	if (dayTime.date > date) return 1440
 	return dayTime.minutes
+}
+
+export function meetingSlice(meeting: MeetingResponse, date: string): { from: number, to: number} | null {
+	const startAt = minutesOnDate(meeting.startAt, date)
+	const endAt = minutesOnDate(meeting.endAt, date)
+	return startAt === endAt ? null : { from: startAt, to: endAt }
+}
+
+export function meetingTimes(meeting: MeetingResponse): { date: string, start: number, end: number } {
+	const start = utcToZoned(meeting.startAt)
+	const end = utcToZoned(meeting.endAt)
+	const endMinutes = end.date !== start.date ? 1440 : end.minutes
+	return { date: start.date, start: start.minutes, end: endMinutes }
 }
