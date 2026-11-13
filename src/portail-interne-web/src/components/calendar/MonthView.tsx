@@ -5,9 +5,10 @@ import { isUnpaidDay } from "../../ui/leaveBandBackground"
 import { segmentsFor } from "../../utils/calendar"
 import { formatLongDate, formatShortWeekday } from "../../utils/date"
 import { LeaveRow } from "./LeaveRow"
-import type { MeetingResponse } from "../../api/meetings"
+import { ParticipantResponse, type MeetingResponse } from "../../api/meetings"
 import { formatMinutes, meetingSlice } from "../../utils/meetings"
 import { MEETING_COLOR_STYLES } from "../../ui/meetingColors"
+import { HourglassEmptyOutlined } from "@mui/icons-material"
 
 type Props = {
 	days: string[]
@@ -133,11 +134,17 @@ export function MonthView({ days, leaves, meetings, today, date, compact, onSele
 									return (
 										<ul key={day} className="min-w-0 space-y-0.5">
 											{dayMeetings.slice(0, 3).map((m) => (
-												<li key={m.meeting.id} title={`${m.meeting.title}, ${formatMinutes(m.from)} – ${formatMinutes(m.to)}`}>
-													<button type="button" className={`flex items-center gap-1 text-xs text-slate-700 w-full text-left ${focusRing}`} onClick={() => onOpenMeeting?.(m.meeting.id)}>
+												<li key={m.meeting.id} title={`${m.meeting.title}, ${formatMinutes(m.from)} – ${formatMinutes(m.to)}${m.meeting.myResponse === ParticipantResponse.EnAttente ? ", en attente de ta réponse" : m.meeting.myResponse === ParticipantResponse.Decline ? ", décliné" : ""}`}>
+													<button type="button" className={`flex items-center gap-1 text-xs text-slate-700 w-full text-left ${focusRing} ${m.meeting.myResponse === ParticipantResponse.Decline ? "opacity-50" : ""}`} onClick={() => onOpenMeeting?.(m.meeting.id)}>
 														<span className={`size-2 shrink-0 rounded-full ${MEETING_COLOR_STYLES[m.meeting.color].swatch}`} aria-hidden="true" />
+														{m.meeting.myResponse == ParticipantResponse.EnAttente &&
+															<span className="flex text-slate-600">
+																<HourglassEmptyOutlined fontSize="inherit" aria-hidden="true" />
+																<p className="sr-only">En attente de ta réponse</p>
+															</span>
+														}
 														<span className="font-medium shrink-0">{formatMinutes(m.from)}</span>
-														<span className="font-light truncate"> – {m.meeting.title}</span>
+														<span className={`font-light truncate ${m.meeting.myResponse === ParticipantResponse.Decline ? "line-through" : ""}`}> – {m.meeting.title}</span>
 													</button>
 												</li>
 											))}

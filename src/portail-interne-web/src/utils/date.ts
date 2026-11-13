@@ -1,6 +1,7 @@
 import { APP_TIME_ZONE } from "../config"
 
 let timeZone = APP_TIME_ZONE // valeur par défaut, en attendant /me
+const relativeFormatter = new Intl.RelativeTimeFormat("fr-CA", { numeric: "auto" })
 
 const dateFormatter = new Intl.DateTimeFormat("fr-CA", {
 	day: "numeric",
@@ -36,6 +37,12 @@ const monthFormatter = new Intl.DateTimeFormat("fr-CA", {
 
 const shortWeekdayFormatter = new Intl.DateTimeFormat("fr-CA", {
 	weekday: "short",
+	timeZone: "UTC"
+})
+
+const shortDayFormatter = new Intl.DateTimeFormat("fr-CA", {
+	day: "numeric",
+	month: "short",
 	timeZone: "UTC"
 })
 
@@ -86,10 +93,40 @@ export function formatShortWeekday(iso: string): string {
 	return shortWeekdayFormatter.format(date)
 }
 
+export function formatShortDay(iso: string): string {
+	const date = toUtcDate(iso)
+	return shortDayFormatter.format(date)
+}
+
 export function formatTime(time: string): string {
 	const [hours, minutes] = time.split(":")
 	const h = Number(hours)
 	return minutes === "00" ? `${h} h` : `${h} h ${minutes}`
+}
+
+export function formatRelative(iso: string, now: number): string {
+	const gap = now - Date.parse(iso)
+	const minutes = Math.floor(gap / 60000)
+	const hours = Math.floor(gap / (60000 * 60))
+	
+	// Jours du calendrier, dans le fuseau de la personne connectée.
+	const day = utcToZoned(iso).date
+	const today = utcToZoned(new Date(now).toISOString()).date
+	const days = (Date.parse(today) - Date.parse(day)) / 86_400_000
+
+	if (minutes < 1)
+		return "à l'instant"
+
+	if (minutes < 60)
+		return relativeFormatter.format(-minutes, "minute")
+
+	if (days === 0)
+		return relativeFormatter.format(-hours, "hour")
+
+	if (days < 7)
+		return relativeFormatter.format(-days, "day")
+
+	return formatShortDay(day)
 }
 
 export function daysFromToday(offset: number): string {

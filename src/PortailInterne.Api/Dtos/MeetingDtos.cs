@@ -46,6 +46,11 @@ public class SaveMeetingColorRequest
 	public string? Color { get; set; }
 }
 
+public class SaveMeetingResponseRequest
+{
+	public ParticipantResponse Response { get; set; }
+}
+
 public class MeetingResponse
 {
 	public int Id { get; set; }
@@ -58,6 +63,7 @@ public class MeetingResponse
 	public bool IsTeamMeeting { get; set; }
 	public bool IsFlexible { get; set; }
 	public string Color { get; set; } = string.Empty;
+	public ParticipantResponse? MyResponse { get; set; }
 }
 
 public class MeetingDetailResponse
@@ -73,6 +79,7 @@ public class MeetingPerson
 	public int EmployeeId { get; set; }
 	public string FirstName { get; set; } = string.Empty;
 	public string LastName { get; set; } = string.Empty;
+	public ParticipantResponse Response { get; set; }
 }
 
 public class MeetingConflict

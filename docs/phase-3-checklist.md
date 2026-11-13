@@ -62,29 +62,32 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [x] Couleur choisie par l’employé ; bloc souple chevauché affiché pâli à côté du meeting
   - [x] Libre / occupé : « occupé souple » visuellement distinct, sans dépendre de la couleur seule
   - [x] Vue mois : « 10h Titre », 3 au maximum puis « + N autres »
-- [ ] 14b. **Densité** de la grille horaire (Compacte / Normale / Aérée), préférence stockée dans l’API comme la plage d’heures : plus de place par heure quand il y a plusieurs réunions ou tâches
-- [ ] 15. Affichage des erreurs métier (congé, conflit) côté UI
-- [ ] 16. Centre de notifs simple (badge / liste) — même si la phase 5 le pousse plus loin
-- [ ] 17. Accueil : widget / badge **notifications** + lien meetings dans le menu
+- [x] 14b. **Densité** de la grille horaire (Compacte / Normale / Aérée), préférence stockée dans l’API comme la plage d’heures : plus de place par heure quand il y a plusieurs réunions ou tâches
+- [x] 15. Affichage des erreurs métier (congé, conflit) côté UI
+- [x] 16. Centre de notifs simple (badge / liste) — même si la phase 5 le pousse plus loin
+  - [x] Page `/notifications` : non lues mises en avant, date relative, ouvrir = lue + lien, « Tout marquer comme lu », « Voir plus »
+  - [x] Cloche (ordinateur) : menu des 5 dernières ; mobile : lien dans l'en-tête
+  - [x] Compte de non lues partagé, rafraîchi chaque minute et au retour sur l'onglet
+- [x] 17. Accueil : widget / badge **notifications** + lien meetings dans le menu
 
 ## Validation manuelle
 
-- [ ] Bloc personnel ferme et souple OK, couleur choisie conservée
-- [ ] Meeting groupe OK
-- [ ] Blocage si participant en congé approuvé
-- [ ] Conflit → notification(s) visibles
-- [ ] Meeting d’équipe prioritaire selon la règle choisie
-- [ ] Meeting d’équipe sur un bloc souple : aucun conflit, bloc pâli, notification au propriétaire
-- [ ] Un participant change la couleur d’un meeting : les autres ne voient aucun changement
-- [ ] Calendrier à jour pour tous les participants
-- [ ] Annulation retire l’événement du calendrier
-- [ ] Un employé voit le libre / occupé d’un collègue, jamais le titre de ses événements
+- [x] Bloc personnel ferme et souple OK, couleur choisie conservée
+- [x] Meeting groupe OK
+- [x] Blocage si participant en congé approuvé
+- [x] Conflit → notification(s) visibles
+- [x] Meeting d’équipe prioritaire selon la règle choisie
+- [x] Meeting d’équipe sur un bloc souple : aucun conflit, bloc pâli, notification au propriétaire
+- [x] Un participant change la couleur d’un meeting : les autres ne voient aucun changement
+- [x] Calendrier à jour pour tous les participants
+- [x] Annulation retire l’événement du calendrier
+- [x] Un employé voit le libre / occupé d’un collègue, jamais le titre de ses événements
 
 ## Bonus
 
-- [ ] Réponse participant (Accepté / Décliné)
-- [ ] Tests API (R6, R7, R21, isolation)
-- [ ] Convertisseur UTC sur les `DateTime` déjà en base (`CreatedAt`, `ReviewedAt`…) : le JSON doit finir par `Z`, sinon une heure affichée serait décalée (comme `StartAt` / `EndAt` des meetings)
+- [x] Réponse participant (Accepté / Décliné)
+- [x] Tests API (R6, R7, R21, isolation)
+- [x] Convertisseur UTC sur les `DateTime` déjà en base (`CreatedAt`, `ReviewedAt`…) : le JSON doit finir par `Z`, sinon une heure affichée serait décalée (comme `StartAt` / `EndAt` des meetings)
 
 ## Notes / blocages
 

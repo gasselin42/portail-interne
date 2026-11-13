@@ -26,7 +26,7 @@ export function LeavesPage() {
 			: "conges"
 
 	const openNew = () => setSearchParams({ onglet: tab, nouvelle: "1" })
-	const closeNew = () => setSearchParams({ onglet: tab })
+	const closeNew = () => setSearchParams({ onglet: tab }, { replace: true })
 
 	return (
 		<div className="mx-auto max-w-6xl px-6 py-10">

@@ -1,6 +1,6 @@
 import type { EffectiveDay } from "../../api/calendar"
 import type { MeetingResponse } from "../../api/meetings"
-import type { CalendarHourRangeId } from "../../api/preferences"
+import { CalendarDensity, type CalendarDensityId, type CalendarHourRangeId } from "../../api/preferences"
 import type { LeaveSegment } from "../../utils/calendar"
 import { dayNote } from "../../utils/timeGrid"
 import { LeaveBand } from "../leaves/LeaveBand"
@@ -11,10 +11,11 @@ type Props = {
 	effectiveDay?: EffectiveDay
 	meetings?: MeetingResponse[]
 	range?: CalendarHourRangeId
+	density?: CalendarDensityId
 	onOpenMeeting?: (id: number) => void
 }
 
-export function DayView({ segments, effectiveDay, meetings, range, onOpenMeeting }: Props) {
+export function DayView({ segments, effectiveDay, meetings, range, density = CalendarDensity.Normal, onOpenMeeting }: Props) {
 	const note = effectiveDay ? dayNote(effectiveDay) : null
 	return (
 		<div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/50">
@@ -24,7 +25,7 @@ export function DayView({ segments, effectiveDay, meetings, range, onOpenMeeting
 				))}
 			</ul>
 			{note && <p className="text-[11px] font-medium text-violet-700 border-t border-slate-200/80 px-3 py-2">{note}</p>}
-			{effectiveDay && range !== undefined && <TimeGrid days={[effectiveDay]} range={range} meetings={meetings ?? []} onOpenMeeting={onOpenMeeting} />}
+			{effectiveDay && range !== undefined && <TimeGrid days={[effectiveDay]} range={range} density={density} meetings={meetings ?? []} onOpenMeeting={onOpenMeeting} />}
 		</div>
 	)
 }

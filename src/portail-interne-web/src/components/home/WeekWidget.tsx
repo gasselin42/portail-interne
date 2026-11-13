@@ -1,8 +1,10 @@
+import { useNavigate, useOutletContext } from "react-router-dom"
 import { getCalendar } from "../../api/calendar"
+import { CalendarHourRange, getPreferences } from "../../api/preferences"
 import { useAsync } from "../../hooks/useAsync"
 import { useMediaQuery } from "../../hooks/useMediaQuery"
 import { segmentsFor } from "../../utils/calendar"
-import { addDays, startOfWeek, todayIso } from "../../utils/date"
+import { addDays, startOfWeek, todayIso, utcToZoned } from "../../utils/date"
 import { DayView } from "../calendar/DayView"
 import { WeekView } from "../calendar/WeekView"
 import { ErrorBanner } from "../feedback/Banner"
@@ -14,9 +16,19 @@ export function WeekWidget() {
 	const days = Array.from({ length: 7 }, (_, i) => addDays(from, i))
 	const to = days[6]
 
-	const { data, error, loading, retry } = useAsync((signal) => getCalendar(from, to, signal), [from, to])
+	const { preferencesVersion } = useOutletContext<{ preferencesVersion: number }>()
+	const { data, error, loading, retry } = useAsync((signal) => Promise.all([getCalendar(from, to, signal), getPreferences(signal)]), [from, to, preferencesVersion])
+	const [calendar, preferences] = data ?? [null, null]
 
 	const isDesktop = useMediaQuery("(min-width: 48rem)")
+	const navigate = useNavigate()
+
+	function handleOpenMeeting(id: number) {
+		const meeting = calendar?.meetings.find((m) => m.id === id)
+		if (meeting === undefined) return
+		const date = utcToZoned(meeting.startAt).date
+		navigate(`/calendar?vue=jour&date=${date}&evenement=${id}`)
+	}
 
 	return (
 		<Widget title={isDesktop ? "Ma semaine" : "Aujourd'hui"} link={{ to: "/calendar", label: "Ouvrir le calendrier" }} className="md:col-span-2">
@@ -29,11 +41,23 @@ export function WeekWidget() {
 			) : isDesktop ? (
 				<WeekView
 					days={days}
-					segments={segmentsFor(data?.leaves ?? [], days)}
+					effectiveDays={calendar?.days}
+					meetings={calendar?.meetings}
+					segments={segmentsFor(calendar?.leaves ?? [], days)}
+					range={preferences?.calendarHourRange ?? CalendarHourRange.WorkHours}
 					today={today}
+					density={preferences?.calendarDensity}
+					onOpenMeeting={handleOpenMeeting}
 				/>
 			) : (
-				<DayView segments={segmentsFor(data?.leaves ?? [], [today])} />
+				<DayView
+					effectiveDay={calendar?.days.find((d) => d.date === today)}
+					meetings={calendar?.meetings}
+					segments={segmentsFor(calendar?.leaves ?? [], [today])}
+					range={preferences?.calendarHourRange ?? CalendarHourRange.WorkHours}
+					density={preferences?.calendarDensity}
+					onOpenMeeting={handleOpenMeeting}
+				/>
 			)}
 		</Widget>
 	)

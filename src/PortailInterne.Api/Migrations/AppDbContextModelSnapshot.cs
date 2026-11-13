@@ -163,6 +163,9 @@ namespace PortailInterne.Api.Migrations
                     b.Property<int>("EmployeeId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("CalendarDensity")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("CalendarHourRange")
                         .HasColumnType("INTEGER");
 
@@ -426,6 +429,9 @@ namespace PortailInterne.Api.Migrations
                     b.Property<string>("Color")
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("Response")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("MeetingId", "EmployeeId");
 

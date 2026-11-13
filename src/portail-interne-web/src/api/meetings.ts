@@ -7,6 +7,14 @@ export const MeetingKind = {
 
 export type MeetingKindId = (typeof MeetingKind)[keyof typeof MeetingKind]
 
+export const ParticipantResponse = {
+	EnAttente: 0,
+	Accepte: 1,
+	Decline: 2
+} as const
+
+export type ParticipantResponseId = (typeof ParticipantResponse)[keyof typeof ParticipantResponse]
+
 export const MEETING_COLORS = ["blue", "indigo", "cyan", "teal", "fuchsia", "pink", "orange", "stone"] as const
 
 export type MeetingColor = (typeof MEETING_COLORS)[number]
@@ -31,6 +39,7 @@ export type MeetingResponse = {
 	isTeamMeeting: boolean
 	isFlexible: boolean
 	color: MeetingColor
+	myResponse: ParticipantResponseId | null
 }
 
 export type MeetingDetailResponse = {
@@ -81,6 +90,7 @@ export type MeetingPerson = {
 	employeeId: number
 	firstName: string
 	lastName: string
+	response: ParticipantResponseId
 }
 
 export type CreateMeetingResult =
@@ -146,4 +156,14 @@ export async function updateMeeting(id: number, request: UpdateMeetingRequest): 
 	}
 
 	return { status: "updated", meeting: (await res.json()) as MeetingResponse }
+}
+
+export async function respondToMeeting(id: number, response: ParticipantResponseId): Promise<void> {
+	const res = await apiFetch(`/api/meetings/${id}/response`, {
+		method: "PUT",
+		body: JSON.stringify({ response })
+	})
+	if (!res.ok) {
+		throw new Error(await readApiError(res, "Impossible d'enregistrer ta réponse"))
+	}
 }

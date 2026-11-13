@@ -3,10 +3,10 @@ import { Modal } from "../dialogs/Modal"
 import { linkClasses, secondaryButton } from "../../ui/buttons"
 import { Link } from "react-router-dom"
 import { KeyOutlined } from "@mui/icons-material"
-import { sectionTitle } from "../../ui/fields"
+import { labelClass, sectionTitle } from "../../ui/fields"
 import { ErrorBanner } from "../feedback/Banner"
 import { useAsync } from "../../hooks/useAsync"
-import { CalendarHourRange, getPreferences, savePreferences, type CalendarHourRangeId } from "../../api/preferences"
+import { CalendarDensity, CalendarHourRange, getPreferences, savePreferences, type CalendarDensityId, type CalendarHourRangeId } from "../../api/preferences"
 import { SegmentedControl } from "../common/SegmentedControl"
 
 type Props = {
@@ -44,7 +44,7 @@ function PreferencesContent({ onSaved }: { onSaved: () => void }) {
 					Chargement…
 				</p>
 			) : data && 
-				<HourRangeChoice initial={data.calendarHourRange} onSaved={onSaved} />
+				<CalendarChoices initialRange={data.calendarHourRange} initialDensity={data.calendarDensity} onSaved={onSaved} />
 			}
 		</div>
 	)
@@ -55,23 +55,33 @@ const HOUR_RANGE_VIEWS: { value: CalendarHourRangeId, label: string }[] = [
 	{ value: CalendarHourRange.FullDay, label: "Journée complète" }
 ]
 
-function HourRangeChoice({ initial, onSaved }: { initial: CalendarHourRangeId, onSaved: () => void }) {
-	const [value, setValue] = useState<CalendarHourRangeId>(initial)
+const DENSITY_VIEWS: { value: CalendarDensityId, label: string }[] = [
+	{ value: CalendarDensity.Normal, label: "Normale" },
+	{ value: CalendarDensity.Compact, label: "Compacte" },
+	{ value: CalendarDensity.Airy, label: "Aérée" },
+]
+
+function CalendarChoices({ initialRange, initialDensity, onSaved }: { initialRange: CalendarHourRangeId, initialDensity: CalendarDensityId, onSaved: () => void }) {
+	const [range, setRange] = useState<CalendarHourRangeId>(initialRange)
+	const [density, setDensity] = useState<CalendarDensityId>(initialDensity)
 	const [error, setError] = useState<string | null>(null)
 	const [saving, setSaving] = useState(false)
 
-	async function handleChange(next: CalendarHourRangeId) {
-		if (saving || next === value) return
-		const previous = value
-		setValue(next)
+	async function handleChange(nextRange: CalendarHourRangeId, nextDensity: CalendarDensityId) {
+		if (saving || (nextRange === range && nextDensity === density)) return
+		const previousRange = range
+		const previousDensity = density
+		setRange(nextRange)
+		setDensity(nextDensity)
 		setError(null)
 		setSaving(true)
 
 		try {
-			await savePreferences({ calendarHourRange: next })
+			await savePreferences({ calendarHourRange: nextRange, calendarDensity: nextDensity })
 			onSaved()
 		} catch (e) {
-			setValue(previous)
+			setRange(previousRange)
+			setDensity(previousDensity)
 			setError(e instanceof Error ? e.message : "Erreur")
 		} finally {
 			setSaving(false)
@@ -80,7 +90,22 @@ function HourRangeChoice({ initial, onSaved }: { initial: CalendarHourRangeId, o
 	
 	return (
 		<>
-			<SegmentedControl label="Plage d'heures" options={HOUR_RANGE_VIEWS} value={value} onChange={handleChange} />
+			<div className="flex flex-col">
+				<span className={labelClass} aria-hidden="true">
+					Plage d'heures
+				</span>
+				<div className="flex flex-1">
+					<SegmentedControl label="Plage d'heures" options={HOUR_RANGE_VIEWS} value={range} onChange={(next) => handleChange(next, density)} />
+				</div>
+			</div>
+			<div className="flex flex-col mt-3">
+				<span className={labelClass} aria-hidden="true">
+					Densité
+				</span>
+				<div className="flex flex-1">
+					<SegmentedControl label="Densité" options={DENSITY_VIEWS} value={density} onChange={(next) => handleChange(range, next)} />
+				</div>
+			</div>
 			{error && <p role="alert" className="mt-2 text-sm text-red-600">{error}</p>}
 		</>
 	)

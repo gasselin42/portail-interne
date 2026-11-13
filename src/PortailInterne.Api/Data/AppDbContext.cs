@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PortailInterne.Api.Models;
 using PortailInterne.Api.Services;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace PortailInterne.Api.Data;
 
@@ -23,6 +24,13 @@ public class AppDbContext : DbContext
 	public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
 	{
 		SavingChanges += (_, _) => UpdateSearchKeys();
+	}
+
+	protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+	{
+		// Tous les DateTime sont lus comme UTC (le JSON finit par « Z »).
+		configurationBuilder.Properties<DateTime>().HaveConversion<UtcDateTimeConverter>();
+		configurationBuilder.Properties<DateTime?>().HaveConversion<NullableUtcDateTimeConverter>();
 	}
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -81,6 +89,9 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(l => l.ReviewedById)
                 .OnDelete(DeleteBehavior.Restrict);
+
+			entity.Property(l => l.StartDate).HasConversion((ValueConverter?)null);
+			entity.Property(l => l.EndDate).HasConversion((ValueConverter?)null);
         });
 
 		// --- ScheduleAdjustment ---
@@ -210,12 +221,6 @@ public class AppDbContext : DbContext
 			entity.Property(m => m.Description).HasMaxLength(2000);
 			entity.HasIndex(m => new { m.StartAt, m.EndAt });
 
-			entity.Property(m => m.StartAt)
-				.HasConversion(v => v, v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
-
-			entity.Property(m => m.EndAt)
-				.HasConversion(v => v, v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
-
 			entity.HasOne(m => m.Organizer)
                 .WithMany()
                 .HasForeignKey(m => m.OrganizerId)
@@ -247,12 +252,6 @@ public class AppDbContext : DbContext
 			entity.Property(n => n.Message).HasMaxLength(500);
 			entity.Property(n => n.Link).HasMaxLength(200);
 
-			entity.Property(n => n.CreatedAt)
-				.HasConversion(v => v, v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
-
-			entity.Property(n => n.ReadAt)
-				.HasConversion(v => v, v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : v);
-		
 			entity.HasOne(n => n.Recipient)
 				.WithMany()
 				.HasForeignKey(n => n.RecipientId)

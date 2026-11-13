@@ -12,6 +12,8 @@ import { PresenceDialog } from "../components/profile/PresenceDialog"
 import { PreferencesDialog } from "../components/profile/PreferencesDialog"
 import { ReturnBanner } from "../components/profile/ReturnBanner"
 import { MyInfoDialog } from "../components/profile/MyInfoDialog"
+import { UnreadCountProvider } from "../notifications/UnreadCountProvider"
+import { MobileNotificationLink } from "../components/notifications/MobileNotificationLink"
 
 const COLLAPSED_KEY = "portail_sidebar_collapsed"
 
@@ -57,74 +59,77 @@ export function AppLayout() {
 	if (me?.mustChangePassword) return <Outlet />
 
 	return (
-		<div className="flex min-h-screen bg-linear-to-b from-slate-50 via-slate-50 to-white">
-			<aside
-				className={`sticky top-0 hidden h-screen shrink-0 flex-col lg:flex ${collapsed ? "w-20" : "w-64"} overflow-hidden border-r border-slate-200 bg-white transition-[width] duration-200`}
-			>
-				<div className="min-h-0 flex-1">
-					<SidebarContent collapsed={collapsed} onOpenDialog={setOpenDialog} />
-				</div>
-				<button
-					type="button"
-					onClick={toggleCollapsed}
-					aria-expanded={!collapsed}
-					title={collapsed ? "Agrandir le menu" : "Réduire le menu"}
-					aria-label={collapsed ? "Agrandir le menu" : "Réduire le menu"}
-					className={`${iconButton} m-3`}
+		<UnreadCountProvider>
+			<div className="flex min-h-screen bg-linear-to-b from-slate-50 via-slate-50 to-white">
+				<aside
+					className={`sticky top-0 hidden h-screen shrink-0 flex-col lg:flex ${collapsed ? "w-20" : "w-64"} overflow-hidden border-r border-slate-200 bg-white transition-[width] duration-200`}
 				>
-					{collapsed ? <MenuOutlined fontSize="small" /> : <MenuOpenOutlined fontSize="small" />}
-				</button>
-			</aside>
-			<div className="flex min-w-0 flex-1 flex-col">
-				<header className="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 lg:hidden">
+					<div className="min-h-0 flex-1">
+						<SidebarContent collapsed={collapsed} onOpenDialog={setOpenDialog} />
+					</div>
 					<button
 						type="button"
-						onClick={() => setMobileOpen(true)}
-						aria-label="Ouvrir le menu"
-						className={iconButton}
+						onClick={toggleCollapsed}
+						aria-expanded={!collapsed}
+						title={collapsed ? "Agrandir le menu" : "Réduire le menu"}
+						aria-label={collapsed ? "Agrandir le menu" : "Réduire le menu"}
+						className={`${iconButton} m-3`}
 					>
-						<MenuOutlined fontSize="small" />
+						{collapsed ? <MenuOutlined fontSize="small" /> : <MenuOpenOutlined fontSize="small" />}
 					</button>
-					<Brand />
-				</header>
-				<main className="flex-1">
-					<ReturnBanner version={presenceVersion} />
-					<ErrorBoundary key={pathname} fallback={(reset) => <PageCrash onRetry={reset} />}>
-						<Outlet context={{ preferencesVersion }} />
-					</ErrorBoundary>
-				</main>
-			</div>
-			<PresenceDialog
-				open={openDialog === "presence"}
-				onClose={() => setOpenDialog(null)}
-				onDeparted={() => setPresenceVersion((v) => v + 1)}
-			/>
-			<MyInfoDialog open={openDialog === "info"} onClose={() => setOpenDialog(null)} />
-			<PreferencesDialog open={openDialog === "preferences"} onClose={() => setOpenDialog(null)} onSaved={() => setPreferencesVersion((v) => v + 1)} />
-			<Dialog open={mobileOpen} onClose={setMobileOpen} className="relative z-50 lg:hidden">
-				<DialogBackdrop
-					transition
-					className="fixed inset-0 bg-slate-900/40 transition-opacity duration-200 data-closed:opacity-0"
-				/>
-				<div className="fixed inset-0 flex">
-					<DialogPanel
-						transition
-						className="relative flex w-72 max-w-[85%] flex-col bg-white shadow-xl transition duration-200 ease-out data-closed:-translate-x-full"
-					>
+				</aside>
+				<div className="flex min-w-0 flex-1 flex-col">
+					<header className="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 lg:hidden">
 						<button
 							type="button"
-							onClick={() => setMobileOpen(false)}
-							aria-label="Fermer le menu"
-							className={`${iconButton} absolute top-4 right-3`}
+							onClick={() => setMobileOpen(true)}
+							aria-label="Ouvrir le menu"
+							className={iconButton}
 						>
-							<CloseOutlined fontSize="small" />
+							<MenuOutlined fontSize="small" />
 						</button>
-						<div className="min-h-0 flex-1">
-							<SidebarContent collapsed={false} onNavigate={() => setMobileOpen(false)} onOpenDialog={(dialog) => { setMobileOpen(false); setOpenDialog(dialog) }} />
-						</div>
-					</DialogPanel>
+						<Brand />
+						<MobileNotificationLink />
+					</header>
+					<main className="flex-1">
+						<ReturnBanner version={presenceVersion} />
+						<ErrorBoundary key={pathname} fallback={(reset) => <PageCrash onRetry={reset} />}>
+							<Outlet context={{ preferencesVersion }} />
+						</ErrorBoundary>
+					</main>
 				</div>
-			</Dialog>
-		</div>
+				<PresenceDialog
+					open={openDialog === "presence"}
+					onClose={() => setOpenDialog(null)}
+					onDeparted={() => setPresenceVersion((v) => v + 1)}
+				/>
+				<MyInfoDialog open={openDialog === "info"} onClose={() => setOpenDialog(null)} />
+				<PreferencesDialog open={openDialog === "preferences"} onClose={() => setOpenDialog(null)} onSaved={() => setPreferencesVersion((v) => v + 1)} />
+				<Dialog open={mobileOpen} onClose={setMobileOpen} className="relative z-50 lg:hidden">
+					<DialogBackdrop
+						transition
+						className="fixed inset-0 bg-slate-900/40 transition-opacity duration-200 data-closed:opacity-0"
+					/>
+					<div className="fixed inset-0 flex">
+						<DialogPanel
+							transition
+							className="relative flex w-72 max-w-[85%] flex-col bg-white shadow-xl transition duration-200 ease-out data-closed:-translate-x-full"
+						>
+							<button
+								type="button"
+								onClick={() => setMobileOpen(false)}
+								aria-label="Fermer le menu"
+								className={`${iconButton} absolute top-4 right-3`}
+							>
+								<CloseOutlined fontSize="small" />
+							</button>
+							<div className="min-h-0 flex-1">
+								<SidebarContent collapsed={false} onNavigate={() => setMobileOpen(false)} onOpenDialog={(dialog) => { setMobileOpen(false); setOpenDialog(dialog) }} />
+							</div>
+						</DialogPanel>
+					</div>
+				</Dialog>
+			</div>
+		</UnreadCountProvider>
 	)
 }

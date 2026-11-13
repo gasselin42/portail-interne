@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using PortailInterne.Api.Data;
 using PortailInterne.Api.Dtos;
 using PortailInterne.Api.Services;
+using PortailInterne.Api.Models;
 
 namespace PortailInterne.Api.Controllers;
 
@@ -70,7 +71,8 @@ public class AvailabilityController : ControllerBase
 		var events = await _db.MeetingParticipants
 			.Where(p => ids.Contains(p.EmployeeId)
 				&& p.Meeting.StartAt < windowEnd
-				&& p.Meeting.EndAt > windowStart)
+				&& p.Meeting.EndAt > windowStart
+				&& p.Response != ParticipantResponse.Decline)
 			.Select(p => new { p.EmployeeId, p.Meeting.StartAt, p.Meeting.EndAt, p.Meeting.IsFlexible })
 			.ToListAsync();
 
@@ -91,6 +93,7 @@ public class AvailabilityController : ControllerBase
 			};
 
 			availability.Busy.AddRange(days.SelectMany(d => AbsenceSlots(d, employeeZone)));
+			availability.Busy.AddRange(days.SelectMany(d => LeaveSlots(d, employeeZone)));
 			availability.Busy.AddRange(events.Where(e => e.EmployeeId == employee.Id).Select(e => new BusySlot { StartAt = e.StartAt, EndAt = e.EndAt, Kind = e.IsFlexible ? BusyKind.FlexibleBusy : BusyKind.Busy } ));
 
 			availability.Busy = availability.Busy.OrderBy(b => b.StartAt).ToList();
@@ -138,6 +141,23 @@ public class AvailabilityController : ControllerBase
 				Kind = BusyKind.Absent
 			});
 		}
+
+		return slots;
+	}
+
+	private static List<BusySlot> LeaveSlots(EffectiveDay day, TimeZoneInfo zone)
+	{
+		var slots = new List<BusySlot>();
+
+		if (day.Source != DaySource.Conge)
+			return slots;
+
+		slots.Add(new BusySlot
+		{
+			StartAt = MeetingTime.ToUtc(day.Date, TimeOnly.MinValue, zone),
+			EndAt = MeetingTime.ToUtc(day.Date.AddDays(1), TimeOnly.MinValue, zone),
+			Kind = BusyKind.Absent
+		});
 
 		return slots;
 	}

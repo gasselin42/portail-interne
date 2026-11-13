@@ -14,7 +14,7 @@ import {
 	todayIso,
 } from "../utils/date"
 import { iconButton, primaryButton, secondaryButton } from "../ui/buttons"
-import { ChevronLeft, ChevronRight } from "@mui/icons-material"
+import { ChevronLeft, ChevronRight, HourglassEmptyOutlined } from "@mui/icons-material"
 import { LeaveStatus } from "../api/leaves"
 import { ErrorBanner } from "../components/feedback/Banner"
 import { segmentsFor } from "../utils/calendar"
@@ -29,8 +29,9 @@ import { getCalendar } from "../api/calendar"
 import { getPreferences } from "../api/preferences"
 import { useAsync } from "../hooks/useAsync"
 import { MeetingDialog } from "../components/meetings/MeetingDialog"
-import type { MeetingColor, MeetingResponse } from "../api/meetings"
+import type { MeetingColor, MeetingResponse, ParticipantResponseId } from "../api/meetings"
 import { MeetingDetailDialog } from "../components/meetings/MeetingDetailDialog"
+import type { ReactNode } from "react"
 
 type View = "jour" | "semaine" | "mois"
 
@@ -49,7 +50,22 @@ const LEAVE_LEGEND = [
 	{ status: LeaveStatus.EnAttente, unpaid: true, label: "En attente sans solde" },
 ]
 
-const MEETING_LEGEND_STYLE = "h-3 w-6 rounded-sm border-2 border-dashed border-blue-500 bg-blue-100"
+const FLEXIBLE_SWATCH = "h-3 w-6 rounded-sm border-2 border-dashed border-blue-500 bg-blue-100"
+
+const EVENT_LEGEND: { label: string; swatch: ReactNode }[] = [
+	{ label: "Bloc souple", swatch: <span className={FLEXIBLE_SWATCH} /> },
+	{ label: "Bloc souple chevauché", swatch: <span className={`${FLEXIBLE_SWATCH} opacity-50`} /> },
+	{ label: "En attente de ta réponse", swatch: <HourglassEmptyOutlined fontSize="inherit" /> },
+	{
+		label: "Décliné",
+		swatch: (
+			<span className="rounded-sm border-l-4 border-blue-500 bg-blue-100 px-1 text-[10px] leading-4 text-blue-900 line-through opacity-50">
+				Titre
+			</span>
+		),
+	},
+]
+
 
 type CalendarRange = {
 	from: string
@@ -129,6 +145,7 @@ export function CalendarPage() {
 	const effectiveDays = calendar?.days ?? null
 	const meetings = calendar?.meetings ?? []
 	const range = preferences?.calendarHourRange
+	const density = preferences?.calendarDensity
 
 	const containsToday =
 		view === "mois" ? startOfMonth(date) === startOfMonth(today) : from <= today && today <= to
@@ -148,10 +165,10 @@ export function CalendarPage() {
 				: "Aucune absence ce jour-là."
 
 	const openNew = () => setSearchParams((prev) => { prev.set("nouvel-evenement", "1"); return prev })
-	const closeNew = () => setSearchParams((prev) => { prev.delete("nouvel-evenement"); return prev })
+	const closeNew = () => setSearchParams((prev) => { prev.delete("nouvel-evenement"); return prev }, { replace: true })
 
 	const openMeeting = (id: number) => setSearchParams((prev) => { prev.set("evenement", String(id)); return prev })
-	const closeMeeting = () => setSearchParams((prev) => { prev.delete("evenement"); return prev })
+	const closeMeeting = () => setSearchParams((prev) => { prev.delete("evenement"); return prev }, { replace: true })
 
 	function handleCreated(meeting: MeetingResponse) {
 		closeNew()
@@ -160,6 +177,10 @@ export function CalendarPage() {
 
 	function handleColorChanged(id: number, color: MeetingColor) {
 		setData(([c, p]) => [{ ...c, meetings: c.meetings.map((m) => m.id === id ? { ...m, color } : m) }, p])
+	}
+
+	function handleResponded(id: number, response: ParticipantResponseId) {
+		setData(([c, p]) => [{ ...c, meetings: c.meetings.map((m) => m.id === id ? { ...m, myResponse: response } : m) }, p])
 	}
 
 	function handleCancelled(id: number) {
@@ -246,8 +267,30 @@ export function CalendarPage() {
 				) : null}
 			</div>
 
-			{view === "jour" && <DayView segments={segments} effectiveDay={effectiveDays?.[0]} meetings={meetings} range={range} onOpenMeeting={openMeeting} />}
-			{view === "semaine" && <WeekView days={days} segments={segments} today={today} effectiveDays={effectiveDays ?? undefined} meetings={meetings} range={range} onOpenMeeting={openMeeting} />}
+			{view === "jour" && (
+				<DayView
+					segments={segments}
+					effectiveDay={effectiveDays?.[0]}
+					meetings={meetings}
+					range={range}
+					density={density}
+					onOpenMeeting={openMeeting}
+				/>
+			)}
+			
+			{view === "semaine" && (
+				<WeekView
+					days={days}
+					segments={segments}
+					today={today}
+					effectiveDays={effectiveDays ?? undefined}
+					meetings={meetings}
+					range={range}
+					density={density}
+					onOpenMeeting={openMeeting}
+				/>
+			)}
+			
 			{view === "mois" && (
 				<MonthView
 					days={days}
@@ -268,6 +311,7 @@ export function CalendarPage() {
 					effectiveDay={effectiveDays?.find((d) => d.date === date)}
 					meetings={meetings}
 					range={range}
+					density={density}
 					onOpenMeeting={openMeeting}
 				/> 
 			)}
@@ -290,19 +334,16 @@ export function CalendarPage() {
 			<div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
 				<span className="font-medium text-slate-700">Événements :</span>
 				<ul aria-label="Légende des événements" className="flex flex-wrap gap-4 gap-y-1 text-xs text-slate-600">
-					{["Bloc souple", "Bloc souple chevauché"].map((label) => (
+					{EVENT_LEGEND.map(({ label, swatch }) => (
 						<li key={label} className="flex items-center gap-1.5">
-							<span
-								aria-hidden="true"
-								className={`${MEETING_LEGEND_STYLE} ${label === "Bloc souple chevauché" ? "opacity-50" : ""}`}
-							/>
+							<span className="flex" aria-hidden="true">{swatch}</span>
 							{label}
 						</li>
 					))}
 				</ul>
 			</div>
 			<MeetingDialog open={newEventOpen} initialDate={date} onClose={closeNew} onSaved={handleCreated} />
-			<MeetingDetailDialog meetingId={openedMeetingId} onClose={closeMeeting} onColorChanged={handleColorChanged} onCancelled={handleCancelled} onUpdated={handleUpdated} />
+			<MeetingDetailDialog meetingId={openedMeetingId} onClose={closeMeeting} onColorChanged={handleColorChanged} onResponded={handleResponded} onCancelled={handleCancelled} onUpdated={handleUpdated} />
 		</div>
 	)
 }

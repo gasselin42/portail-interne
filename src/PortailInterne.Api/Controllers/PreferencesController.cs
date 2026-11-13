@@ -29,7 +29,7 @@ public class PreferencesController : ControllerBase
 
 		var userPrefs = await _db.EmployeePreferences.FindAsync(userId);
 		
-		return Ok(new PreferencesDto { CalendarHourRange = userPrefs?.CalendarHourRange ?? CalendarHourRange.WorkHours });
+		return Ok(new PreferencesDto { CalendarHourRange = userPrefs?.CalendarHourRange ?? CalendarHourRange.WorkHours, CalendarDensity = userPrefs?.CalendarDensity ?? CalendarDensity.Normal });
 	}
 
 	[HttpPut]
@@ -37,6 +37,9 @@ public class PreferencesController : ControllerBase
 	{
 		if (!Enum.IsDefined(request.CalendarHourRange))
 			return BadRequest(new { message = "Plage d'heures inconnue." });
+
+		if (!Enum.IsDefined(request.CalendarDensity))
+			return BadRequest(new { message = "Densité inconnue." });
 
 		var employeeIdClaim = User.FindFirstValue("employeeId");
 
@@ -46,12 +49,15 @@ public class PreferencesController : ControllerBase
 		var userPrefs = await _db.EmployeePreferences.FindAsync(userId);
 
 		if (userPrefs is null)
-			_db.EmployeePreferences.Add(new EmployeePreferences { EmployeeId = userId, CalendarHourRange = request.CalendarHourRange });
+			_db.EmployeePreferences.Add(new EmployeePreferences { EmployeeId = userId, CalendarHourRange = request.CalendarHourRange, CalendarDensity = request.CalendarDensity });
 		else
+		{
 			userPrefs.CalendarHourRange = request.CalendarHourRange;
+			userPrefs.CalendarDensity = request.CalendarDensity;
+		}
 
 		await _db.SaveChangesAsync();
 
-		return Ok(new PreferencesDto { CalendarHourRange = request.CalendarHourRange });
+		return Ok(new PreferencesDto { CalendarHourRange = request.CalendarHourRange, CalendarDensity = request.CalendarDensity });
 	}
 }

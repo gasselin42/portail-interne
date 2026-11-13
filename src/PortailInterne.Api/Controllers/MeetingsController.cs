@@ -77,7 +77,7 @@ public class MeetingsController : ControllerBase
 			IsTeamMeeting = isTeamMeeting,
 			IsFlexible = request.IsFlexible,
 			Participants = [
-				new MeetingParticipant { EmployeeId = _scope.CallerEmployeeId, Color = request.Color },
+				new MeetingParticipant { EmployeeId = _scope.CallerEmployeeId, Color = request.Color, Response = ParticipantResponse.Accepte },
 				.. participants.Select(p => new MeetingParticipant { EmployeeId = p.Id }),
 			]
 		};
@@ -89,7 +89,7 @@ public class MeetingsController : ControllerBase
 
 		await _db.SaveChangesAsync();
 
-		return Created($"api/meetings/{meeting.Id}", MeetingMapping.ToResponse(meeting, request.Color));
+		return Created($"api/meetings/{meeting.Id}", MeetingMapping.ToResponse(meeting, request.Color, ParticipantResponse.Accepte));
 	}
 
 	[HttpGet("{id:int}")]
@@ -110,16 +110,17 @@ public class MeetingsController : ControllerBase
 		if (!(canEdit || isParticipant))
 			return NotFound();
 
+		var caller = meeting.Participants.FirstOrDefault(p => p.EmployeeId == _scope.CallerEmployeeId);
 		var response = new MeetingDetailResponse
 		{
-			Meeting = MeetingMapping.ToResponse(meeting, meeting.Participants.FirstOrDefault(p => p.EmployeeId == _scope.CallerEmployeeId)?.Color),
-			Organizer = new MeetingPerson { EmployeeId = meeting.OrganizerId, FirstName = meeting.Organizer.FirstName, LastName = meeting.Organizer.LastName },
+			Meeting = MeetingMapping.ToResponse(meeting, caller?.Color, caller?.Response),
+			Organizer = new MeetingPerson { EmployeeId = meeting.OrganizerId, FirstName = meeting.Organizer.FirstName, LastName = meeting.Organizer.LastName, Response = ParticipantResponse.Accepte },
 			Participants = meeting.Participants
 						.Where(p => p.EmployeeId != meeting.OrganizerId)
 						.OrderBy(p => p.Employee.LastName)
 						.ThenBy(p => p.Employee.FirstName)
 						.ThenBy(p => p.EmployeeId)
-						.Select(p => new MeetingPerson { EmployeeId = p.EmployeeId, FirstName = p.Employee.FirstName, LastName = p.Employee.LastName })
+						.Select(p => new MeetingPerson { EmployeeId = p.EmployeeId, FirstName = p.Employee.FirstName, LastName = p.Employee.LastName, Response = p.Response })
 						.ToList(),
 			CanEdit = canEdit
 		};
@@ -210,10 +211,67 @@ public class MeetingsController : ControllerBase
 				meeting.Participants.Add(new MeetingParticipant { EmployeeId = newId });
 		}
 
+		if (timeChanged)
+		{
+			foreach (var participant in meeting.Participants.Where((p) => p.EmployeeId != meeting.OrganizerId).ToList())
+				participant.Response = ParticipantResponse.EnAttente;
+		}
+
 		AddUpdateNotices(meeting, before, actor, organizer, participants, conflicts, overlaps, everyone);
 		
 		await _db.SaveChangesAsync();
-		return Ok(MeetingMapping.ToResponse(meeting, meeting.Participants.FirstOrDefault(p => p.EmployeeId == _scope.CallerEmployeeId)?.Color));
+
+		var caller = meeting.Participants.FirstOrDefault(p => p.EmployeeId == _scope.CallerEmployeeId);
+		return Ok(MeetingMapping.ToResponse(meeting, caller?.Color, caller?.Response));
+	}
+
+	[HttpPut("{id:int}/response")]
+	public async Task<IActionResult> UpdateResponse(int id, SaveMeetingResponseRequest request)
+	{
+		var meeting = await _db.Meetings
+			.Include(m => m.Organizer)
+			.Include(m => m.Participants)
+				.ThenInclude(p => p.Employee)
+					.ThenInclude(e => e.Site)
+			.FirstOrDefaultAsync(m => m.Id == id);
+
+		if (meeting is null || !meeting.Participants.Any((p) => p.EmployeeId == _scope.CallerEmployeeId))
+			return NotFound();
+
+		if (meeting.OrganizerId == _scope.CallerEmployeeId)
+			return BadRequest(new { message = "L'organisateur participe d'office."});
+
+		if (!Enum.IsDefined(request.Response) || request.Response == ParticipantResponse.EnAttente)
+			return BadRequest(new { message = "Réponse inconnue."});
+
+		if (meeting.StartAt <= _time.GetUtcNow().UtcDateTime)
+			return BadRequest(new { message = "Ce meeting a déjà commencé." });
+		
+		var participant = meeting.Participants.First((p) => p.EmployeeId == _scope.CallerEmployeeId);
+
+		if (request.Response != participant.Response)
+		{
+			var oldResponse = participant.Response;
+			participant.Response = request.Response;
+
+			var organizer = await LoadPersonAsync(meeting.OrganizerId);
+
+			if (request.Response == ParticipantResponse.Decline)
+			{
+				AddNotification(meeting.OrganizerId, NotificationType.MeetingDeclined, meeting.StartAt, organizer.Zone,
+					$"{participant.Employee.FirstName} {participant.Employee.LastName} a décliné « {meeting.Title} », " + MeetingTexts.FormatWhen(meeting.StartAt, organizer.Zone) + ".");
+			}
+
+			if (request.Response == ParticipantResponse.Accepte && oldResponse == ParticipantResponse.Decline)
+			{
+				AddNotification(meeting.OrganizerId, NotificationType.MeetingDeclinedWithdrawn, meeting.StartAt, organizer.Zone,
+					$"{participant.Employee.FirstName} {participant.Employee.LastName} participera finalement à « {meeting.Title} », " + MeetingTexts.FormatWhen(meeting.StartAt, organizer.Zone) + ".");
+			}
+		
+			await _db.SaveChangesAsync();
+		}
+
+		return NoContent();
 	}
 
 	[HttpDelete("{id:int}")]
@@ -383,7 +441,8 @@ public class MeetingsController : ControllerBase
 			.Where(p => everyoneIds.Contains(p.EmployeeId)
 				&& p.Meeting.StartAt < end
 				&& p.Meeting.EndAt > start
-				&& p.MeetingId != excludeMeetingId)
+				&& p.MeetingId != excludeMeetingId
+				&& p.Response != ParticipantResponse.Decline)
 			.Select(p => new Overlap(
 				p.EmployeeId,
 				p.MeetingId,
@@ -545,6 +604,7 @@ public class MeetingsController : ControllerBase
 		{
 			foreach (var p in participants.Where(p => before.Ids.Contains(p.Id)))
 			{
+				NotificationType type = NotificationType.MeetingUpdated;
 				var when = MeetingTexts.FormatWhen(meeting.StartAt, p.Zone);
 				string text;
 
@@ -558,7 +618,13 @@ public class MeetingsController : ControllerBase
 				if (timeChanged && conflicts.Any(c => c.EmployeeId == p.Id))
 					text += " Ça chevauche un autre de tes événements." + (meeting.IsTeamMeeting ? " Meeting d'équipe : il a priorité." : "");
 
-				AddNotification(p.Id, NotificationType.MeetingUpdated, meeting.StartAt, p.Zone, text);
+				if (timeChanged && !conflicts.Any(c => c.EmployeeId == p.Id) && meeting.IsTeamMeeting && overlaps.Any(o => o.EmployeeId == p.Id && o.IsFlexible))
+				{
+					text += " Il chevauche ton bloc souple, qui reste en place.";
+					type = NotificationType.FlexibleBlockOverlapped;
+				}
+
+				AddNotification(p.Id, type, meeting.StartAt, p.Zone, text);
 			}
 		}
 

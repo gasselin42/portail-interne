@@ -1,16 +1,20 @@
 import { DaySource, type CalendarAbsence, type EffectiveDay } from "../api/calendar"
 import { LeaveStatus } from "../api/leaves"
-import { CalendarHourRange, type CalendarHourRangeId } from "../api/preferences"
+import { CalendarDensity, CalendarHourRange, type CalendarDensityId, type CalendarHourRangeId } from "../api/preferences"
 import { formatTime } from "./date"
 
-export const HOUR_HEIGHT = 48 // pixels par heure
+export const HOUR_HEIGHTS: Record<CalendarDensityId, number> = {
+	[CalendarDensity.Normal]: 48,
+	[CalendarDensity.Compact]: 32,
+	[CalendarDensity.Airy]: 72,
+} // pixels par heure
 
-export function timeToPx(time: string, startHour: number): number {
-	return minutesToPx(toMinutes(time), startHour)
+export function timeToPx(time: string, startHour: number, density: CalendarDensityId): number {
+	return minutesToPx(toMinutes(time), startHour, density)
 }
 
-export function minutesToPx(minutes: number, startHour: number): number {
-	return minutes * HOUR_HEIGHT / 60 - startHour * HOUR_HEIGHT
+export function minutesToPx(minutes: number, startHour: number, density: CalendarDensityId): number {
+	return minutes * HOUR_HEIGHTS[density] / 60 - startHour * HOUR_HEIGHTS[density]
 }
 
 function toMinutes(time: string): number {

@@ -11,7 +11,9 @@ public enum NotificationType
 	AbsenceCancelled = 6,
 	AbsenceUnplanned = 7,
 	AbsenceReturnUnconfirmed = 8,
-	LeaveOverlapsMeeting = 9
+	LeaveOverlapsMeeting = 9,
+	MeetingDeclined = 10,
+	MeetingDeclinedWithdrawn = 11
 }
 
 public class Notification

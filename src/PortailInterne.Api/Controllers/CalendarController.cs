@@ -83,9 +83,9 @@ public class CalendarController : ControllerBase
 				.Where(p => p.EmployeeId == employeeId
 					&& p.Meeting.StartAt < toMidnight && p.Meeting.EndAt > fromMidnight)
 				.OrderBy(p => p.Meeting.StartAt)
-				.Select(p => new { p.Meeting, p.Color })
+				.Select(p => new { p.Meeting, p.Color, p.Response })
 				.ToListAsync())
-			.Select(m => MeetingMapping.ToResponse(m.Meeting, m.Color))
+			.Select(m => MeetingMapping.ToResponse(m.Meeting, m.Color, m.Response))
 			.ToList();
 
 		return Ok(new CalendarResponse { Days = daysResponse, Leaves = leaves, Meetings = meetings });

@@ -144,210 +144,203 @@ function MeetingForm({ initialDate, onClose, onSaved, meeting }: FormProps) {
 	const people: EmployeeOption[] = [...(organizer ? [organizer] : []), ...participants]
 
 	return (
-		<>
-			{error && (
-				<div className="mt-3">
-					<ErrorBanner message={error} />
-				</div>
-			)}
-
-			<form onSubmit={handleSubmit}>
-				<section className="pt-2">
-					<div className="grid gap-5 sm:grid-cols-3">
-						<div className="flex flex-col">
-							<span className={labelClass} aria-hidden="true">
-								Type
-							</span>
-							<div className="flex flex-1 items-center">
-								<SegmentedControl
-									label="Type"
-									options={KIND_OPTIONS}
-									value={kind}
-									onChange={(k) => setKind(k)}
-									disabled={meeting !== undefined}
-								/>
-							</div>
-						</div>
-						<div>
-							<label htmlFor="title" className={labelClass}>
-								Titre
-							</label>
-							<input
-								id="title"
-								type="text"
-								required
-								data-autofocus
-								value={title}
-								onChange={(e) => setTitle(e.target.value)}
-								className={inputClass}
-							/>
-						</div>
-						<div>
-							<label htmlFor="description" className={labelClass}>
-								Description (facultative)
-							</label>
-							<input
-								id="description"
-								type="text"
-								value={description}
-								onChange={(e) => setDescription(e.target.value)}
-								className={inputClass}
-							/>
-						</div>
-					</div>
-					<div className="mt-5 grid gap-5 sm:grid-cols-3">
-						<div>
-							<label htmlFor="date" className={labelClass}>
-								Date
-							</label>
-							<input
-								id="date"
-								type="date"
-								required
-								min={firstBookableDate()}
-								value={date}
-								onChange={(e) => {
-									const newDate = e.target.value
-									if (newDate === "") return
-									setDate(newDate)
-									if (start < earliestStart(newDate))
-										moveStart(earliestStart(newDate))
-								}}
-								className={inputClass}
-							/>
-						</div>
-						<div>
-							<label htmlFor="start" className={labelClass}>
-								Début
-							</label>
-							<select
-								id="start"
-								required
-								value={start}
-								onChange={(e) => moveStart(Number(e.target.value))}
-								className={inputClass}
-							>
-								{startOptions().filter(o => o >= earliestStart(date)).map((m) => (
-									<option key={m} value={m}>
-										{formatOptionTime(m)}
-									</option>
-								))}
-							</select>
-						</div>
-						<div>
-							<label htmlFor="end" className={labelClass}>
-								Fin
-							</label>
-							<select
-								id="end"
-								required
-								value={end}
-								onChange={(e) => setEnd(Number(e.target.value))}
-								className={inputClass}
-							>
-								{endOptions(start).map((m) => (
-									<option key={m.label} value={m.value}>
-										{m.label}
-									</option>
-								))}
-							</select>
-						</div>
-					</div>
-					<div className={`mt-5 grid gap-5 items-start ${meeting === undefined ? "sm:grid-cols-2" : ""}`}>
-						<div>
-							{kind === MeetingKind.Meeting && (
-								<>
-									<label htmlFor="participants" className={labelClass}>
-										Participants
-									</label>
-									<EmployeeCombobox
-										id="participants"
-										value={null}
-										onChange={addParticipant}
-										placeholder="Ajouter un participant…"
-									/>
-									{participants.length > 0 && (
-										<ul className="mt-2 flex flex-wrap gap-2" aria-label="Participants">
-											{participants.map((p) => (
-												<li
-													key={p.id}
-													className="flex items-center gap-1.5 rounded-full bg-slate-100 py-0.5 pr-1 pl-0.5 text-sm"
-												>
-													<Avatar firstName={p.firstName} lastName={p.lastName} size="sm" />
-													<span>
-														{p.firstName} {p.lastName}
-													</span>
-													<button
-														type="button"
-														aria-label={`Retirer ${p.firstName} ${p.lastName}`}
-														onClick={() =>
-															setParticipants(participants.filter((f) => p.id !== f.id))
-														}
-														className={`rounded-full p-0.5 text-slate-500 hover:bg-slate-200 hover:text-slate-700 ${focusRing}`}
-													>
-														<CloseOutlined fontSize="small" />
-													</button>
-												</li>
-											))}
-										</ul>
-									)}
-								</>
-							)}
-							{kind === MeetingKind.PersonalBlock && (
-								<>
-									<span className={labelClass}>Souplesse</span>
-									<label className="flex items-center gap-2 font-normal text-slate-900">
-										<input
-											type="checkbox"
-											checked={isFlexible}
-											onChange={(e) => setIsFlexible(e.target.checked)}
-											className="size-4 accent-sky-600"
-											aria-describedby="flexible-help"
-										/>
-										Bloc souple
-									</label>
-									<p id="flexible-help" className="mt-1 text-xs text-slate-500">
-										Un meeting d'équipe pourra chevaucher ce bloc sans conflit ; tu recevras simplement une notification.
-									</p>
-								</>
-							)}
-						</div>
-						{meeting === undefined &&
-							<div>
-								<ColorPicker legend="Couleur" value={color} onChange={setColor} />
-							</div>
-						}
-					</div>
-				</section>
-				<div className="mt-5">
-					<AvailabilityStrip
-						date={date}
-						people={people}
-						start={start}
-						end={end}
-						onPick={moveStart}
-					/>
-				</div>
-				{pendingConflict && <MeetingConflictPanel conflict={pendingConflict} myId={me?.employeeId} isEditing={meeting !== undefined} />}
-				<div className="mt-6 flex justify-end gap-3">
-					<button type="button" onClick={onClose} disabled={busy} className={secondaryButton}>
-						Annuler
-					</button>
-					<button type="submit" disabled={busy} className={primaryButton}>
-						<span className="grid">
-							<span className={`col-start-1 row-start-1 ${busy ? "invisible" : ""}`}>
-								{meeting
-									? pendingConflict ? "Enregistrer quand même" : "Enregistrer"
-									: pendingConflict ? "Créer quand même" : "Créer"
-								}
-							</span>
-							<span className={`col-start-1 row-start-1 ${busy ? "" : "invisible"}`}>
-								{meeting ? "Enregistrement…" : "Création…"}
-							</span>
+		<form onSubmit={handleSubmit}>
+			<section className="pt-2">
+				<div className="grid gap-5 sm:grid-cols-3">
+					<div className="flex flex-col">
+						<span className={labelClass} aria-hidden="true">
+							Type
 						</span>
-					</button>
+						<div className="flex flex-1 items-center">
+							<SegmentedControl
+								label="Type"
+								options={KIND_OPTIONS}
+								value={kind}
+								onChange={(k) => setKind(k)}
+								disabled={meeting !== undefined}
+							/>
+						</div>
+					</div>
+					<div>
+						<label htmlFor="title" className={labelClass}>
+							Titre
+						</label>
+						<input
+							id="title"
+							type="text"
+							required
+							data-autofocus
+							value={title}
+							onChange={(e) => setTitle(e.target.value)}
+							className={inputClass}
+						/>
+					</div>
+					<div>
+						<label htmlFor="description" className={labelClass}>
+							Description (facultative)
+						</label>
+						<input
+							id="description"
+							type="text"
+							value={description}
+							onChange={(e) => setDescription(e.target.value)}
+							className={inputClass}
+						/>
+					</div>
 				</div>
-			</form>
-		</>
+				<div className="mt-5 grid gap-5 sm:grid-cols-3">
+					<div>
+						<label htmlFor="date" className={labelClass}>
+							Date
+						</label>
+						<input
+							id="date"
+							type="date"
+							required
+							min={firstBookableDate()}
+							value={date}
+							onChange={(e) => {
+								const newDate = e.target.value
+								if (newDate === "") return
+								setDate(newDate)
+								if (start < earliestStart(newDate))
+									moveStart(earliestStart(newDate))
+							}}
+							className={inputClass}
+						/>
+					</div>
+					<div>
+						<label htmlFor="start" className={labelClass}>
+							Début
+						</label>
+						<select
+							id="start"
+							required
+							value={start}
+							onChange={(e) => moveStart(Number(e.target.value))}
+							className={inputClass}
+						>
+							{startOptions().filter(o => o >= earliestStart(date)).map((m) => (
+								<option key={m} value={m}>
+									{formatOptionTime(m)}
+								</option>
+							))}
+						</select>
+					</div>
+					<div>
+						<label htmlFor="end" className={labelClass}>
+							Fin
+						</label>
+						<select
+							id="end"
+							required
+							value={end}
+							onChange={(e) => setEnd(Number(e.target.value))}
+							className={inputClass}
+						>
+							{endOptions(start).map((m) => (
+								<option key={m.label} value={m.value}>
+									{m.label}
+								</option>
+							))}
+						</select>
+					</div>
+				</div>
+				<div className={`mt-5 grid gap-5 items-start ${meeting === undefined ? "sm:grid-cols-2" : ""}`}>
+					<div>
+						{kind === MeetingKind.Meeting && (
+							<>
+								<label htmlFor="participants" className={labelClass}>
+									Participants
+								</label>
+								<EmployeeCombobox
+									id="participants"
+									value={null}
+									onChange={addParticipant}
+									placeholder="Ajouter un participant…"
+								/>
+								{participants.length > 0 && (
+									<ul className="mt-2 flex flex-wrap gap-2" aria-label="Participants">
+										{participants.map((p) => (
+											<li
+												key={p.id}
+												className="flex items-center gap-1.5 rounded-full bg-slate-100 py-0.5 pr-1 pl-0.5 text-sm"
+											>
+												<Avatar firstName={p.firstName} lastName={p.lastName} size="sm" />
+												<span>
+													{p.firstName} {p.lastName}
+												</span>
+												<button
+													type="button"
+													aria-label={`Retirer ${p.firstName} ${p.lastName}`}
+													onClick={() =>
+														setParticipants(participants.filter((f) => p.id !== f.id))
+													}
+													className={`rounded-full p-0.5 text-slate-500 hover:bg-slate-200 hover:text-slate-700 ${focusRing}`}
+												>
+													<CloseOutlined fontSize="small" />
+												</button>
+											</li>
+										))}
+									</ul>
+								)}
+							</>
+						)}
+						{kind === MeetingKind.PersonalBlock && (
+							<>
+								<span className={labelClass}>Souplesse</span>
+								<label className="flex items-center gap-2 font-normal text-slate-900">
+									<input
+										type="checkbox"
+										checked={isFlexible}
+										onChange={(e) => setIsFlexible(e.target.checked)}
+										className="size-4 accent-sky-600"
+										aria-describedby="flexible-help"
+									/>
+									Bloc souple
+								</label>
+								<p id="flexible-help" className="mt-1 text-xs text-slate-500">
+									Un meeting d'équipe pourra chevaucher ce bloc sans conflit ; tu recevras simplement une notification.
+								</p>
+							</>
+						)}
+					</div>
+					{meeting === undefined &&
+						<div>
+							<ColorPicker legend="Couleur" value={color} onChange={setColor} />
+						</div>
+					}
+				</div>
+			</section>
+			<div className="mt-5">
+				<AvailabilityStrip
+					date={date}
+					people={people}
+					start={start}
+					end={end}
+					onPick={moveStart}
+				/>
+			</div>
+			{error && <div className="mt-3"><ErrorBanner message={error} /></div>}
+			{pendingConflict && <MeetingConflictPanel conflict={pendingConflict} myId={me?.employeeId} isEditing={meeting !== undefined} />}
+			<div className="mt-6 flex justify-end gap-3">
+				<button type="button" onClick={onClose} disabled={busy} className={secondaryButton}>
+					Annuler
+				</button>
+				<button type="submit" disabled={busy} className={primaryButton}>
+					<span className="grid">
+						<span className={`col-start-1 row-start-1 ${busy ? "invisible" : ""}`}>
+							{meeting
+								? pendingConflict ? "Enregistrer quand même" : "Enregistrer"
+								: pendingConflict ? "Créer quand même" : "Créer"
+							}
+						</span>
+						<span className={`col-start-1 row-start-1 ${busy ? "" : "invisible"}`}>
+							{meeting ? "Enregistrement…" : "Création…"}
+						</span>
+					</span>
+				</button>
+			</div>
+		</form>
 	)
 }

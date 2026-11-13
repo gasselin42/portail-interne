@@ -110,8 +110,49 @@ public class AvailabilityApiTests
 		Assert.Equal(DayStatus.Working, samDay.Status);
 
 		Assert.Empty(result[0].Busy);
-		Assert.Empty(result[1].Busy);
+		AssertSlot(Assert.Single(result[1].Busy), BusyKind.Absent, Utc(2026, 10, 15, 4, 0), Utc(2026, 10, 16, 4, 0)); // congé : toute la journée
 		Assert.Single(result[2].Busy);
+	}
+
+	[Fact]
+	public async Task Un_conge_en_attente_n_occupe_rien()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		api.WithDb(db =>
+		{
+			db.WorkSchedules.Add(WeekdaySchedule(team.Mark));
+			db.LeaveRequests.Add(Leave(team.Mark, Thursday, LeaveStatus.EnAttente));
+		});
+		var sam = await api.LoginAsync("sam@test.local");
+
+		var result = (await sam.GetFromJsonAsync<List<EmployeeAvailability>>(Url(Thursday, Thursday, team.Mark.Id)))!;
+
+		Assert.Equal(DayStatus.Working, result[0].Days.Single().Status);
+		Assert.Empty(result[0].Busy);
+	}
+
+	[Fact]
+	public async Task Un_conge_occupe_la_journee_dans_le_fuseau_de_l_employe()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		api.WithDb(db =>
+		{
+			var paris = new Site { Name = "Paris", TimeZoneId = "Europe/Paris" };
+			db.Sites.Add(paris);
+			db.SaveChanges();
+			db.Employees.Find(team.Jane.Id)!.SiteId = paris.Id;
+			db.WorkSchedules.Add(WeekdaySchedule(team.Jane));
+			db.LeaveRequests.Add(Leave(team.Jane, new DateOnly(2026, 10, 16), LeaveStatus.Approuve));
+		});
+		var sam = await api.LoginAsync("sam@test.local");
+
+		// Jeudi à Montréal = jeudi 6 h → vendredi 6 h à Paris ; congé le vendredi à Paris (UTC+2)
+		var result = (await sam.GetFromJsonAsync<List<EmployeeAvailability>>(Url(Thursday, Thursday, team.Jane.Id)))!;
+
+		var leave = Assert.Single(result[0].Busy);
+		AssertSlot(leave, BusyKind.Absent, Utc(2026, 10, 15, 22, 0), Utc(2026, 10, 16, 22, 0));
 	}
 
 	[Fact]
@@ -302,6 +343,16 @@ public class AvailabilityApiTests
 			.. new[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday }
 				.Select(d => new WorkScheduleDay { DayOfWeek = d, StartTime = new(8, 0), EndTime = new(17, 0), BreakMinutes = 30 }),
 		],
+	};
+
+	/// <summary>Un congé d'une journée.</summary>
+	private static LeaveRequest Leave(Employee employee, DateOnly date, LeaveStatus status) => new()
+	{
+		EmployeeId = employee.Id,
+		StartDate = date.ToDateTime(TimeOnly.MinValue),
+		EndDate = date.ToDateTime(TimeOnly.MinValue),
+		Type = LeaveType.Conge,
+		Status = status,
 	};
 
 	/// <summary>Une absence prévue le jeudi 15 octobre 2026, approuvée par défaut.</summary>

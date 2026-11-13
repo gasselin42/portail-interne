@@ -1,9 +1,8 @@
 import { useState } from "react"
 import { Modal } from "../dialogs/Modal"
 import { useAsync } from "../../hooks/useAsync"
-import { changeMeetingColor, deleteMeeting, getMeeting, MeetingKind, type MeetingColor, type MeetingPerson, type MeetingResponse } from "../../api/meetings"
 import { ErrorBanner } from "../feedback/Banner"
-import { dangerButton, secondaryButton } from "../../ui/buttons"
+import { dangerButton, secondaryButton, focusRing } from "../../ui/buttons"
 import { formatLongDate } from "../../utils/date"
 import { formatMinutes, meetingTimes } from "../../utils/meetings"
 import { Avatar } from "../employees/Avatar"
@@ -12,6 +11,19 @@ import { labelClass } from "../../ui/fields"
 import { ColorPicker } from "./ColorPicker"
 import { ConfirmDialog } from "../dialogs/ConfirmDialog"
 import { MeetingDialog } from "./MeetingDialog"
+import { CheckCircleOutlineOutlined, HighlightOff, HourglassEmptyOutlined, type SvgIconComponent } from "@mui/icons-material"
+import {
+	changeMeetingColor,
+	deleteMeeting,
+	getMeeting,
+	MeetingKind,
+	respondToMeeting,
+	ParticipantResponse,
+	type ParticipantResponseId,
+	type MeetingColor,
+	type MeetingPerson,
+	type MeetingResponse
+} from "../../api/meetings"
 
 type Props = DetailProps & {
 	meetingId: number | null
@@ -20,38 +32,59 @@ type Props = DetailProps & {
 type DetailProps = {
 	onClose: () => void
 	onColorChanged: (id: number, color: MeetingColor) => void
+	onResponded: (id: number, response: ParticipantResponseId) => void
 	onCancelled: (id: number) => void
 	onUpdated: (meeting: MeetingResponse) => void
 }
 
 const TAG = "rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700"
 
-export function MeetingDetailDialog({ meetingId, onClose, onColorChanged, onCancelled, onUpdated }: Props) {
+const RESPONSE_BUTTON = `inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`
+const RESPONSE_IDLE = "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+const RESPONSE_ACCEPTED = "border-emerald-600 bg-emerald-50 text-emerald-800"
+const RESPONSE_DECLINED = "border-red-600 bg-red-50 text-red-800"
+
+const PARTICIPANT_RESPONSES: Record<ParticipantResponseId, { icon: SvgIconComponent, label: string; className: string }> = {
+	[ParticipantResponse.EnAttente]: { icon: HourglassEmptyOutlined, label: "En attente", className: "text-slate-600" },
+	[ParticipantResponse.Accepte]: { icon: CheckCircleOutlineOutlined, label: "Accepté", className: "text-emerald-600" },
+	[ParticipantResponse.Decline]: { icon: HighlightOff, label: "Décliné", className: "text-red-600" },
+}
+
+export function MeetingDetailDialog({ meetingId, onClose, onColorChanged, onResponded, onCancelled, onUpdated }: Props) {
 	// Garde le dernier événement affiché pendant le fondu de fermeture.
 	const [shownId, setShownId] = useState(meetingId)
 	if (meetingId !== null && meetingId !== shownId) setShownId(meetingId)
 	
 	return (
 		<Modal open={meetingId !== null} title="Détails de l'événement" onClose={onClose}>
-			{shownId !== null && <MeetingDetail key={shownId} id={shownId} onClose={onClose} onColorChanged={onColorChanged} onCancelled={onCancelled} onUpdated={onUpdated} />}
+			{shownId !== null && <MeetingDetail key={shownId} id={shownId} onClose={onClose} onColorChanged={onColorChanged} onResponded={onResponded} onCancelled={onCancelled} onUpdated={onUpdated} />}
 		</Modal>
 	)
 }
 
 function PersonChip({ person, myId }: { person: MeetingPerson, myId: number | undefined }) {
+	const Icon = PARTICIPANT_RESPONSES[person.response].icon
+	const label = PARTICIPANT_RESPONSES[person.response].label
+	const css = PARTICIPANT_RESPONSES[person.response].className
 	return (
 		<span className="flex items-center gap-1.5 rounded-full bg-slate-100 py-0.5 pr-2 pl-0.5 text-sm">
 			<Avatar firstName={person.firstName} lastName={person.lastName} size="sm" />
 			{person.employeeId === myId ? "Toi" : `${person.firstName} ${person.lastName}`}
+			<span className={`${css} flex`}>
+				<Icon fontSize="inherit" aria-hidden="true" />
+				<p className="sr-only">{label}</p>
+			</span>
 		</span>
 	)
 }
 
-export function MeetingDetail({ id, onClose, onColorChanged, onCancelled, onUpdated }: { id: number } & DetailProps) {
+export function MeetingDetail({ id, onClose, onColorChanged, onResponded, onCancelled, onUpdated }: { id: number } & DetailProps) {
 	const [colorBusy, setColorBusy] = useState(false)
 	const [colorError, setColorError] = useState<string | null>(null)
 	const [confirmOpen, setConfirmOpen] = useState(false)
 	const [cancelError, setCancelError] = useState<string | null>(null)
+	const [responseBusy, setResponseBusy] = useState(false)
+	const [responseError, setResponseError] = useState<string | null>(null)
 	const [editOpen, setEditOpen] = useState(false)
 	const [time] = useState(() => Date.now())
 
@@ -66,6 +99,28 @@ export function MeetingDetail({ id, onClose, onColorChanged, onCancelled, onUpda
 	const { date, start, end } = meetingTimes(meeting)
 	const isParticipant = me?.employeeId === organizer.employeeId || participants.some(p => p.employeeId === me?.employeeId)
 	const canModify = data.canEdit && Date.parse(meeting.startAt) > time
+
+	// Un invité (pas l'organisateur) répond tant que le meeting n'a pas commencé.
+	const canRespond = meeting.myResponse !== null && me?.employeeId !== organizer.employeeId && Date.parse(meeting.startAt) > time
+
+	async function handleRespond(response: ParticipantResponseId) {
+		if (response === meeting.myResponse) return
+		setResponseBusy(true)
+		setResponseError(null)
+		try {
+			await respondToMeeting(meeting.id, response)
+			setData((d) => ({
+				...d,
+				meeting: { ...d.meeting, myResponse: response },
+				participants: d.participants.map((p) => p.employeeId === me?.employeeId ? { ...p, response } : p),
+			}))
+			onResponded(meeting.id, response)
+		} catch (e) {
+			setResponseError(e instanceof Error ? e.message : "Impossible d'enregistrer ta réponse.")
+		} finally {
+			setResponseBusy(false)
+		}
+	}
 
 	async function handleColor(color: MeetingColor) {
 		setColorBusy(true)
@@ -101,6 +156,35 @@ export function MeetingDetail({ id, onClose, onColorChanged, onCancelled, onUpda
 					{formatLongDate(date)}, {formatMinutes(start)} – {formatMinutes(end)}
 				</p>
 			</div>
+
+			{canRespond && (
+				<div>
+					<p className={labelClass}>Ta réponse</p>
+					<div className="mt-1 flex gap-2">
+						<button
+							type="button"
+							onClick={() => handleRespond(ParticipantResponse.Accepte)}
+							disabled={responseBusy}
+							aria-pressed={meeting.myResponse === ParticipantResponse.Accepte}
+							className={`${RESPONSE_BUTTON} ${meeting.myResponse === ParticipantResponse.Accepte ? RESPONSE_ACCEPTED : RESPONSE_IDLE}`}
+						>
+							<CheckCircleOutlineOutlined fontSize="small" />
+							Accepter
+						</button>
+						<button
+							type="button"
+							onClick={() => handleRespond(ParticipantResponse.Decline)}
+							disabled={responseBusy}
+							aria-pressed={meeting.myResponse === ParticipantResponse.Decline}
+							className={`${RESPONSE_BUTTON} ${meeting.myResponse === ParticipantResponse.Decline ? RESPONSE_DECLINED : RESPONSE_IDLE}`}
+						>
+							<HighlightOff fontSize="small" />
+							Décliner
+						</button>
+					</div>
+					{responseError && <div className="mt-2"><ErrorBanner message={responseError} /></div>}
+				</div>
+			)}
 
 			{(meeting.kind === MeetingKind.PersonalBlock || meeting.isTeamMeeting) && (
 				<ul className="flex flex-wrap gap-1.5">

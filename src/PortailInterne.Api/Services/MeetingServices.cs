@@ -92,7 +92,7 @@ public static class MeetingTime
 
 public static class MeetingMapping
 {
-	public static MeetingResponse ToResponse(Meeting meeting, string? color)
+	public static MeetingResponse ToResponse(Meeting meeting, string? color, ParticipantResponse? response)
 	{
 		return new MeetingResponse
 		{
@@ -105,7 +105,8 @@ public static class MeetingMapping
 			OrganizerId = meeting.OrganizerId,
 			IsTeamMeeting = meeting.IsTeamMeeting,
 			IsFlexible = meeting.IsFlexible,
-			Color = color ?? MeetingColors.Default
+			Color = color ?? MeetingColors.Default,
+			MyResponse = response
 		};
 	}
 }

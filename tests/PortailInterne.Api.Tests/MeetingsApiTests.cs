@@ -1210,6 +1210,48 @@ public class MeetingsApiTests
 	}
 
 	[Fact]
+	public async Task Deplacer_un_meeting_d_equipe_sur_un_bloc_souple_sans_conflit_proprietaire_notifie()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var mark = await api.LoginAsync("mark@test.local"); // manager : meeting d'équipe
+		var id = await CreatedId(await mark.PostAsJsonAsync("/api/meetings", Group([team.Sam.Id])));
+		api.WithDb(db => db.Meetings.Add(Existing(team.Sam, "2026-10-16T18:00:00Z", "2026-10-16T19:00:00Z", kind: MeetingKind.PersonalBlock, isFlexible: true)));
+
+		var res = await mark.PutAsJsonAsync($"/api/meetings/{id}", Edit([team.Sam.Id], start: "2026-10-16T18:00:00Z", end: "2026-10-16T19:00:00Z")); // aucune confirmation
+
+		Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+		api.WithDb(db =>
+		{
+			Assert.Equal(2, db.Meetings.Count()); // le bloc est toujours là
+			var latest = db.Notifications.Where(n => n.RecipientId == team.Sam.Id).OrderByDescending(n => n.Id).First();
+			Assert.Equal(NotificationType.FlexibleBlockOverlapped, latest.Type);
+			Assert.Equal("Mark Test a modifié l'horaire de « Revue » : vendredi 16 octobre à 14 h. Il chevauche ton bloc souple, qui reste en place.", latest.Message);
+		});
+	}
+
+	[Fact]
+	public async Task Le_statut_d_equipe_est_fixe_a_la_creation()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var jane = await api.LoginAsync("jane@test.local"); // ni manager ni Admin : meeting ordinaire
+		var id = await CreatedId(await jane.PostAsJsonAsync("/api/meetings", Group([team.Sam.Id])));
+		var alex = await api.LoginAsync("alex@test.local"); // Admin du site
+
+		var res = await alex.PutAsJsonAsync($"/api/meetings/{id}", Edit([team.Sam.Id], title: "Revue Q4"));
+
+		Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+		Assert.False((await res.Content.ReadFromJsonAsync<MeetingResponse>())!.IsTeamMeeting);
+		api.WithDb(db =>
+		{
+			var meeting = db.Meetings.Single();
+			Assert.False(meeting.IsTeamMeeting);
+			Assert.Equal(team.Jane.Id, meeting.OrganizerId);
+		});
+	}
+
+	[Fact]
 	public async Task Modifier_sans_le_droit_ou_trop_tard_refuse()
 	{
 		using var api = new ApiFactory().Start();
@@ -1291,6 +1333,135 @@ public class MeetingsApiTests
 		var res = await api.CreateClient().PostAsJsonAsync("/api/meetings", Block());
 
 		Assert.Equal(HttpStatusCode.Unauthorized, res.StatusCode);
+	}
+
+	// ─── Réponses (Accepté / Décliné) ──────────────────────────────────────
+
+	[Fact]
+	public async Task Un_invite_est_en_attente_l_organisateur_accepte_d_office()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var sam = await api.LoginAsync("sam@test.local");
+		var jane = await api.LoginAsync("jane@test.local");
+		var id = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id])));
+
+		var forSam = (await sam.GetFromJsonAsync<MeetingDetailResponse>($"/api/meetings/{id}"))!;
+		var forJane = (await jane.GetFromJsonAsync<MeetingDetailResponse>($"/api/meetings/{id}"))!;
+
+		Assert.Equal(ParticipantResponse.Accepte, forSam.Meeting.MyResponse);
+		Assert.Equal(ParticipantResponse.Accepte, forSam.Organizer.Response);
+		Assert.Equal(ParticipantResponse.EnAttente, Assert.Single(forSam.Participants).Response);
+		Assert.Equal(ParticipantResponse.EnAttente, forJane.Meeting.MyResponse);
+	}
+
+	[Fact]
+	public async Task Repondre_change_la_reponse_et_seul_un_nouveau_refus_previent_l_organisateur()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var sam = await api.LoginAsync("sam@test.local");
+		var jane = await api.LoginAsync("jane@test.local");
+		var id = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id])));
+		var url = $"/api/meetings/{id}/response";
+
+		var accepted = await jane.PutAsJsonAsync(url, new { response = ParticipantResponse.Accepte });
+		api.WithDb(db => Assert.Empty(db.Notifications.Where(n => n.RecipientId == team.Sam.Id)));
+
+		await jane.PutAsJsonAsync(url, new { response = ParticipantResponse.Decline });
+		await jane.PutAsJsonAsync(url, new { response = ParticipantResponse.Decline }); // deux fois : une seule notification
+
+		Assert.Equal(HttpStatusCode.NoContent, accepted.StatusCode);
+		api.WithDb(db =>
+		{
+			Assert.Equal(ParticipantResponse.Decline, db.MeetingParticipants.Single(p => p.EmployeeId == team.Jane.Id).Response);
+			var notice = db.Notifications.Single(n => n.RecipientId == team.Sam.Id);
+			Assert.Equal(NotificationType.MeetingDeclined, notice.Type);
+			Assert.Equal("Jane Test a décliné « Revue », jeudi 15 octobre à 10 h.", notice.Message);
+		});
+
+		await jane.PutAsJsonAsync(url, new { response = ParticipantResponse.Accepte }); // on peut changer d'avis : l'organisateur le sait
+		api.WithDb(db =>
+		{
+			Assert.Equal(ParticipantResponse.Accepte, db.MeetingParticipants.Single(p => p.EmployeeId == team.Jane.Id).Response);
+			var withdrawn = db.Notifications.Where(n => n.RecipientId == team.Sam.Id).OrderByDescending(n => n.Id).First();
+			Assert.Equal(NotificationType.MeetingDeclinedWithdrawn, withdrawn.Type);
+			Assert.Equal("Jane Test participera finalement à « Revue », jeudi 15 octobre à 10 h.", withdrawn.Message);
+			Assert.Equal(2, db.Notifications.Count(n => n.RecipientId == team.Sam.Id));
+		});
+	}
+
+	[Fact]
+	public async Task Repondre_refuse_pour_l_organisateur_un_non_participant_une_reponse_invalide_ou_trop_tard()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var sam = await api.LoginAsync("sam@test.local");
+		var jane = await api.LoginAsync("jane@test.local");
+		var mark = await api.LoginAsync("mark@test.local");
+		var id = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id])));
+		var started = Shared(team.Sam, [team.Jane]);
+		started.StartAt = new DateTime(2026, 10, 14, 15, 0, 0, DateTimeKind.Utc);
+		started.EndAt = new DateTime(2026, 10, 14, 17, 0, 0, DateTimeKind.Utc);
+		api.WithDb(db => db.Meetings.Add(started));
+		var url = $"/api/meetings/{id}/response";
+
+		Assert.Equal("L'organisateur participe d'office.", await ErrorMessage(await sam.PutAsJsonAsync(url, new { response = ParticipantResponse.Decline })));
+		Assert.Equal(HttpStatusCode.NotFound, (await mark.PutAsJsonAsync(url, new { response = ParticipantResponse.Accepte })).StatusCode);
+		Assert.Equal(HttpStatusCode.NotFound, (await jane.PutAsJsonAsync("/api/meetings/999/response", new { response = ParticipantResponse.Accepte })).StatusCode);
+		Assert.Equal(HttpStatusCode.BadRequest, (await jane.PutAsJsonAsync(url, new { response = ParticipantResponse.EnAttente })).StatusCode);
+		Assert.Equal(HttpStatusCode.BadRequest, (await jane.PutAsJsonAsync(url, new { response = 7 })).StatusCode);
+		Assert.Equal("Ce meeting a déjà commencé.", await ErrorMessage(await jane.PutAsJsonAsync($"/api/meetings/{started.Id}/response", new { response = ParticipantResponse.Decline })));
+
+		api.WithDb(db =>
+		{
+			Assert.All(db.MeetingParticipants.Where(p => p.EmployeeId == team.Jane.Id), p => Assert.Equal(ParticipantResponse.EnAttente, p.Response));
+			Assert.Empty(db.Notifications.Where(n => n.RecipientId == team.Sam.Id));
+		});
+	}
+
+	[Fact]
+	public async Task Decline_rend_libre_aucun_conflit_ni_creneau_occupe()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var sam = await api.LoginAsync("sam@test.local");
+		var jane = await api.LoginAsync("jane@test.local");
+		var id = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id])));
+		await jane.PutAsJsonAsync($"/api/meetings/{id}/response", new { response = ParticipantResponse.Decline });
+		var alex = await api.LoginAsync("alex@test.local");
+
+		var busy = (await alex.GetFromJsonAsync<List<EmployeeAvailability>>($"/api/availability?from=2026-10-15&to=2026-10-15&employeeIds={team.Jane.Id}"))!;
+		var created = await alex.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id])); // même créneau, sans confirmation
+
+		Assert.Empty(busy.Single().Busy);
+		Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+	}
+
+	[Fact]
+	public async Task Changer_l_heure_remet_les_reponses_en_attente_changer_le_titre_non()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		var sam = await api.LoginAsync("sam@test.local");
+		var jane = await api.LoginAsync("jane@test.local");
+		var id = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Group([team.Jane.Id])));
+		await jane.PutAsJsonAsync($"/api/meetings/{id}/response", new { response = ParticipantResponse.Decline });
+		ParticipantResponse JaneResponse()
+		{
+			var response = ParticipantResponse.EnAttente;
+			api.WithDb(db => response = db.MeetingParticipants.Single(p => p.EmployeeId == team.Jane.Id).Response);
+			return response;
+		}
+
+		await sam.PutAsJsonAsync($"/api/meetings/{id}", Edit([team.Jane.Id], title: "Revue Q4"));
+		var afterRename = JaneResponse();
+		await sam.PutAsJsonAsync($"/api/meetings/{id}", Edit([team.Jane.Id], title: "Revue Q4", start: "2026-10-16T14:00:00Z", end: "2026-10-16T15:00:00Z"));
+		var afterMove = JaneResponse();
+
+		Assert.Equal(ParticipantResponse.Decline, afterRename);
+		Assert.Equal(ParticipantResponse.EnAttente, afterMove);
+		api.WithDb(db => Assert.Equal(ParticipantResponse.Accepte, db.MeetingParticipants.Single(p => p.EmployeeId == team.Sam.Id).Response));
 	}
 
 	// ─── Aides ──────────────────────────────────────────────────────────────

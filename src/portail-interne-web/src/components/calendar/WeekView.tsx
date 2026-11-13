@@ -1,6 +1,6 @@
 import type { EffectiveDay } from "../../api/calendar"
 import type { MeetingResponse } from "../../api/meetings"
-import type { CalendarHourRangeId } from "../../api/preferences"
+import { CalendarDensity, type CalendarDensityId, type CalendarHourRangeId } from "../../api/preferences"
 import type { LeaveSegment } from "../../utils/calendar"
 import { formatDayHeader } from "../../utils/date"
 import { dayNote } from "../../utils/timeGrid"
@@ -14,10 +14,11 @@ type Props = {
 	effectiveDays?: EffectiveDay[]
 	meetings?: MeetingResponse[]
 	range?: CalendarHourRangeId
+	density?: CalendarDensityId
 	onOpenMeeting?: (id: number) => void
 }
 
-export function WeekView({ days, segments, today, effectiveDays, meetings, range, onOpenMeeting }: Props) {
+export function WeekView({ days, segments, today, effectiveDays, meetings, range, density = CalendarDensity.Normal, onOpenMeeting }: Props) {
 	return (
 		<div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/50">
 			{/* 1. En-têtes : 7 colonnes, un par jour */}
@@ -50,7 +51,7 @@ export function WeekView({ days, segments, today, effectiveDays, meetings, range
 				<LeaveRow segments={segments} />
 			</div>
 
-			{effectiveDays && range !== undefined && <TimeGrid days={effectiveDays} range={range} meetings={meetings ?? []} onOpenMeeting={onOpenMeeting} />}
+			{effectiveDays && range !== undefined && <TimeGrid days={effectiveDays} range={range} density={density} meetings={meetings ?? []} onOpenMeeting={onOpenMeeting} />}
 		</div>
 	)
 }
