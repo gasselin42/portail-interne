@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PhoneNumbers;
 using PortailInterne.Api.Data;
 using PortailInterne.Api.Dtos;
 using PortailInterne.Api.Models;
@@ -35,6 +36,16 @@ public class SitesController : ControllerBase
 		if (!TimeZoneInfo.TryFindSystemTimeZoneById(request.TimeZoneId.Trim(), out _))
 			return BadRequest(new { message = "Fuseau horaire inconnu. Utilise un identifiant IANA, par exemple « Europe/Paris »." });
 
+		var siteCode = request.CountryCode.ToUpperInvariant();
+
+		if (!PhoneNumberUtil.GetInstance().GetSupportedRegions().Any((s) => s == siteCode))
+			return BadRequest(new { message = "Pays inconnu. Utilise un code à deux lettres, par exemple « CA » ou « FR »." });
+
+		var phoneNumber = PhoneNumberRules.Normalize(request.MainPhoneNumber, siteCode);
+
+		if (phoneNumber.Error != null)
+			return BadRequest(new { message = phoneNumber.Error });
+
 		var duplicate = await _db.Sites
 			.AnyAsync(s => s.Name.ToLower() == request.Name.Trim().ToLower());
 
@@ -44,7 +55,9 @@ public class SitesController : ControllerBase
 		var site = new Site
 		{
 			Name = request.Name.Trim(),
-			TimeZoneId = request.TimeZoneId.Trim()	
+			TimeZoneId = request.TimeZoneId.Trim(),
+			CountryCode = siteCode,
+			MainPhoneNumber = phoneNumber.Number
 		};
 
 		_db.Sites.Add(site);
@@ -64,6 +77,16 @@ public class SitesController : ControllerBase
 
 		if (!TimeZoneInfo.TryFindSystemTimeZoneById(request.TimeZoneId.Trim(), out _))
 			return BadRequest(new { message = "Fuseau horaire inconnu. Utilise un identifiant IANA, par exemple « Europe/Paris »." });
+		
+		var siteCode = request.CountryCode.ToUpperInvariant();
+
+		if (!PhoneNumberUtil.GetInstance().GetSupportedRegions().Any((s) => s == siteCode))
+			return BadRequest(new { message = "Pays inconnu. Utilise un code à deux lettres, par exemple « CA » ou « FR »." });
+
+		var phoneNumber = PhoneNumberRules.Normalize(request.MainPhoneNumber, siteCode);
+
+		if (phoneNumber.Error != null)
+			return BadRequest(new { message = phoneNumber.Error });
 
 		var duplicate = await _db.Sites
 			.AnyAsync(s => s.Name.ToLower() == request.Name.Trim().ToLower() && s.Id != id);
@@ -73,6 +96,8 @@ public class SitesController : ControllerBase
 
 		site.Name = request.Name.Trim();
 		site.TimeZoneId = request.TimeZoneId.Trim();
+		site.CountryCode = siteCode;
+		site.MainPhoneNumber = phoneNumber.Number;
 
 		await _db.SaveChangesAsync();
 

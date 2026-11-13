@@ -30,7 +30,8 @@ public class MeResponse
     public string LastName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string JobTitle { get; set; } = string.Empty;
-    public string? PhoneNumber { get; set; } = string.Empty;
+    public string? WorkPhone { get; set; }
+    public string? PhoneExtension { get; set; }
 	public int SiteId { get; set; }
 	public string SiteTimeZoneId { get; set; } = string.Empty;
     public Departement Departement { get; set; }

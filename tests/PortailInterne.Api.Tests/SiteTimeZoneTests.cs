@@ -17,7 +17,7 @@ public class SiteTimeZoneTests
 		using var api = new ApiFactory(LateEvening).Start();
 		api.WithDb(db =>
 		{
-			var paris = new Site { Name = "Paris", TimeZoneId = "Europe/Paris" };
+			var paris = new Site { Name = "Paris", TimeZoneId = "Europe/Paris", CountryCode = "FR" };
 			db.Sites.Add(paris);
 			db.SaveChanges();
 			db.Employees.Single(e => e.Id == api.Team.Jane.Id).SiteId = paris.Id;

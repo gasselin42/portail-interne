@@ -211,7 +211,7 @@ public class CalendarApiTests
 		var team = api.Team;
 		api.WithDb(db =>
 		{
-			var paris = new Site { Name = "Paris", TimeZoneId = "Europe/Paris" };
+			var paris = new Site { Name = "Paris", TimeZoneId = "Europe/Paris", CountryCode = "FR" };
 			db.Sites.Add(paris);
 			db.SaveChanges();
 			db.Employees.Find(team.Sam.Id)!.SiteId = paris.Id;

@@ -11,6 +11,13 @@ public class SaveSiteRequest
 
 	[Required(ErrorMessage = "Le fuseau horaire est obligatoire.")]
 	public string TimeZoneId { get; set; } = string.Empty;
+
+	[Required(ErrorMessage = "Le code du pays est obligatoire.")]
+	[MaxLength(2, ErrorMessage = "Le code du pays doit avoir 2 caractères au maximum.")]
+	public string CountryCode { get; set; } = string.Empty;
+
+	[MaxLength(20, ErrorMessage = "Le numéro de téléphone du site doit avoir 20 caractères au maximum.")]
+	public string? MainPhoneNumber { get; set; }
 }
 
 public class SaveTeamVisibilityRequest

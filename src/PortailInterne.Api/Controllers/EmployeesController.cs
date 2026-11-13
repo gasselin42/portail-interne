@@ -48,7 +48,8 @@ public class EmployeesController : ControllerBase
 				SiteName = e.Site.Name,
                 JobTitle = e.JobTitle,
                 Departement = e.Departement,
-                PhoneNumber = e.PhoneNumber ?? string.Empty,
+                WorkPhone = e.WorkPhone ?? string.Empty,
+				PhoneExtension = e.PhoneExtension ?? string.Empty,
                 PhotoUrl = e.PhotoFileName == null ? null : PhotoStorage.UrlFor(e.PhotoFileName),
             })
             .ToListAsync();
@@ -73,7 +74,8 @@ public class EmployeesController : ControllerBase
 			SiteName = employee.Site.Name,
             JobTitle = employee.JobTitle,
             Departement = employee.Departement,
-            PhoneNumber = employee.PhoneNumber ?? string.Empty,
+            WorkPhone = employee.WorkPhone ?? string.Empty,
+			PhoneExtension = employee.PhoneExtension ?? string.Empty,
             ManagerId = employee.ManagerId,
 			CanManage = await _scope.CanManageAsync(employee),
             PhotoUrl = employee.PhotoFileName == null

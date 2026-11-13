@@ -135,7 +135,7 @@ export function FicheEmployePage() {
 							</div>
 							<div>
 								<dt className="font-medium text-slate-500">Téléphone</dt>
-								<dd className="text-slate-900">{employee.phoneNumber || "-"}</dd>
+								<dd className="text-slate-900">{employee.workPhone || "-"}</dd>
 							</div>
 							<div>
 								<dt className="font-medium text-slate-500">Manager</dt>

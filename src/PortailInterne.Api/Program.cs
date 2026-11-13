@@ -113,6 +113,8 @@ if (app.Environment.IsDevelopment())
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+		var logger = scope.ServiceProvider.GetRequiredService<ILogger<AppDbContext>>();
+		DbSeeder.BackfillPhoneNumbers(db, logger);
         db.Database.Migrate(); // À éviter en prod
         DbSeeder.Seed(db);
 		DbSeeder.BackfillSearchKeys(db);

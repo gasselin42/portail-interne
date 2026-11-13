@@ -39,7 +39,8 @@ public class Employee
 
     public Departement Departement { get; set; }
 
-    public string? PhoneNumber { get; set; }
+    public string? WorkPhone { get; set; }
+	public string? PhoneExtension { get; set; }
 
     public int? ManagerId { get; set; }
 

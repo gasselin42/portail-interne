@@ -106,7 +106,7 @@ public class AuthorizationMatrixTests
 		var api = new ApiFactory().Start();
 		api.WithDb(db =>
 		{
-			var paris = new Site { Name = "Paris", TimeZoneId = "Europe/Paris" };
+			var paris = new Site { Name = "Paris", TimeZoneId = "Europe/Paris", CountryCode = "FR" };
 			db.Sites.Add(paris);
 			db.SaveChanges();
 			db.Employees.Add(new Employee

@@ -22,7 +22,8 @@ public class CreateEmployeeRequest
 
     public string? JobTitle { get; set; }
 
-    public string? PhoneNumber { get; set; }
+    public string? WorkPhone { get; set; }
+	public string? PhoneExtension { get; set; }
 
     public int? ManagerId { get; set; }
 
@@ -50,7 +51,8 @@ public class UpdateEmployeeRequest
 
     public string? JobTitle { get; set; }
 
-    public string? PhoneNumber { get; set; }
+    public string? WorkPhone { get; set; }
+	public string? PhoneExtension { get; set; }
 
     public int? ManagerId { get; set; }
 

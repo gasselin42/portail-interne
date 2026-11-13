@@ -47,7 +47,8 @@ public class AppDbContext : DbContext
 			entity.HasIndex(e => new { e.LastNameKey, e.FirstNameKey });
             entity.Property(e => e.Email).HasMaxLength(256);
             entity.Property(e => e.JobTitle).HasMaxLength(150);
-            entity.Property(e => e.PhoneNumber).HasMaxLength(30);
+            entity.Property(e => e.WorkPhone).HasMaxLength(20);
+            entity.Property(e => e.PhoneExtension).HasMaxLength(6);
 			entity.Property(e => e.AnnualLeaveDays).HasDefaultValue(20);
 			entity.Property(e => e.SiteId).HasDefaultValue(1);
 
@@ -152,7 +153,9 @@ public class AppDbContext : DbContext
 		// --- Site ---
 		modelBuilder.Entity<Site>(entity =>
 		{
-			entity.HasData(new Site { Id = 1, Name = "Montréal", TimeZoneId = "America/Toronto" });
+			entity.Property((s) => s.CountryCode).HasMaxLength(2);
+			entity.Property((s) => s.MainPhoneNumber).HasMaxLength(20);
+			entity.HasData(new Site { Id = 1, Name = "Montréal", TimeZoneId = "America/Toronto", CountryCode = "CA" });
 		});
 
 		// --- WorkSchedule ---

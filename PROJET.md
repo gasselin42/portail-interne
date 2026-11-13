@@ -91,7 +91,7 @@ Les rôles Manager / Agent IT seront introduits aux phases concernées.
 - Recherche (nom, équipe, poste) ; filtre par langue parlée.
 - L’annuaire montre **tous les sites** ; un filtre par site permet de n’afficher qu’un site (gardé dans l’URL).
 - Fiche employé (détails de contact, manager optionnel).
-- Coordonnées **professionnelles** publiques (numéro du site + poste, cellulaire pro, prénom d’usage, langues parlées, local, date d’embauche) et **personnelles** privées (cellulaire, email perso, adresse, anniversaire, contacts d’urgence), saisies par l’employé dans « Mon profil » (R28).
+- Coordonnées **professionnelles** publiques (numéro du site + poste, téléphone pro, prénom d’usage, langues parlées, local, date d’embauche) et **personnelles** privées (cellulaire, email perso, adresse, anniversaire, contacts d’urgence), saisies par l’employé dans « Mon profil » (R28).
 - Lien naturel avec congés, meetings, tickets IT (qui est qui).
 
 ### 5.2 Congés et absences
@@ -288,7 +288,7 @@ Phase 5 : **temps réel** (SignalR) — la cloche se met à jour sans recharger 
 **Objectif :** séparer ce que tout le monde peut voir de ce qui reste privé, avant que des visiteurs voient l’annuaire dans la démo publique.
 
 **Inclus :**
-- Numéro principal du site + poste de l’employé ; cellulaire professionnel optionnel (les numéros existants y sont migrés)
+- Numéro principal du site + poste de l’employé ; téléphone professionnel optionnel (cellulaire ou ligne directe) (les numéros existants y sont migrés)
 - Cellulaire et email personnels, adresse domiciliaire, 0 à 2 contacts d’urgence, dans des tables à part (R28)
 - Prénom d’usage, langues parlées (filtre de l’annuaire), local, date d’embauche (ancienneté sur la fiche)
 - Anniversaire privé par défaut ; widget « Anniversaires de la semaine » à l’accueil pour ceux qui l’affichent
@@ -448,7 +448,7 @@ Après la phase 3.1 (aucune coordonnée personnelle visible dans l’annuaire) ;
 - **MeetingParticipant** : MeetingId, EmployeeId, Response (EnAttente / Accepte / Decline ; l’organisateur accepte d’office), Color? (choisie par chaque personne, organisateur compris)
 
 ### Phase 3.1
-- `Site.MainPhoneNumber?`, `Site.CountryCode` (ISO 3166) ; numéros enregistrés en E.164 ; `Employee.PhoneExtension?` ; `Employee.PhoneNumber` renommé `WorkMobilePhone?` (données conservées)
+- `Site.MainPhoneNumber?`, `Site.CountryCode` (ISO 3166) ; numéros enregistrés en E.164 ; `Employee.PhoneExtension?` ; `Employee.PhoneNumber` renommé `WorkPhone?` (données conservées)
 - `Employee.PreferredName?` (+ clé de recherche), `Employee.OfficeLocation?`, `Employee.HireDate` (DateOnly)
 - **EmployeeLanguage** : EmployeeId, LanguageCode (ISO 639-1, liste fixe) — clé composée
 - **EmployeePrivateInfo** : EmployeeId (clé), PersonalMobilePhone?, PersonalEmail?, AddressLine1?, AddressLine2?, City?, Region?, PostalCode?, Country?, BirthMonth?, BirthDay?, ShowBirthday, UpdatedAt
@@ -526,7 +526,7 @@ Les écrans sont côté **React**. L’API expose les routes `/api/...` correspo
 ### Phase 3.1
 13d. Mon profil (fiche, prénom d’usage, langues, coordonnées personnelles, adresse, anniversaire, contacts d’urgence)
 13f. Accueil : widget « Anniversaires de la semaine »
-13e. Formulaire employé et fiche : poste, cellulaire pro, section personnelle (Admin du site) ; numéro principal dans l’écran Sites
+13e. Formulaire employé et fiche : poste, téléphone pro, section personnelle (Admin du site) ; numéro principal dans l’écran Sites
 
 ### Phase 3.5
 13a. Créer un meeting récurrent (règle + aperçu en clair : « Chaque lundi à 10h, jusqu’au 31 déc. »)
@@ -584,7 +584,7 @@ Les écrans sont côté **React**. L’API expose les routes `/api/...` correspo
 | R25 | Remplaçant d’approbation : un manager désigne un remplaçant pour une période (employé actif du même site, jamais lui-même) ; pendant la période, le remplaçant approuve les demandes de l’équipe, sauf les siennes ; un Admin du site peut toujours approuver (R23) ; sans remplaçant, une demande qui arrive pendant un congé approuvé du manager, ou pour un employé dont le manager est parti, notifie les Admins du site ; la décision garde qui a approuvé « au nom de » qui ; le manager garde ses droits pendant la période |
 | R26 | Date de départ (heure locale du site, ≥ aujourd’hui, fixée par un Admin du site, modifiable ou annulable avant la date) : dès cette date, connexion refusée (R4), retrait des meetings futurs (organisateurs notifiés), annulation de ses meetings futurs avec participants (participants notifiés) et de ses demandes en attente ; à la saisie, avertissement listant ses subordonnés et ses meetings organisés ; tant que ses subordonnés n’ont pas de nouveau manager, leurs demandes notifient les Admins du site (R25) |
 | R27 | Trouver un créneau : pour des participants et une durée, propose les 3 premiers créneaux sur les 14 prochains jours, par tranches de 15 min, jamais dans le passé, à l’intérieur de l’horaire effectif de chacun (dans son fuseau), sans congé, absence, meeting ni bloc ferme ; un bloc souple n’est ignoré que pour un meeting d’équipe (R21) ; sans résultat, message clair indiquant qui bloque le plus (« sans Sam : 4 créneaux ») |
-| R28 | Coordonnées : **professionnelles** (email, numéro du site + poste, cellulaire professionnel, prénom d’usage, langues parlées, local, date d’embauche) visibles dans l’annuaire ; **personnelles** (cellulaire et email personnels, adresse domiciliaire, anniversaire, 0 à 2 contacts d’urgence) dans des tables à part, jamais renvoyées par l’annuaire ; lecture : l’employé, les Admins de son site (R23) et l’Admin global ; son manager direct voit seulement les contacts d’urgence (jamais l’adresse) ; modification : l’employé (« Mon profil ») ou un Admin de son site ; supprimées à la date de départ (R26) ; le prénom d’usage remplace le prénom partout où un nom est affiché, la recherche trouve les deux ; l’anniversaire (jour et mois, sans l’année) n’est montré aux collègues que si l’employé l’a choisi (29 février : affiché le 28 les années non bissextiles) |
+| R28 | Coordonnées : **professionnelles** (email, numéro du site + poste, téléphone professionnel, prénom d’usage, langues parlées, local, date d’embauche) visibles dans l’annuaire ; **personnelles** (cellulaire et email personnels, adresse domiciliaire, anniversaire, 0 à 2 contacts d’urgence) dans des tables à part, jamais renvoyées par l’annuaire ; lecture : l’employé, les Admins de son site (R23) et l’Admin global ; son manager direct voit seulement les contacts d’urgence (jamais l’adresse) ; modification : l’employé (« Mon profil ») ou un Admin de son site ; supprimées à la date de départ (R26) ; le prénom d’usage remplace le prénom partout où un nom est affiché, la recherche trouve les deux ; l’anniversaire (jour et mois, sans l’année) n’est montré aux collègues que si l’employé l’a choisi (29 février : affiché le 28 les années non bissextiles) |
 
 ---
 

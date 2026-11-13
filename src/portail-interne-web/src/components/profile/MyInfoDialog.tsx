@@ -77,7 +77,7 @@ function MyInfoDetails({ me, year, employee, sites, balance, onClose }: DetailsP
 				<dt className="text-slate-500">Courriel</dt>
 					<dd className="text-slate-900">{me.email}</dd>
 				<dt className="text-slate-500">Téléphone</dt>
-					<dd className="text-slate-900">{me.phoneNumber ?? "—"}</dd>
+					<dd className="text-slate-900">{me.workPhone ?? "—"}</dd>
 				<dt className="text-slate-500">Site</dt>
 					<dd className="text-slate-900">{site?.name} ({site?.timeZoneId})</dd>
 				<dt className="text-slate-500">Manager</dt>

@@ -134,8 +134,8 @@ namespace PortailInterne.Api.Migrations
                     b.Property<int?>("ManagerId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("PhoneNumber")
-                        .HasMaxLength(30)
+                    b.Property<string>("PhoneExtension")
+                        .HasMaxLength(6)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("PhotoFileName")
@@ -145,6 +145,10 @@ namespace PortailInterne.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
                         .HasDefaultValue(1);
+
+                    b.Property<string>("WorkPhone")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -532,6 +536,15 @@ namespace PortailInterne.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("CountryCode")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MainPhoneNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -551,6 +564,7 @@ namespace PortailInterne.Api.Migrations
                         new
                         {
                             Id = 1,
+                            CountryCode = "CA",
                             Name = "Montréal",
                             TeamVisibility = 0,
                             TimeZoneId = "America/Toronto"

@@ -35,7 +35,8 @@ export function CreateEmployeePage() {
 	const [role, setRole] = useState<RoleId | null>(null)
 	const [jobTitle, setJobTitle] = useState<string>("")
 	const [leaveDays, setLeaveDays] = useState(20)
-	const [phoneNumber, setPhoneNumber] = useState<string>("")
+	const [workPhone, setWorkPhone] = useState<string>("")
+	const [phoneExtension, setPhoneExtension] = useState<string>("")
 	const [manager, setManager] = useState<EmployeeOption | null>(null)
 	const [photo, setPhoto] = useState<File | null>(null)
 	const [photoPreview, setPhotoPreview] = useState<string | null>(null)
@@ -77,7 +78,7 @@ export function CreateEmployeePage() {
 				setDepartement(employee.departement)
 				setRole(employee.role as RoleId)
 				setJobTitle(employee.jobTitle)
-				setPhoneNumber(employee.phoneNumber)
+				setWorkPhone(employee.workPhone)
 				setLeaveDays(employee.annualLeaveDays)
 				setSiteId(employee.siteId)
 				setOriginalSiteId(employee.siteId)
@@ -139,7 +140,7 @@ export function CreateEmployeePage() {
 						departement,
 						role,
 						jobTitle,
-						phoneNumber,
+						workPhone,
 						managerId: manager?.id,
 						leaveDays,
 						siteId: siteId!
@@ -158,7 +159,7 @@ export function CreateEmployeePage() {
 					departement: departement,
 					role: role,
 					jobTitle,
-					phoneNumber,
+					workPhone,
 					managerId: manager?.id,
 					leaveDays,
 					siteId: siteId!
@@ -485,20 +486,39 @@ export function CreateEmployeePage() {
 					</div>
 
 					<div className="grid gap-5 sm:grid-cols-2">
-						<div>
-							<label
-								htmlFor="phoneNumber"
-								className={labelClass}
-							>
-								Téléphone
-							</label>
-							<input
-								id="phoneNumber"
-								type="tel"
-								value={phoneNumber}
-								onChange={(e) => setPhoneNumber(e.target.value)}
-								className={inputClass}
-							/>
+						<div className="grid grid-cols-[1fr_6rem] gap-3">
+							<div>
+								<label
+									htmlFor="workPhone"
+									className={labelClass}
+								>
+									Téléphone professionnel
+								</label>
+								<input
+									id="workPhone"
+									type="tel"
+									value={workPhone}
+									onChange={(e) => setWorkPhone(e.target.value)}
+									className={inputClass}
+								/>
+							</div>
+							<div>
+								<label
+									htmlFor="phoneExtension"
+									className={labelClass}
+								>
+									Poste
+								</label>
+								<input
+									id="phoneExtension"
+									type="string"
+									inputMode="numeric"
+									maxLength={6}
+									value={phoneExtension}
+									onChange={(e) => setPhoneExtension(e.target.value)}
+									className={inputClass}
+								/>
+							</div>
 						</div>
 						<div>
 							<label htmlFor="manager" className={labelClass}>

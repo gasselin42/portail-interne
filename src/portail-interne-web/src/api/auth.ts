@@ -15,7 +15,8 @@ export type Me = {
 	lastName: string
 	email: string
 	jobTitle: string
-	phoneNumber: string | null
+	workPhone: string | null
+	phoneExtension: string | null
 	departement: DepartementId
 	role: RoleId
 	isManager: boolean

@@ -242,9 +242,9 @@ public class SiteScopeApiTests
 		using var api = new ApiFactory().Start();
 		var gaby = await api.LoginAsync("gaby@test.local");
 
-		var valid = await gaby.PostAsJsonAsync("/api/sites", new { name = " Vancouver ", timeZoneId = "America/Vancouver" });
-		var unknownZone = await gaby.PostAsJsonAsync("/api/sites", new { name = "Atlantide", timeZoneId = "Atlantis/Capital" });
-		var duplicate = await gaby.PostAsJsonAsync("/api/sites", new { name = "vancouver", timeZoneId = "America/Vancouver" });
+		var valid = await gaby.PostAsJsonAsync("/api/sites", new { name = " Vancouver ", timeZoneId = "America/Vancouver", countryCode = "CA" });
+		var unknownZone = await gaby.PostAsJsonAsync("/api/sites", new { name = "Atlantide", timeZoneId = "Atlantis/Capital", countryCode = "CA" });
+		var duplicate = await gaby.PostAsJsonAsync("/api/sites", new { name = "vancouver", timeZoneId = "America/Vancouver", countryCode = "CA" });
 
 		Assert.Equal(HttpStatusCode.Created, valid.StatusCode);
 		Assert.Equal("Vancouver", (await valid.Content.ReadFromJsonAsync<Site>())!.Name);
@@ -259,13 +259,44 @@ public class SiteScopeApiTests
 		var alex = await api.LoginAsync("alex@test.local");
 		var gaby = await api.LoginAsync("gaby@test.local");
 
-		var create = await alex.PostAsJsonAsync("/api/sites", new { name = "Vancouver", timeZoneId = "America/Vancouver" });
-		var update = await alex.PutAsJsonAsync("/api/sites/1", new { name = "Montréal", timeZoneId = "America/Toronto" });
-		var unknown = await gaby.PutAsJsonAsync("/api/sites/99", new { name = "Nulle part", timeZoneId = "America/Toronto" });
+		var create = await alex.PostAsJsonAsync("/api/sites", new { name = "Vancouver", timeZoneId = "America/Vancouver", countryCode = "CA" });
+		var update = await alex.PutAsJsonAsync("/api/sites/1", new { name = "Montréal", timeZoneId = "America/Toronto", countryCode = "CA" });
+		var unknown = await gaby.PutAsJsonAsync("/api/sites/99", new { name = "Nulle part", timeZoneId = "America/Toronto", countryCode = "CA" });
 
 		Assert.Equal(HttpStatusCode.Forbidden, create.StatusCode);
 		Assert.Equal(HttpStatusCode.Forbidden, update.StatusCode);
 		Assert.Equal(HttpStatusCode.NotFound, unknown.StatusCode);
+	}
+
+	[Fact]
+	public async Task Le_pays_du_site_est_valide_et_enregistre_en_majuscules()
+	{
+		using var api = new ApiFactory().Start();
+		var gaby = await api.LoginAsync("gaby@test.local");
+
+		var created = await gaby.PostAsJsonAsync("/api/sites", new { name = "Lyon", timeZoneId = "Europe/Paris", countryCode = "fr", mainPhoneNumber = "   " });
+		var unknownCountry = await gaby.PostAsJsonAsync("/api/sites", new { name = "Atlantide", timeZoneId = "Europe/Paris", countryCode = "ZZ" });
+		var missingCountry = await gaby.PostAsJsonAsync("/api/sites", new { name = "Nulle part", timeZoneId = "Europe/Paris" });
+		var site = (await created.Content.ReadFromJsonAsync<Site>())!;
+		var modified = await gaby.PutAsJsonAsync($"/api/sites/{site.Id}", new { name = "Lyon", timeZoneId = "Europe/Paris", countryCode = "be" });
+		var modifiedUnknown = await gaby.PutAsJsonAsync($"/api/sites/{site.Id}", new { name = "Lyon", timeZoneId = "Europe/Paris", countryCode = "XX" });
+
+		Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+		Assert.Equal("FR", site.CountryCode);
+		Assert.Null(site.MainPhoneNumber); // vide ou espaces = pas de numéro
+		Assert.Equal("Pays inconnu. Utilise un code à deux lettres, par exemple « CA » ou « FR ».",
+			(await unknownCountry.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>()).GetProperty("message").GetString());
+		Assert.Equal(HttpStatusCode.BadRequest, missingCountry.StatusCode);
+		Assert.Equal(HttpStatusCode.NoContent, modified.StatusCode);
+		Assert.Equal(HttpStatusCode.BadRequest, modifiedUnknown.StatusCode);
+		api.WithDb(db => Assert.Equal("BE", db.Sites.Single(s => s.Id == site.Id).CountryCode));
+	}
+
+	[Fact]
+	public async Task Montreal_est_au_Canada()
+	{
+		using var api = new ApiFactory().Start();
+		api.WithDb(db => Assert.Equal("CA", db.Sites.Single(s => s.Id == 1).CountryCode));
 	}
 
 	// ─── Aides ──────────────────────────────────────────────────────────────
@@ -278,7 +309,7 @@ public class SiteScopeApiTests
 		Paris? result = null;
 		api.WithDb(db =>
 		{
-			var site = new Site { Name = "Paris", TimeZoneId = "Europe/Paris" };
+			var site = new Site { Name = "Paris", TimeZoneId = "Europe/Paris", CountryCode = "FR" };
 			db.Sites.Add(site);
 			db.SaveChanges();
 

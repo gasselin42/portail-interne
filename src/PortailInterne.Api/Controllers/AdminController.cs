@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 using PortailInterne.Api.Dtos;
 using PortailInterne.Api.Data;
@@ -41,7 +42,8 @@ public class AdminController : ControllerBase
 	{
 		var siteId = _scope.IsGlobalAdmin ? request.SiteId!.Value : await _scope.CallerSiteIdAsync();
 
-		if (!await _db.Sites.AnyAsync(s => s.Id == siteId))
+		var site = await _db.Sites.FirstOrDefaultAsync(s => s.Id == siteId);
+		if (site is null)
 			return BadRequest(new { message = "Le site choisi n'existe pas." });
 	
 		var managerError = await ValidateManagerAsync(request.ManagerId, null, siteId);
@@ -61,6 +63,14 @@ public class AdminController : ControllerBase
 				return BadRequest(new { message = photoError});
 		}
 
+		var phoneNumber = PhoneNumberRules.Normalize(request.WorkPhone, site.CountryCode);
+
+		if (phoneNumber.Error is not null)
+			return BadRequest(new { message = phoneNumber.Error });
+
+		if (!string.IsNullOrWhiteSpace(request.PhoneExtension) && !Regex.IsMatch(request.PhoneExtension.Trim(), "^[0-9]{1,6}$"))
+			return BadRequest(new { message = "Le poste doit contenir de 1 à 6 chiffres."});
+
 		string email = request.Email.Trim().ToLowerInvariant();
 
         if (await _db.UserAccounts.AnyAsync(u => u.Email == email)
@@ -77,7 +87,8 @@ public class AdminController : ControllerBase
 			Email = email,
 			Departement = request.Departement!.Value,
 			JobTitle = request.JobTitle?.Trim() ?? string.Empty,
-            PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber,
+            WorkPhone = phoneNumber.Number,
+			PhoneExtension = string.IsNullOrWhiteSpace(request.PhoneExtension) ? null : request.PhoneExtension.Trim(),
 			ManagerId = request.ManagerId,
 			AnnualLeaveDays = request.AnnualLeaveDays!.Value,
 			SiteId = siteId,
@@ -152,7 +163,8 @@ public class AdminController : ControllerBase
 			SiteName = employee.Site.Name,
             JobTitle = employee.JobTitle,
             Departement = employee.Departement,
-            PhoneNumber = employee.PhoneNumber ?? string.Empty,
+            WorkPhone = employee.WorkPhone ?? string.Empty,
+			PhoneExtension = employee.PhoneExtension ?? string.Empty,
             ManagerId = employee.ManagerId,
 			ManagerFirstName = manager?.FirstName,
 			ManagerLastName = manager?.LastName,
@@ -201,7 +213,8 @@ public class AdminController : ControllerBase
 
 		var siteId = _scope.IsGlobalAdmin ? request.SiteId!.Value : await _scope.CallerSiteIdAsync();
 
-		if (!await _db.Sites.AnyAsync(s => s.Id == siteId))
+		var site = await _db.Sites.FirstOrDefaultAsync(s => s.Id == siteId);
+		if (site is null)
 			return BadRequest(new { message = "Le site choisi n'existe pas." });
 		
         var managerError = await ValidateManagerAsync(request.ManagerId, id, siteId);
@@ -211,6 +224,14 @@ public class AdminController : ControllerBase
 
         if (employee.UserAccount is null || request.Role is null)
 			return BadRequest(new { message = "Rôle manquant." });
+
+		var phoneNumber = PhoneNumberRules.Normalize(request.WorkPhone, site.CountryCode);
+
+		if (phoneNumber.Error is not null)
+			return BadRequest(new { message = phoneNumber.Error });
+
+		if (!string.IsNullOrWhiteSpace(request.PhoneExtension) && !Regex.IsMatch(request.PhoneExtension.Trim(), "^[0-9]{1,6}$"))
+			return BadRequest(new { message = "Le poste doit contenir de 1 à 6 chiffres."});
 
 		var ancienNom = employee.PhotoFileName;
 		if (photo is not null && photo.Length > 0)
@@ -225,7 +246,8 @@ public class AdminController : ControllerBase
 		employee.LastName = request.LastName.Trim();
 		employee.JobTitle = request.JobTitle?.Trim() ?? string.Empty;
 		employee.Departement = request.Departement!.Value;
-		employee.PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber;
+		employee.WorkPhone = phoneNumber.Number;
+		employee.PhoneExtension = string.IsNullOrWhiteSpace(request.PhoneExtension) ? null : request.PhoneExtension.Trim();
 		employee.ManagerId = request.ManagerId;
 		employee.UserAccount.Role = request.Role;
 		employee.AnnualLeaveDays = request.AnnualLeaveDays!.Value;

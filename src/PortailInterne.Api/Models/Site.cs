@@ -20,4 +20,8 @@ public class Site
 	public string TimeZoneId { get; set; } = string.Empty;
 
 	public TeamVisibility TeamVisibility { get; set; }
+
+	public string CountryCode { get; set; } = string.Empty;
+
+	public string? MainPhoneNumber { get; set; }
 }

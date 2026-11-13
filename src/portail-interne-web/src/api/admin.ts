@@ -8,7 +8,8 @@ export type CreateEmployeeRequest = {
 	departement: DepartementId
 	role: RoleId
 	jobTitle?: string
-	phoneNumber?: string
+	workPhone?: string
+	phoneExtension?: string
 	managerId?: number
 	leaveDays: number
 	siteId: number
@@ -20,7 +21,8 @@ export type UpdateEmployeeRequest = {
 	departement: DepartementId
 	role: RoleId
 	jobTitle?: string
-	phoneNumber?: string
+	workPhone?: string
+	phoneExtension?: string
 	managerId?: number
 	leaveDays: number
 	siteId: number
@@ -83,7 +85,8 @@ export async function createEmployee(
 	form.append("annualLeaveDays", String(body.leaveDays))
 	form.append("siteId", String(body.siteId))
 	if (body.jobTitle) form.append("jobTitle", body.jobTitle)
-	if (body.phoneNumber) form.append("phoneNumber", body.phoneNumber)
+	if (body.workPhone) form.append("workPhone", body.workPhone)
+	if (body.phoneExtension) form.append("phoneExtension", body.phoneExtension)
 	if (body.managerId) form.append("managerId", String(body.managerId))
 	if (photo) form.append("photo", photo)
 
@@ -112,7 +115,8 @@ export async function updateEmployee(
 	form.append("annualLeaveDays", String(body.leaveDays))
 	form.append("siteId", String(body.siteId))
 	if (body.jobTitle) form.append("jobTitle", body.jobTitle)
-	if (body.phoneNumber) form.append("phoneNumber", body.phoneNumber)
+	if (body.workPhone) form.append("workPhone", body.workPhone)
+	if (body.phoneExtension) form.append("phoneExtension", body.phoneExtension)
 	if (body.managerId) form.append("managerId", String(body.managerId))
 	if (photo) form.append("photo", photo)
 

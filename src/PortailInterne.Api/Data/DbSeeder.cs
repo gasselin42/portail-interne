@@ -105,5 +105,28 @@ public class DbSeeder
 
 		db.SaveChanges();
 	}
+
+	/// Calcule les clés de recherche des employés qui n'en ont pas encore
+	/// (ceux créés avant la migration ClesDeRechercheEmployes).
+	public static void BackfillPhoneNumbers(AppDbContext db, ILogger logger)
+	{
+		var employees = db.Employees.Include(e => e.Site).Where(e => e.WorkPhone != null && !e.WorkPhone.StartsWith("+")).ToList();
+		if (employees.Count == 0)
+			return;
+		
+		foreach (var employee in employees)
+		{
+			var phoneNumber = PhoneNumberRules.Normalize(employee.WorkPhone, employee.Site.CountryCode);
+			if (phoneNumber.Error != null)
+			{
+				logger.LogWarning("Numéro de {FirstName} {LastName} ({Id}) impossible à convertir : {Phone}", employee.FirstName, employee.LastName, employee.Id, employee.WorkPhone);
+				employee.WorkPhone = null;
+				continue;
+			}
+			employee.WorkPhone = phoneNumber.Number;
+		}
+
+		db.SaveChanges();
+	}
 }
 

@@ -158,7 +158,7 @@ public class MeetingsApiTests
 		var team = api.Team;
 		api.WithDb(db =>
 		{
-			var paris = new Site { Name = "Paris", TimeZoneId = "Europe/Paris" };
+			var paris = new Site { Name = "Paris", TimeZoneId = "Europe/Paris", CountryCode = "FR" };
 			db.Sites.Add(paris);
 			db.SaveChanges();
 			db.Employees.Find(team.Jane.Id)!.SiteId = paris.Id;
@@ -330,7 +330,7 @@ public class MeetingsApiTests
 		var team = api.Team;
 		api.WithDb(db =>
 		{
-			var paris = new Site { Name = "Paris", TimeZoneId = "Europe/Paris" };
+			var paris = new Site { Name = "Paris", TimeZoneId = "Europe/Paris", CountryCode = "FR" };
 			db.Sites.Add(paris);
 			db.SaveChanges();
 			db.Employees.Find(team.Jane.Id)!.SiteId = paris.Id;
@@ -627,7 +627,7 @@ public class MeetingsApiTests
 		var team = api.Team;
 		api.WithDb(db =>
 		{
-			var paris = new Site { Name = "Paris", TimeZoneId = "Europe/Paris" };
+			var paris = new Site { Name = "Paris", TimeZoneId = "Europe/Paris", CountryCode = "FR" };
 			db.Sites.Add(paris);
 			db.SaveChanges();
 			db.Employees.Find(team.Jane.Id)!.SiteId = paris.Id;
@@ -652,7 +652,7 @@ public class MeetingsApiTests
 		var team = api.Team;
 		api.WithDb(db =>
 		{
-			var paris = new Site { Name = "Paris", TimeZoneId = "Europe/Paris" };
+			var paris = new Site { Name = "Paris", TimeZoneId = "Europe/Paris", CountryCode = "FR" };
 			db.Sites.Add(paris);
 			db.SaveChanges();
 			db.Employees.Find(team.Jane.Id)!.SiteId = paris.Id;
@@ -787,7 +787,7 @@ public class MeetingsApiTests
 		var team = api.Team;
 		api.WithDb(db =>
 		{
-			var paris = new Site { Name = "Paris", TimeZoneId = "Europe/Paris" };
+			var paris = new Site { Name = "Paris", TimeZoneId = "Europe/Paris", CountryCode = "FR" };
 			db.Sites.Add(paris);
 			db.SaveChanges();
 			db.Employees.Find(team.Alex.Id)!.SiteId = paris.Id;
@@ -908,7 +908,7 @@ public class MeetingsApiTests
 		var blockId = await CreatedId(await sam.PostAsJsonAsync("/api/meetings", Block(start: "2026-10-16T14:00:00Z", end: "2026-10-16T16:00:00Z")));
 		api.WithDb(db =>
 		{
-			var paris = new Site { Name = "Paris", TimeZoneId = "Europe/Paris" };
+			var paris = new Site { Name = "Paris", TimeZoneId = "Europe/Paris", CountryCode = "FR" };
 			db.Sites.Add(paris);
 			db.SaveChanges();
 			db.Employees.Find(team.Alex.Id)!.SiteId = paris.Id; // Admin, mais d'un autre site

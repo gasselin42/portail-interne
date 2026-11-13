@@ -11,7 +11,8 @@ public class EmployeeListItemResponse
 	public string SiteName { get; set; } = string.Empty;
     public string JobTitle { get; set; } = string.Empty;
     public Departement Departement { get; set; }
-    public string PhoneNumber { get; set; } = string.Empty;
+    public string WorkPhone { get; set; } = string.Empty;
+	public string PhoneExtension { get; set; } = string.Empty;
     public string? PhotoUrl { get; set; }
 }
 
