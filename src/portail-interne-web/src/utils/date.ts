@@ -1,6 +1,7 @@
 import { APP_TIME_ZONE } from "../config"
 
 let timeZone = APP_TIME_ZONE // valeur par défaut, en attendant /me
+const relativeFormatter = new Intl.RelativeTimeFormat("fr-CA", { numeric: "auto" })
 
 const dateFormatter = new Intl.DateTimeFormat("fr-CA", {
 	day: "numeric",
@@ -36,6 +37,12 @@ const monthFormatter = new Intl.DateTimeFormat("fr-CA", {
 
 const shortWeekdayFormatter = new Intl.DateTimeFormat("fr-CA", {
 	weekday: "short",
+	timeZone: "UTC"
+})
+
+const shortDayFormatter = new Intl.DateTimeFormat("fr-CA", {
+	day: "numeric",
+	month: "short",
 	timeZone: "UTC"
 })
 
@@ -86,10 +93,40 @@ export function formatShortWeekday(iso: string): string {
 	return shortWeekdayFormatter.format(date)
 }
 
+export function formatShortDay(iso: string): string {
+	const date = toUtcDate(iso)
+	return shortDayFormatter.format(date)
+}
+
 export function formatTime(time: string): string {
 	const [hours, minutes] = time.split(":")
 	const h = Number(hours)
 	return minutes === "00" ? `${h} h` : `${h} h ${minutes}`
+}
+
+export function formatRelative(iso: string, now: number): string {
+	const gap = now - Date.parse(iso)
+	const minutes = Math.floor(gap / 60000)
+	const hours = Math.floor(gap / (60000 * 60))
+	
+	// Jours du calendrier, dans le fuseau de la personne connectée.
+	const day = utcToZoned(iso).date
+	const today = utcToZoned(new Date(now).toISOString()).date
+	const days = (Date.parse(today) - Date.parse(day)) / 86_400_000
+
+	if (minutes < 1)
+		return "à l'instant"
+
+	if (minutes < 60)
+		return relativeFormatter.format(-minutes, "minute")
+
+	if (days === 0)
+		return relativeFormatter.format(-hours, "hour")
+
+	if (days < 7)
+		return relativeFormatter.format(-days, "day")
+
+	return formatShortDay(day)
 }
 
 export function daysFromToday(offset: number): string {
@@ -137,4 +174,43 @@ export function getWeekDay(iso: string): number {
 
 export function iterateDays(value: string, length: number) {
 	return Array.from({ length: length }, (_, i) => addDays(value, i))
+}
+
+/** Le décalage du fuseau du site à un instant donné, en minutes (ex. −240 à Montréal en octobre). */
+function offsetMinutes(utcMs: number): number {
+	const parts = new Intl.DateTimeFormat("en-CA", {
+		timeZone,
+		hourCycle: "h23",
+		year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit",
+	}).formatToParts(new Date(utcMs)) // Découpe l'instant donné en year, month, day, etc.
+
+	const get = (type: string) => Number(parts.find((p) => p.type === type)!.value)
+	// Prends la même date et temps que l'instant donné, mais en UTC
+	const asUtc = Date.UTC(get("year"), get("month") - 1, get("day"), get("hour"), get("minute"))
+
+	// La différence, en minutes (60 000 ms = 1 min)
+	return Math.round((asUtc - utcMs) / 60000)
+}
+
+/** Une date du site et une heure en minutes depuis minuit (1440 = minuit le lendemain) → instant UTC ISO. */
+export function zonedToUtc(date: string, minutes: number): string {
+	const [year, month, day] = date.split("-").map(Number)
+	const wall = Date.UTC(year, month - 1, day, 0, minutes)
+
+	// Deux passes : le décalage peut changer entre l'estimation et la réponse (passage à l'heure d'été)
+	let utc = wall - offsetMinutes(wall) * 60000
+	utc = wall - offsetMinutes(utc) * 60000
+
+	return new Date(utc).toISOString()
+}
+
+/** Un instant UTC → sa date et ses minutes depuis minuit, dans le fuseau du site. */
+export function utcToZoned(iso: string): { date: string; minutes: number } {
+	const utc = Date.parse(iso)
+	const local = new Date(utc + offsetMinutes(utc) * 60000)
+
+	return {
+		date: local.toISOString().slice(0, 10),
+		minutes: local.getUTCHours() * 60 + local.getUTCMinutes(),
+	}
 }

@@ -55,7 +55,7 @@ public class AccessScope
 	{
 		if (IsAdmin) return true;
 
-		var hasSubordinates = await _db.Employees.AnyAsync(e => e.ManagerId == CallerEmployeeId && e.IsActive);
+		var hasSubordinates = await HasSubordinatesAsync();
 		if (hasSubordinates) return true;
 
 		var siteId = await CallerSiteIdAsync();
@@ -81,4 +81,7 @@ public class AccessScope
 
 		return visibility != TeamVisibility.Nobody;
 	}
+
+	public async Task<bool> HasSubordinatesAsync() =>
+		await _db.Employees.AnyAsync(e => e.ManagerId == CallerEmployeeId && e.IsActive);
 }

@@ -7,7 +7,7 @@ using PortailInterne.Api.Services;
 namespace PortailInterne.Api.Tests;
 
 /// <summary>
-/// GET /api/calendar : horaire effectif de chaque jour (R16) et congés, de bout en bout.
+/// GET /api/calendar : horaire effectif de chaque jour (R16), congés et meetings de l'appelant (phase 3, étape 10), de bout en bout.
 /// Semaine de Noël 2026 (lundi 21 au dimanche 27 décembre) ; Noël (vendredi 25) est un férié du site.
 /// </summary>
 public class CalendarApiTests
@@ -181,7 +181,67 @@ public class CalendarApiTests
 		Assert.Empty(day.Absences);
 	}
 
+	[Fact]
+	public async Task Les_meetings_de_la_plage_arrivent_tries_avec_la_couleur_de_l_appelant()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		// Décembre à Montréal : UTC−5
+		api.WithDb(db => db.Meetings.AddRange(
+			Event("Dimanche soir", team.Sam, "2026-12-28T04:00:00Z", "2026-12-28T05:00:00Z"),            // 27 : 23 h → minuit
+			Event("Lundi", team.Mark, "2026-12-21T15:00:00Z", "2026-12-21T16:00:00Z", [team.Sam], samColor: "teal"), // 21 : 10 h
+			Event("Avant", team.Sam, "2026-12-21T04:00:00Z", "2026-12-21T05:00:00Z"),                    // 20 : 23 h → minuit, touche le début
+			Event("Après", team.Sam, "2026-12-28T05:00:00Z", "2026-12-28T06:00:00Z"),                    // 28 : minuit, touche la fin
+			Event("Sans Sam", team.Jane, "2026-12-22T15:00:00Z", "2026-12-22T16:00:00Z")));
+		var sam = await api.LoginAsync("sam@test.local");
+
+		var meetings = (await sam.GetFromJsonAsync<CalendarResponse>(ChristmasWeek))!.Meetings;
+
+		Assert.Equal(["Lundi", "Dimanche soir"], meetings.Select(m => m.Title));
+		Assert.Equal("teal", meetings[0].Color);
+		Assert.Equal(team.Mark.Id, meetings[0].OrganizerId);
+		Assert.Equal(MeetingColors.Default, meetings[1].Color);
+		Assert.Equal(DateTimeKind.Utc, meetings[0].StartAt.Kind);
+	}
+
+	[Fact]
+	public async Task La_plage_des_meetings_suit_le_fuseau_de_l_appelant()
+	{
+		using var api = new ApiFactory().Start();
+		var team = api.Team;
+		api.WithDb(db =>
+		{
+			var paris = new Site { Name = "Paris", TimeZoneId = "Europe/Paris" };
+			db.Sites.Add(paris);
+			db.SaveChanges();
+			db.Employees.Find(team.Sam.Id)!.SiteId = paris.Id;
+			// 20 décembre 23 h 30 UTC = 21 décembre 0 h 30 à Paris
+			db.Meetings.Add(Event("Tôt", team.Sam, "2026-12-20T23:30:00Z", "2026-12-21T00:30:00Z"));
+		});
+		var sam = await api.LoginAsync("sam@test.local");
+
+		var meetings = (await sam.GetFromJsonAsync<CalendarResponse>(ChristmasWeek))!.Meetings;
+
+		Assert.Equal("Tôt", Assert.Single(meetings).Title);
+	}
+
 	// ─── Aides ──────────────────────────────────────────────────────────────
+
+	/// <summary>Un événement déjà en base : son organisateur et d'autres participants ; samColor = la couleur choisie par Sam.</summary>
+	private static Meeting Event(string title, Employee organizer, string start, string end, Employee[]? others = null, string? samColor = null) => new()
+	{
+		Kind = MeetingKind.Meeting,
+		Title = title,
+		StartAt = DateTime.Parse(start, null, System.Globalization.DateTimeStyles.AdjustToUniversal),
+		EndAt = DateTime.Parse(end, null, System.Globalization.DateTimeStyles.AdjustToUniversal),
+		OrganizerId = organizer.Id,
+		Participants =
+		[
+			.. new[] { organizer }.Concat(others ?? [])
+				.Select(e => new MeetingParticipant { EmployeeId = e.Id, Color = e.Email == "sam@test.local" ? samColor : null }),
+		],
+	};
+
 
 	private static void AssertDay(EffectiveDayResponse day, DaySource source, int? startHour, int? endHour)
 	{

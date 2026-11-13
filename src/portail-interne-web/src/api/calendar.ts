@@ -1,5 +1,6 @@
 import { apiFetch, readApiError } from "./client"
 import type { LeaveRequestResponse, LeaveStatusId } from "./leaves"
+import type { MeetingResponse } from "./meetings"
 
 export const DaySource = {
 	Horaire: 0,
@@ -33,6 +34,7 @@ export type EffectiveDay = {
 export type CalendarData = {
 	days: EffectiveDay[]
 	leaves: LeaveRequestResponse[]
+	meetings: MeetingResponse[]
 }
 
 export type CalendarAbsence = {

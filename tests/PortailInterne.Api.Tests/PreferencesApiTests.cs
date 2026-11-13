@@ -22,6 +22,7 @@ public class PreferencesApiTests
 		var prefs = await sam.GetFromJsonAsync<PreferencesDto>(Url);
 
 		Assert.Equal(CalendarHourRange.WorkHours, prefs!.CalendarHourRange);
+		Assert.Equal(CalendarDensity.Normal, prefs.CalendarDensity);
 		api.WithDb(db => Assert.Empty(db.EmployeePreferences));
 	}
 
@@ -66,6 +67,64 @@ public class PreferencesApiTests
 		var sam = await api.LoginAsync("sam@test.local");
 
 		var res = await sam.PutAsJsonAsync(Url, new { calendarHourRange = 7 });
+
+		Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+		api.WithDb(db => Assert.Empty(db.EmployeePreferences));
+	}
+
+	[Fact]
+	public async Task Densite_enregistree_avec_la_plage_d_heures()
+	{
+		using var api = new ApiFactory().Start();
+		var sam = await api.LoginAsync("sam@test.local");
+
+		var created = await sam.PutAsJsonAsync(Url, new { calendarHourRange = CalendarHourRange.FullDay, calendarDensity = CalendarDensity.Airy });
+		var afterCreate = await sam.GetFromJsonAsync<PreferencesDto>(Url);
+		await sam.PutAsJsonAsync(Url, new { calendarHourRange = CalendarHourRange.WorkHours, calendarDensity = CalendarDensity.Compact });
+		var afterUpdate = await sam.GetFromJsonAsync<PreferencesDto>(Url);
+
+		var echoed = (await created.Content.ReadFromJsonAsync<PreferencesDto>())!;
+		Assert.Equal(CalendarDensity.Airy, echoed.CalendarDensity);
+		Assert.Equal(CalendarHourRange.FullDay, afterCreate!.CalendarHourRange);
+		Assert.Equal(CalendarDensity.Airy, afterCreate.CalendarDensity);
+		Assert.Equal(CalendarHourRange.WorkHours, afterUpdate!.CalendarHourRange);
+		Assert.Equal(CalendarDensity.Compact, afterUpdate.CalendarDensity);
+	}
+
+	[Fact]
+	public async Task Changer_un_champ_garde_l_autre_si_on_le_renvoie()
+	{
+		using var api = new ApiFactory().Start();
+		var sam = await api.LoginAsync("sam@test.local");
+
+		await sam.PutAsJsonAsync(Url, new { calendarHourRange = CalendarHourRange.FullDay, calendarDensity = CalendarDensity.Compact });
+		await sam.PutAsJsonAsync(Url, new { calendarHourRange = CalendarHourRange.FullDay, calendarDensity = CalendarDensity.Airy });
+		var prefs = await sam.GetFromJsonAsync<PreferencesDto>(Url);
+
+		Assert.Equal(CalendarHourRange.FullDay, prefs!.CalendarHourRange);
+		Assert.Equal(CalendarDensity.Airy, prefs.CalendarDensity);
+	}
+
+	[Fact]
+	public async Task Densite_absente_vaut_normale()
+	{
+		using var api = new ApiFactory().Start();
+		var sam = await api.LoginAsync("sam@test.local");
+
+		var res = await sam.PutAsJsonAsync(Url, new { calendarHourRange = CalendarHourRange.FullDay });
+		var prefs = await sam.GetFromJsonAsync<PreferencesDto>(Url);
+
+		Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+		Assert.Equal(CalendarDensity.Normal, prefs!.CalendarDensity);
+	}
+
+	[Fact]
+	public async Task Densite_inconnue_refusee()
+	{
+		using var api = new ApiFactory().Start();
+		var sam = await api.LoginAsync("sam@test.local");
+
+		var res = await sam.PutAsJsonAsync(Url, new { calendarHourRange = CalendarHourRange.WorkHours, calendarDensity = 9 });
 
 		Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
 		api.WithDb(db => Assert.Empty(db.EmployeePreferences));

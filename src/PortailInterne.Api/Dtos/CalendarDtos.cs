@@ -30,6 +30,7 @@ public class CalendarResponse
 {
 	public List<EffectiveDayResponse> Days { get; set; } = [];
 	public List<LeaveRequestResponse> Leaves { get; set; } = [];
+	public List<MeetingResponse> Meetings { get; set; } = [];
 }
 
 public class CalendarAbsenceResponse

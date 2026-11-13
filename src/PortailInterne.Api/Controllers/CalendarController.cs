@@ -74,6 +74,20 @@ public class CalendarController : ControllerBase
 
 		await _leaveUsage.AddUsageAsync(leaves);
 
-		return Ok(new CalendarResponse { Days = daysResponse, Leaves = leaves });
+		var zone = await _clock.TimeZoneForAsync(employeeId);
+		var fromMidnight = TimeZoneInfo.ConvertTimeToUtc(from.ToDateTime(TimeOnly.MinValue), zone);
+		var toMidnight = TimeZoneInfo.ConvertTimeToUtc(to.AddDays(1).ToDateTime(TimeOnly.MinValue), zone);
+
+		List<MeetingResponse> meetings = (await _db.MeetingParticipants
+				.AsNoTracking()
+				.Where(p => p.EmployeeId == employeeId
+					&& p.Meeting.StartAt < toMidnight && p.Meeting.EndAt > fromMidnight)
+				.OrderBy(p => p.Meeting.StartAt)
+				.Select(p => new { p.Meeting, p.Color, p.Response })
+				.ToListAsync())
+			.Select(m => MeetingMapping.ToResponse(m.Meeting, m.Color, m.Response))
+			.ToList();
+
+		return Ok(new CalendarResponse { Days = daysResponse, Leaves = leaves, Meetings = meetings });
 	}
 }

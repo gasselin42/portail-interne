@@ -29,6 +29,15 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [ ] 10. Notification au demandeur (création / assignation / résolution)
 - [ ] 11. (Optionnel) lier un créneau calendrier au ticket
 - [ ] 12. Autorisation stricte (R9) : employé ≠ console IT
+- [ ] 12b. Base de connaissances : modèle `KnowledgeArticle` + migration
+  - [ ] CRUD réservé aux rôles IT ; brouillon / publié ; les employés ne voient que les articles publiés
+  - [ ] Recherche insensible aux accents et à la casse (même approche que `TextKey`)
+  - [ ] Endpoint de suggestions à partir du titre d’un ticket (5 au maximum)
+  - [ ] « Ça règle mon problème » : compteur `HelpfulCount` (tickets évités)
+- [ ] 12c. Notifications en **temps réel** (SignalR)
+  - [ ] Hub authentifié par le JWT (passé en `access_token` dans l’URL, seul cas où le navigateur ne peut pas envoyer l’en-tête)
+  - [ ] Chaque notification créée est poussée à son destinataire seulement (tous ses onglets ouverts)
+  - [ ] Le temps réel ne remplace pas la lecture : à la reconnexion, la liste est relue depuis l’API (aucune notification perdue si la connexion tombe)
 
 ## Frontend (React)
 
@@ -39,6 +48,9 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [ ] 17. Accueil : panneau / widget notifications (aperçu + non lus) branché sur le centre de notifs
 - [ ] 18. Warning visible pour l’assigné (« prévoir un slot »)
 - [ ] 19. (Optionnel) bouton « planifier créneau » → meeting / événement
+- [ ] 20. **Base de connaissances** : liste + recherche, page d’un article, éditeur pour l’IT
+- [ ] 21. Suggestions d’articles dans **Nouveau ticket** pendant la saisie du titre ; « Ça règle mon problème » ferme le formulaire
+- [ ] 22. Connexion SignalR ouverte à la connexion, fermée à la déconnexion ; badge et liste mis à jour sans recharger
 
 ## Validation manuelle
 
@@ -49,6 +61,10 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [ ] Permissions respectées (employé hors console IT)
 - [ ] Résolution / fermeture du ticket OK
 - [ ] Admin a accès console IT (si prévu)
+- [ ] En tapant « VPN » dans un ticket, l’article VPN est suggéré ; « Ça règle mon problème » n’ouvre aucun ticket
+- [ ] Un brouillon d’article est invisible pour un employé
+- [ ] Deux navigateurs : un meeting créé dans l’un fait apparaître la notification dans l’autre sans recharger
+- [ ] Wi-Fi coupé puis rétabli : les notifications reçues entre-temps apparaissent
 
 ## Bonus
 

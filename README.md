@@ -37,11 +37,14 @@ L’IA m’a servi de mentor : elle propose les étapes et des pistes, puis rév
 |-------|---------|--------|
 | Phase 1 | Authentification, rôles, annuaire | ✅ Terminé |
 | Phase 2 | Congés, approbation, calendrier personnel (semaine, jour, mois), soldes | ✅ Terminé |
-| Phase 2.5 | Horaires de travail, jours fériés par site, calendrier en grille horaire | ⏳ À venir |
+| Phase 2.5 | Horaires de travail, jours fériés par site, calendrier en grille horaire | ✅ Terminé |
 | Phase 3 | Réunions individuelles et de groupe, détection de conflits, libre / occupé | ⏳ À venir |
-| Phase 3.5 | Réunions récurrentes | ⏳ À venir |
+| Phase 3.1 | Coordonnées professionnelles et personnelles, page « Mon profil » | ⏳ À venir |
+| Phase 3.5 | Réunions récurrentes, « Trouver un créneau » | ⏳ À venir |
 | Phase 4 | Réservation de salles et d’équipements | ⏳ À venir |
-| Phase 5 | Portail de demandes TI | ⏳ À venir |
+| Phase 5 | Portail de demandes TI, base de connaissances, notifications en temps réel | ⏳ À venir |
+| Phase 6 | Continuité : remplaçant d’approbation, date de départ | ⏳ À venir |
+| Jalon | Démo publique en ligne | ⏳ À venir |
 
 Le détail de chaque phase se trouve dans [PROJET.md](./PROJET.md) et dans les checklists de [docs/](./docs).
 

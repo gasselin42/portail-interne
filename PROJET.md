@@ -34,7 +34,7 @@ Objectif pédagogique : pratiquer un vrai produit .NET volumineux, découpé en 
 ## 3. Stack technique (décidée)
 
 | Élément | Choix | Notes |
-|--------|--------|-------|
+|---------|-------|-------|
 | Backend | **ASP.NET Core Web API** | Controllers JSON, pas de vues Razor |
 | Frontend | **React** (Vite recommandé) | SPA séparée qui consomme l’API |
 | Auth | **JWT** (Bearer) | Tranché pour la phase 1 ; cookies possibles plus tard |
@@ -88,9 +88,10 @@ Les rôles Manager / Agent IT seront introduits aux phases concernées.
 ### 5.1 Annuaire interne
 
 - Liste des employés actifs (nom, poste, équipe/département, contact).
-- Recherche (nom, équipe, poste).
+- Recherche (nom, équipe, poste) ; filtre par langue parlée.
 - L’annuaire montre **tous les sites** ; un filtre par site permet de n’afficher qu’un site (gardé dans l’URL).
 - Fiche employé (détails de contact, manager optionnel).
+- Coordonnées **professionnelles** publiques (numéro du site + poste, cellulaire pro, prénom d’usage, langues parlées, local, date d’embauche) et **personnelles** privées (cellulaire, email perso, adresse, anniversaire, contacts d’urgence), saisies par l’employé dans « Mon profil » (R28).
 - Lien naturel avec congés, meetings, tickets IT (qui est qui).
 
 ### 5.2 Congés et absences
@@ -121,6 +122,7 @@ Le calendrier est l’élément central du portail.
 - Meeting **de groupe** avec plusieurs employés.
 - Meetings **récurrents** (quotidiens, hebdomadaires, mensuels) avec exceptions : modifier ou annuler une occurrence, les suivantes ou toute la série.
 - **Libre / occupé** : à la création d’un meeting, on voit si les participants sont disponibles, sans jamais voir le détail de leurs événements.
+- **Trouver un créneau** : le portail propose les premiers moments où tous les participants sont libres, en tenant compte des horaires, des fuseaux, des congés et des blocs (R27).
 - Règles :
   - on **ne peut pas** planifier un meeting avec une personne **en congé approuvé** ;
   - si conflit d’horaire pour un ou plusieurs participants à un meeting d’équipe : le **meeting d’équipe a priorité** → les personnes en conflit reçoivent une **notification** ;
@@ -141,6 +143,7 @@ Le calendrier est l’élément central du portail.
 - Assignation à un technicien / employé.
 - La personne assignée reçoit un **avertissement** : elle doit **prévoir un créneau** dans son horaire pour la tâche.
 - Le demandeur initial est **notifié** des changements (assignation, résolution, etc.).
+- **Base de connaissances** : articles rédigés par l’équipe IT, suggérés pendant qu’on écrit un ticket ; « Ça règle mon problème » évite de créer le ticket.
 
 ### 5.6 Notifications
 
@@ -153,6 +156,7 @@ Types prévus (non exhaustif) :
 - Rappel « prévoir un slot » pour une tâche IT
 
 Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus ultérieur.
+Phase 5 : **temps réel** (SignalR) — la cloche se met à jour sans recharger la page.
 
 ### 5.7 Horaires de travail
 
@@ -243,12 +247,12 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
 **Exclu :** temps supplémentaire constaté, banque d’heures, paie, quarts de nuit (passant minuit)
 
 **Critères de done :**
-- [ ] Horaire lundi–jeudi → autres jours non travaillés, chaque semaine
-- [ ] Férié non travaillé automatiquement, sauf ajustement du manager
-- [ ] Départ anticipé demandé, approuvé, visible au calendrier
-- [ ] Congé sur une semaine complète → seuls les jours travaillés comptés
-- [ ] « Aujourd’hui » calculé dans le fuseau du site de l’employé
-- [ ] Un Admin ne voit et ne modifie que les employés de son site ; l’Admin global, tous
+- [x] Horaire lundi–jeudi → autres jours non travaillés, chaque semaine
+- [x] Férié non travaillé automatiquement, sauf ajustement du manager
+- [x] Départ anticipé demandé, approuvé, visible au calendrier
+- [x] Congé sur une semaine complète → seuls les jours travaillés comptés
+- [x] « Aujourd’hui » calculé dans le fuseau du site de l’employé
+- [x] Un Admin ne voit et ne modifie que les employés de son site ; l’Admin global, tous
 
 ---
 
@@ -279,6 +283,28 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
 
 ---
 
+### Phase 3.1 — Coordonnées et profil
+
+**Objectif :** séparer ce que tout le monde peut voir de ce qui reste privé, avant que des visiteurs voient l’annuaire dans la démo publique.
+
+**Inclus :**
+- Numéro principal du site + poste de l’employé ; cellulaire professionnel optionnel (les numéros existants y sont migrés)
+- Cellulaire et email personnels, adresse domiciliaire, 0 à 2 contacts d’urgence, dans des tables à part (R28)
+- Prénom d’usage, langues parlées (filtre de l’annuaire), local, date d’embauche (ancienneté sur la fiche)
+- Anniversaire privé par défaut ; widget « Anniversaires de la semaine » à l’accueil pour ceux qui l’affichent
+- Page **Mon profil** : l’employé consulte sa fiche et modifie ses coordonnées personnelles
+
+**Exclu :** infos de paie, pièces d’identité, informations médicales
+
+**Critères de done :**
+- [ ] L’annuaire affiche « 514 555-1234, poste 2045 » et jamais une coordonnée personnelle
+- [ ] Un employé modifie son contact d’urgence dans Mon profil
+- [ ] Son manager voit le contact d’urgence, pas son cellulaire personnel ; un collègue ne voit ni l’un ni l’autre
+- [ ] « Alex » s’affiche partout pour Alexandra ; chercher « Alexandra » ou « Alex » la trouve
+- [ ] Filtrer l’annuaire sur « anglais » ne montre que les employés qui le parlent
+
+---
+
 ### Phase 3.5 — Meetings récurrents
 
 **Objectif :** planifier une fois une réunion qui revient (ex. réunion d’équipe chaque lundi).
@@ -289,6 +315,7 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
 - Modifier / annuler : cette occurrence, cette occurrence et les suivantes, ou toute la série
 - Règles R6–R8 et horaire effectif vérifiés pour chaque occurrence
 - Récurrence en heure locale : une réunion à 10h reste à 10h après un changement d’heure
+- **Trouver un créneau** pour un meeting simple ou récurrent (R27)
 
 **Exclu :** invitations externes (iCal / email), salles récurrentes (phase 4)
 
@@ -298,6 +325,7 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
 - [ ] « Cette occurrence et les suivantes » coupe la série proprement
 - [ ] Une occurrence en conflit avec un congé approuvé est signalée
 - [ ] 10h reste 10h avant et après le passage à l’heure normale
+- [ ] « Trouver un créneau » propose 3 moments où tout le monde est libre, fuseaux compris
 
 ---
 
@@ -330,6 +358,8 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
 - Warning « prévoir un slot » pour l’assigné
 - Notification au demandeur
 - (Optionnel) lien ticket ↔ événement calendrier
+- Base de connaissances IT suggérée à la création d’un ticket
+- Notifications en **temps réel** (SignalR)
 
 **Critères de done :**
 - [ ] Employé crée une demande
@@ -337,6 +367,44 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
 - [ ] Assigné notifié + warning créneau
 - [ ] Demandeur notifié
 - [ ] Permissions respectées
+- [ ] En tapant « VPN », l’article correspondant est suggéré
+- [ ] Une notification apparaît sans recharger la page
+
+---
+
+### Phase 6 — Continuité
+
+**Objectif :** le portail continue de fonctionner quand quelqu’un s’absente ou quitte l’entreprise.
+
+**Inclus :**
+- **Remplaçant d’approbation** optionnel pour une période ; Admin du site notifié quand une demande attend un manager absent sans remplaçant (R25)
+- **Date de départ** : désactivation du compte à la date prévue, retrait des meetings futurs, demandes en attente annulées (R26)
+
+**Exclu :** transfert de dossiers, organigramme
+
+**Critères de done :**
+- [ ] Manager en congé : son remplaçant approuve les demandes de l’équipe, sauf les siennes
+- [ ] Sans remplaçant : l’Admin du site est notifié de la demande en attente
+- [ ] Date de départ atteinte : connexion refusée, plus dans aucun meeting futur, sans action manuelle
+
+---
+
+### Jalon — Démo publique
+
+**Objectif :** une personne qui découvre le projet (ex. recruteur) le teste en ligne en 30 secondes, sans rien installer.
+
+Après la phase 3.1 (aucune coordonnée personnelle visible dans l’annuaire) ; les meetings de la phase 3 rendent la démo parlante. Mise à jour à chaque phase.
+
+**Inclus :**
+- Hébergement en ligne (HTTPS) de l’API et de React
+- Mode démo (configuration) : bandeau « Démo », boutons « Se connecter comme Employé / Manager / Admin » sur la page de connexion
+- Données de démo générées **par rapport à aujourd’hui** (le calendrier n’est jamais vide), remises à zéro chaque nuit
+- Actions bloquées en démo : mot de passe, rôle et désactivation des comptes de démo
+
+**Critères de done :**
+- [ ] Lien public → connecté en un clic avec chaque rôle
+- [ ] Le calendrier de la semaine courante contient des congés et des meetings
+- [ ] Le lendemain, les modifications d’un visiteur ont disparu
 
 ---
 
@@ -377,7 +445,14 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
 
 ### Phase 3
 - **CalendarEvent / Meeting** : Id, Title, Description?, StartAt, EndAt, OrganizerId, IsTeamMeeting, IsFlexible (bloc personnel seulement), CreatedAt
-- **MeetingParticipant** : MeetingId, EmployeeId, ResponseStatus?, Color? (choisie par chaque personne, organisateur compris)
+- **MeetingParticipant** : MeetingId, EmployeeId, Response (EnAttente / Accepte / Decline ; l’organisateur accepte d’office), Color? (choisie par chaque personne, organisateur compris)
+
+### Phase 3.1
+- `Site.MainPhoneNumber?`, `Site.CountryCode` (ISO 3166) ; numéros enregistrés en E.164 ; `Employee.PhoneExtension?` ; `Employee.PhoneNumber` renommé `WorkMobilePhone?` (données conservées)
+- `Employee.PreferredName?` (+ clé de recherche), `Employee.OfficeLocation?`, `Employee.HireDate` (DateOnly)
+- **EmployeeLanguage** : EmployeeId, LanguageCode (ISO 639-1, liste fixe) — clé composée
+- **EmployeePrivateInfo** : EmployeeId (clé), PersonalMobilePhone?, PersonalEmail?, AddressLine1?, AddressLine2?, City?, Region?, PostalCode?, Country?, BirthMonth?, BirthDay?, ShowBirthday, UpdatedAt
+- **EmergencyContact** : Id, EmployeeId, Name, Relationship, PhoneNumber, SortOrder (1 ou 2)
 
 ### Phase 3.5
 - **MeetingSeries** : Id, OrganizerId, Title, Description?, IsTeamMeeting, TimeZoneId, FirstStartLocal, DurationMinutes, Frequency (Daily/Weekly/Monthly), Interval, DaysOfWeek?, Until? / Count?, CreatedAt
@@ -392,6 +467,14 @@ Canal initial : **notifications in-app** (table + cloche / liste). Email = bonus
 ### Phase 5
 - **ItTicket** : Id, Title, Description, Category?, Status, CreatedById, AssignedToId?, CreatedAt, UpdatedAt, ResolvedAt?
 - **TicketComment** (optionnel)
+
+### Phase 5 (suite)
+- **KnowledgeArticle** : Id, Title, Body, TitleKey (recherche sans accents), IsPublished, AuthorId, HelpfulCount, CreatedAt, UpdatedAt
+
+### Phase 6
+- **ApprovalDelegation** : Id, ManagerId, DelegateId, StartDate, EndDate, CreatedAt
+- `Employee.DepartureDate?` (DateOnly, heure locale du site)
+- Décisions d’approbation : `ReviewedOnBehalfOfId?`
 
 ### Transverse
 - **Notification** : Id, UserId, Type, Message, IsRead, CreatedAt, RelatedEntityType?, RelatedEntityId?
@@ -440,9 +523,15 @@ Les écrans sont côté **React**. L’API expose les routes `/api/...` correspo
 12. Détail meeting
 13. Calendrier enrichi (meetings + congés) + libre / occupé à la création
 
+### Phase 3.1
+13d. Mon profil (fiche, prénom d’usage, langues, coordonnées personnelles, adresse, anniversaire, contacts d’urgence)
+13f. Accueil : widget « Anniversaires de la semaine »
+13e. Formulaire employé et fiche : poste, cellulaire pro, section personnelle (Admin du site) ; numéro principal dans l’écran Sites
+
 ### Phase 3.5
 13a. Créer un meeting récurrent (règle + aperçu en clair : « Chaque lundi à 10h, jusqu’au 31 déc. »)
 13b. Modifier / annuler : cette occurrence, les suivantes ou toute la série
+13c. « Trouver un créneau » dans l’écran de création (R27)
 
 ### Phase 4
 14. Catalogue salles / équipements
@@ -452,7 +541,15 @@ Les écrans sont côté **React**. L’API expose les routes `/api/...` correspo
 16. Mes tickets IT
 17. Nouveau ticket
 18. Console IT (toutes les demandes, assignation)
-19. Centre de notifications
+19. Centre de notifications (temps réel)
+20. Base de connaissances : liste / article ; (IT) rédiger un article ; suggestions dans « Nouveau ticket »
+
+### Phase 6
+21. (Manager) Désigner un remplaçant
+22. (Admin du site) Date de départ dans la fiche employé
+
+### Démo publique
+23. Page de connexion en mode démo (boutons par rôle) + bandeau « Démo »
 
 ---
 
@@ -466,7 +563,7 @@ Les écrans sont côté **React**. L’API expose les routes `/api/...` correspo
 | R4 | Compte inactif → login refusé |
 | R5 | Congé en attente vs approuvé : affichages calendrier distincts |
 | R6 | Pas de meeting avec un participant en congé **approuvé** |
-| R7 | Conflit d’horaire sur meeting d’équipe → priorité au meeting d’équipe + notification |
+| R7 | Meeting d’équipe = organisé par un manager (au moins un subordonné actif) ou un Admin, statut fixé à la création ; en cas de chevauchement il est prioritaire : avertissement renforcé à l’organisateur d’un meeting ordinaire, personnes en conflit notifiées ; un conflit ne bloque jamais (sauf congé approuvé, R6) |
 | R8 | Si salle/équipement demandé : doit être libre sur **tout** le créneau, sinon refus |
 | R9 | Tickets IT : vue globale réservée aux rôles IT / Admin |
 | R10 | Assignation ticket → warning « prévoir un slot » pour l’assigné + notif demandeur |
@@ -484,6 +581,10 @@ Les écrans sont côté **React**. L’API expose les routes `/api/...` correspo
 | R22 | Couleur d’un événement : choisie par chaque personne dans son propre calendrier, parmi une palette fixe qui exclut les couleurs des congés ; couleur par défaut si aucune n’est choisie ; ne change jamais celle des autres participants |
 | R23 | Portée par site : un Admin gère seulement les employés de son site (comptes, fiches, approbations, horaires, ajustements, congé maladie pour autrui) ; l’Admin global gère tous les sites, les sites eux-mêmes et le changement de site ; manager et subordonnés toujours du même site ; changement de site refusé tant que l’employé a un manager ou des subordonnés ; annuaire et meetings restent ouverts à tous les sites |
 | R24 | Absence dans la journée : prévue (demandée, approuvée) ou non prévue (« Je pars », approuvée d’office) ; plusieurs par jour sans chevauchement ; « Je pars » et « Je suis de retour » enregistrent les heures réelles, affichées au calendrier ; confirmables aussi par le manager ou un Admin du site ; sans retour confirmé, fermeture à la fin de la journée de travail, marquée « retour non confirmé » ; un meeting chevauché n’est jamais annulé, l’organisateur et l’employé sont notifiés (phase 3) |
+| R25 | Remplaçant d’approbation : un manager désigne un remplaçant pour une période (employé actif du même site, jamais lui-même) ; pendant la période, le remplaçant approuve les demandes de l’équipe, sauf les siennes ; un Admin du site peut toujours approuver (R23) ; sans remplaçant, une demande qui arrive pendant un congé approuvé du manager, ou pour un employé dont le manager est parti, notifie les Admins du site ; la décision garde qui a approuvé « au nom de » qui ; le manager garde ses droits pendant la période |
+| R26 | Date de départ (heure locale du site, ≥ aujourd’hui, fixée par un Admin du site, modifiable ou annulable avant la date) : dès cette date, connexion refusée (R4), retrait des meetings futurs (organisateurs notifiés), annulation de ses meetings futurs avec participants (participants notifiés) et de ses demandes en attente ; à la saisie, avertissement listant ses subordonnés et ses meetings organisés ; tant que ses subordonnés n’ont pas de nouveau manager, leurs demandes notifient les Admins du site (R25) |
+| R27 | Trouver un créneau : pour des participants et une durée, propose les 3 premiers créneaux sur les 14 prochains jours, par tranches de 15 min, jamais dans le passé, à l’intérieur de l’horaire effectif de chacun (dans son fuseau), sans congé, absence, meeting ni bloc ferme ; un bloc souple n’est ignoré que pour un meeting d’équipe (R21) ; sans résultat, message clair indiquant qui bloque le plus (« sans Sam : 4 créneaux ») |
+| R28 | Coordonnées : **professionnelles** (email, numéro du site + poste, cellulaire professionnel, prénom d’usage, langues parlées, local, date d’embauche) visibles dans l’annuaire ; **personnelles** (cellulaire et email personnels, adresse domiciliaire, anniversaire, 0 à 2 contacts d’urgence) dans des tables à part, jamais renvoyées par l’annuaire ; lecture : l’employé, les Admins de son site (R23) et l’Admin global ; son manager direct voit seulement les contacts d’urgence (jamais l’adresse) ; modification : l’employé (« Mon profil ») ou un Admin de son site ; supprimées à la date de départ (R26) ; le prénom d’usage remplace le prénom partout où un nom est affiché, la recherche trouve les deux ; l’anniversaire (jour et mois, sans l’année) n’est montré aux collègues que si l’employé l’a choisi (29 février : affiché le 28 les années non bissextiles) |
 
 ---
 
@@ -498,9 +599,12 @@ portail-interne/
 │   ├── phase-2-checklist.md
 │   ├── phase-2.5-checklist.md
 │   ├── phase-3-checklist.md
+│   ├── phase-3.1-checklist.md
 │   ├── phase-3.5-checklist.md
 │   ├── phase-4-checklist.md
-│   └── phase-5-checklist.md
+│   ├── phase-5-checklist.md
+│   ├── phase-6-checklist.md
+│   └── demo-publique-checklist.md
 ├── src/
 │   ├── PortailInterne.Api/        ← ASP.NET Core Web API (.NET)
 │   └── portail-interne-web/       ← React (Vite)
@@ -570,6 +674,21 @@ portail-interne/
 | 2026-10-18 | Absences séparées des ajustements (R24) : prévues ou non prévues (urgence), plusieurs par jour, « Je pars » / « Je suis de retour » avec heures réelles, fermeture automatique en fin de journée ; remplace la plage d’absence dans un ajustement
 | 2026-10-18 | Retard sur une absence (R24, première version) : prolongation le jour même, appliquée sans approbation, manager informé ; meeting chevauché conservé, organisateur et employé notifiés
 | 2026-10-18 | Portée par site (R23) : rôle Admin global ; Admin limité à son site ; manager du même site ; changement de site par l’Admin global seulement, refusé s’il y a un manager ou des subordonnés ; annuaire filtrable par site
+| 2026-10-31 | Phase 3 : tout le monde crée des meetings avec tout employé actif (tous sites) ; meeting d’équipe = organisé par un manager (≥ 1 subordonné actif) ou un Admin, fixé à la création (`IsTeamMeeting`), aucune case à cocher ; bouton « Ajouter mon équipe » pour un manager
+| 2026-10-31 | Conflit sur un meeting ordinaire : avertissement, l’organisateur confirme, personnes en conflit notifiées ; chevauchement d’un meeting d’équipe = avertissement renforcé (« prioritaire ») ; congé approuvé = refus (R6) ; modifier / annuler = organisateur ou Admin du site de l’organisateur
+| 2026-10-31 | Ajouts : « Trouver un créneau » (phase 3.5, R27) ; base de connaissances IT et notifications temps réel SignalR (phase 5) ; nouvelle phase 6 — Continuité (remplaçant d’approbation optionnel + notification à l’Admin du site R25, date de départ R26) ; jalon Démo publique (recommandé après la phase 3)
+| 2026-11-01 | Phase 3.1 — Coordonnées : pro publiques (numéro du site + poste, cellulaire pro) vs personnelles privées en tables à part (R28) ; l’employé les saisit dans « Mon profil » ; manager = contacts d’urgence seulement ; anciens numéros migrés en cellulaire pro ; adresse domiciliaire privée (jamais visible du manager) ; prénom d’usage, langues parlées, local, date d’embauche ; anniversaire privé par défaut avec widget d’accueil ; pas de pronoms ni d’infos médicales ; numéros formatés pendant la saisie selon le pays (`libphonenumber-js` / `libphonenumber-csharp`), enregistrés en E.164 ; avant la démo publique
+| 2026-11-01 | Meeting hors de l’horaire effectif d’un participant (jour non travaillé, férié, hors des heures, absence approuvée) : avertissement dans le même 409 que les conflits, levé par `confirmConflicts` ; participants seulement (jamais l’organisateur ni un bloc personnel) ; horaire non défini = aucun avertissement
+| 2026-11-01 | Notifications de conflit (R7, R21) : une seule notification par participant — l’invitation devient « conflit » (avec « Meeting d’équipe : il a priorité. » si d’équipe) ou « bloc souple chevauché » ; meeting d’équipe sur un meeting ordinaire d’un participant : l’organisateur de ce meeting ordinaire est prévenu (« Jane Test a un meeting d’équipe prioritaire pendant « Point projet » »), sans le titre du meeting d’équipe (R17)
+| 2026-11-01 | Détail d’un meeting : organisateur, participants et Admin du site de l’organisateur ; bloc personnel : propriétaire seulement ; sinon 404 sans révéler l’existence (R17)
+| 2026-11-01 | Modifier / annuler (étape 9) : organisateur ou Admin du site (bloc : propriétaire seulement) ; verrouillé dès que le meeting commence ; annuler = suppression définitive, participants notifiés ; modification revalidée comme une création (409 à confirmer, le meeting lui-même ignoré) ; participants restants notifiés seulement si l’heure ou le titre change, ajoutés invités, retirés prévenus, organisateur prévenu quand un Admin agit à sa place
+| 2026-11-01 | Libre / occupé (étape 10b) : consultable par tout employé pour tout employé actif ; par jour, heures de travail ou « non travaillé » (congé, férié et jour de repos confondus) ou « non défini » ; créneaux « occupé » (meeting, bloc ferme), « occupé souple » (bloc souple), « absent » (absence approuvée) ; jamais de titre, de participants, de type de congé ni de motif (R17) ; tout en UTC
+| 2026-11-02 | Absence qui chevauche un meeting (étape 10c, R24) : meetings de groupe seulement (blocs ignorés), jamais annulés ; notifiés à l’approbation (ou à la création approuvée d’office), au « Je pars » imprévu ou en avance, et au retour tardif ; une absence approuvée puis annulée prévient aussi ; destinataires : l’organisateur, et l’employé seulement si quelqu’un d’autre (manager, Admin, système) a agi ; manager prévenu d’un départ imprévu et d’un retour non confirmé ; retour tardif et non confirmé détectés par une tâche de fond, une seule fois par absence
+| 2026-11-02 | Congé approuvé qui chevauche un meeting (étape 10d) : meeting conservé ; employé participant → organisateur notifié ; employé organisateur → participants notifiés, et son manager pour un meeting d’équipe ; une modification qui garde la même heure ne revérifie les congés et les heures de travail que des participants ajoutés (sinon l’organisateur en congé ne pouvait même plus corriger un titre) ; les congés passés (maladie rétroactive) ne notifient rien ; employé prévenu aussi, puisque c’est toujours quelqu’un d’autre qui approuve
+| 2026-11-03 | Écran « Créer un événement » (étape 12) : grande modale ouverte depuis le calendrier (`?nouvel-evenement=1`) ; heures choisies dans des listes par tranches de 15 min (fin proposée en durées, jusqu’à minuit) ; libre / occupé en frise horaire, une ligne par personne, cliquable pour placer le début ; un 409 (conflits, hors horaire) s’affiche dans la modale avec « Créer quand même »
+| 2026-11-05 | Créer un événement (étape 12, suite) : « Créer quand même » ne vaut que pour la requête exacte qui a reçu le 409 (toute modification du formulaire fait revérifier) ; jamais de créneau dans le passé (début à la prochaine tranche de 15 min, date minimale = premier jour qui en a encore) ; libre / occupé : plage d’heures = heures de travail de tous + le créneau (8 h – 18 h si aucune), affichée dans le fuseau de la personne qui regarde, 20 personnes au maximum (comme l’API) ; ordre des étapes front : 14 (calendrier enrichi) avant 13 (détail), pour ouvrir le détail depuis le calendrier
+| 2026-11-08 | Calendrier enrichi et détail d’un événement (étapes 14 et 13) : meetings qui se chevauchent affichés côte à côte, couleur de chaque personne ; détail ouvert par `?evenement=ID` depuis la grille ou la vue mois ; couleur personnelle changée dans le détail seulement (jamais dans la modification, qui ne touche pas la couleur des autres, R22) ; modifier / annuler réservés à l’organisateur ou à l’Admin, et seulement avant le début ; la modification réutilise le formulaire de création, sans changer le type, avec l’organisateur de l’événement (pas forcément la personne qui modifie) dans le libre / occupé
+| 2026-11-13 | Fin de la phase 3 (front 14b à 17, bonus) : densité de la grille (Compacte / Normale / Aérée) stockée avec la plage d’heures ; un congé apparaît comme une absence d’une journée dans le libre / occupé (motif caché, R17) ; centre de notifications : page, cloche avec les 5 dernières (lien simple sur mobile), compte de non lues partagé, rafraîchi chaque minute et au retour sur l’onglet ; fermer une modale ouverte par l’URL remplace l’entrée d’historique (le retour arrière ne la rouvre pas) ; tous les `DateTime` sont relus comme UTC par une convention EF, sauf les dates de congé ; R21 aussi au déplacement d’un meeting d’équipe ; réponse des participants : un refus rend libre (conflits et libre / occupé l’ignorent), un changement d’heure remet les réponses en attente, l’organisateur est notifié d’un refus et de son retrait seulement
 | 2026-10-12 | Ajout de la phase 3.5 — Meetings récurrents (occurrences calculées, exceptions stockées, R18)
 
 ---
@@ -580,12 +699,15 @@ portail-interne/
 |-----|--------|
 | Phase 1 — Auth + annuaire | ✅ Terminée |
 | Phase 2 — Congés + calendrier | ✅ Terminée |
-| Phase 2.5 — Horaires de travail | ⏳ |
+| Phase 2.5 — Horaires de travail | ✅ Terminée |
 | Phase 3 — Meetings | ⏳ |
+| Phase 3.1 — Coordonnées et profil | ⏳ |
 | Phase 3.5 — Meetings récurrents | ⏳ |
 | Phase 4 — Ressources | ⏳ |
 | Phase 5 — Helpdesk IT | ⏳ |
+| Phase 6 — Continuité | ⏳ |
+| Jalon — Démo publique | ⏳ |
 
 ---
 
-*Dernière mise à jour : 2026-10-17*
+*Dernière mise à jour : 2026-10-31*

@@ -55,6 +55,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
 			services.RemoveAll<TimeProvider>();
 			services.AddSingleton<TimeProvider>(new FixedTimeProvider(_now));
+
+			// Pas de tâche de fond : un test lance la vérification lui-même (RunAbsenceWatcherAsync)
+			services.Remove(services.Single(d => d.ImplementationType == typeof(AbsenceWatcherService)));
 		});
 	}
 
@@ -87,6 +90,13 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 		var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 		action(db);
 		db.SaveChanges();
+	}
+
+	/// <summary>Une vérification de la tâche de fond des absences (retour tardif, non confirmé), à « maintenant ».</summary>
+	public async Task RunAbsenceWatcherAsync()
+	{
+		using var scope = Services.CreateScope();
+		await scope.ServiceProvider.GetRequiredService<AbsenceWatcher>().RunOnceAsync();
 	}
 
 	protected override void Dispose(bool disposing)

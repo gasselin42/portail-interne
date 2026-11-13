@@ -6,6 +6,7 @@ import { LogoutOutlined, SettingsOutlined, ScheduleOutlined, BadgeOutlined } fro
 import { Avatar } from "../components/employees/Avatar"
 import { Brand } from "../components/common/Brand"
 import { linkClasses } from "../ui/buttons"
+import { NotificationBell } from "../components/notifications/NotificationBell"
 
 export type UserDialog = "presence" | "info" | "preferences"
 
@@ -33,8 +34,11 @@ export function SidebarContent({ collapsed, onNavigate, onOpenDialog }: Props) {
 	return (
 		<div className="flex h-full flex-col">
 			{/* 1. En-tête */}
-			<div className={`flex px-4 py-5 ${collapsed ? "justify-center" : ""}`}>
+			<div className={`flex items-center px-4 py-5 ${collapsed ? "justify-center flex-col gap-2" : ""}`}>
 				<Brand hideName={collapsed} />
+				<div className={collapsed ? "" : "ml-auto"}>
+					<NotificationBell />
+				</div>
 			</div>
 
 			{/* 2. Liens : flex-1 prend toute la hauteur restante */}

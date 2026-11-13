@@ -18,13 +18,15 @@ public class AbsenceController : ControllerBase
 	private readonly AccessScope _scope;
 	private readonly SiteClock _clock;
 	private readonly EffectiveScheduleService _schedule;
+	private readonly AbsenceNotifier _notifier;
 
-	public AbsenceController(AppDbContext db, AccessScope scope, SiteClock clock, EffectiveScheduleService schedule)
+	public AbsenceController(AppDbContext db, AccessScope scope, SiteClock clock, EffectiveScheduleService schedule, AbsenceNotifier notifier)
 	{
 		_db = db;
 		_scope = scope;
 		_clock = clock;
 		_schedule = schedule;
+		_notifier = notifier;
 	}
 
 	[HttpGet]
@@ -128,6 +130,12 @@ public class AbsenceController : ControllerBase
 		if (overlap)
 			return Conflict(new { message = "Tu as déjà une absence qui chevauche ces heures ce jour-là." });
 
+		if (autoApproved)
+		{
+			var zone = await _clock.TimeZoneForAsync(employee.Id);
+			await _notifier.NotifyMissedMeetingsAsync(employee.Id, MeetingTime.ToUtc(absence.Date, absence.PlannedStart!.Value, zone), MeetingTime.ToUtc(absence.Date, absence.PlannedEnd!.Value, zone), userId);
+		}
+
 		_db.Absences.Add(absence);
 		await _db.SaveChangesAsync();
 
@@ -177,6 +185,12 @@ public class AbsenceController : ControllerBase
 		if (isSelf && absence.Status == LeaveStatus.Approuve)
 			return BadRequest(new { message = "Une absence approuvée ne peut être annulé que par ton manager." });
 
+		if (absence.Status == LeaveStatus.Approuve)
+		{
+			var zone = await _clock.TimeZoneForAsync(employee.Id);
+			await _notifier.NotifyCancelledAsync(employee.Id, MeetingTime.ToUtc(absence.Date, absence.PlannedStart!.Value, zone), MeetingTime.ToUtc(absence.Date, absence.PlannedEnd!.Value, zone), userId);
+		}
+
 		absence.Status = LeaveStatus.Annule;
 		await _db.SaveChangesAsync();
 
@@ -220,8 +234,15 @@ public class AbsenceController : ControllerBase
 											&& a.StartedAt is null && a.PlannedStart is not null
 											&& Math.Abs((a.PlannedStart!.Value - now).TotalMinutes) <= 30);
 
+		var zone = await _clock.TimeZoneForAsync(employee.Id);
+		var nowUtc = MeetingTime.ToUtc(today, now, zone);
+
 		if (absence is not null)
+		{
 			absence.StartedAt = now;
+			if (now < absence.PlannedStart)
+				await _notifier.NotifyMissedMeetingsAsync(employee.Id, nowUtc, MeetingTime.ToUtc(absence.Date, absence.PlannedStart!.Value, zone), userId);
+		}
 		else
 		{
 			absence = new Absence
@@ -242,6 +263,11 @@ public class AbsenceController : ControllerBase
 			};
 
 			_db.Absences.Add(absence);
+
+			await _notifier.NotifyMissedMeetingsAsync(employee.Id, nowUtc, MeetingTime.ToUtc(absence.Date, day.EndTime!.Value, zone), userId);
+
+			var time = now.Minute == 0 ? $"{now.Hour} h" : $"{now.Hour} h {now.Minute:00}";
+			await _notifier.NotifyManagersAsync(employee.Id, userId, NotificationType.AbsenceUnplanned, $"{employee.FirstName} {employee.LastName} a signalé un départ imprévu à {time}.");
 		}
 
 		await _db.SaveChangesAsync();
@@ -283,6 +309,13 @@ public class AbsenceController : ControllerBase
 
 		if (absence is null)
 			return BadRequest(new { message = "Tu n'es pas absent en ce moment." });
+
+		var announcedEnd = (absence.PlannedEnd is null || absence.LateReturnNotified) ? day.EndTime : absence.PlannedEnd;
+		var zone = await _clock.TimeZoneForAsync(employee.Id);
+		var nowUtc = MeetingTime.ToUtc(today, now, zone);
+
+		if (now < announcedEnd)
+			await _notifier.NotifyCancelledAsync(employee.Id, nowUtc, MeetingTime.ToUtc(absence.Date, announcedEnd!.Value, zone), userId);
 
 		absence.EndedAt = now;
 		absence.ReturnConfirmed = true;
@@ -350,6 +383,12 @@ public class AbsenceController : ControllerBase
 
 			if (overlap)
 				return Conflict(new { message = "Cet employé a déjà une absence qui chevauche ces heures ce jour-là." });
+		}
+
+		if (request.Status == LeaveStatus.Approuve)
+		{
+			var zone = await _clock.TimeZoneForAsync(employee.Id);
+			await _notifier.NotifyMissedMeetingsAsync(employee.Id, MeetingTime.ToUtc(absence.Date, absence.PlannedStart!.Value, zone), MeetingTime.ToUtc(absence.Date, absence.PlannedEnd!.Value, zone), userId);
 		}
 
 		absence.Status = request.Status;

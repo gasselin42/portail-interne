@@ -10,13 +10,14 @@ type Props<T extends string | number> = {
 	options: Option<T>[]
 	value: T
 	onChange: (value: T) => void
+	disabled?: boolean
 }
 
 /**
  * Groupe de boutons dont un seul est actif (Jour / Semaine / Mois…).
  * Une pastille glisse sous le bouton actif et prend sa largeur.
  */
-export function SegmentedControl<T extends string | number>({ label, options, value, onChange }: Props<T>) {
+export function SegmentedControl<T extends string | number>({ label, options, value, onChange, disabled }: Props<T>) {
 	const buttonsRef = useRef<(HTMLButtonElement | null)[]>([])
 	const pillRef = useRef<HTMLSpanElement>(null)
 
@@ -62,7 +63,8 @@ export function SegmentedControl<T extends string | number>({ label, options, va
 					type="button"
 					aria-pressed={option.value === value}
 					onClick={() => onChange(option.value)}
-					className={`relative z-10 rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 aria-pressed:text-white aria-pressed:hover:text-white ${focusRing}`}
+					className={`relative z-10 rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 aria-pressed:text-white aria-pressed:hover:text-white disabled:opacity-70 ${focusRing}`}
+					disabled={disabled}
 				>
 					{option.label}
 				</button>

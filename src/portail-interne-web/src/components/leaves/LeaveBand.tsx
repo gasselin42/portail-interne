@@ -19,7 +19,7 @@ export function LeaveBand({ segment, compact = false, style}: Props) {
 	const type = LEAVE_TYPE_LABELS[leave.type]
 	const status = LEAVE_STATUS_LABELS[leave.status]
 	const label = `${type} · ${status}`
-	const fullLabel = `${type} (${status}), ${formatRange(leave.startDate, leave.endDate)}${leave.unpaidDates !== null && leave.unpaidDates.length > 0 ? ", dont 3 jours sans solde" : ""}`
+	const fullLabel = `${type} (${status}), ${formatRange(leave.startDate, leave.endDate)}${leave.unpaidDates !== null && leave.unpaidDates.length > 0 ? `, dont ${leave.unpaidDates.length} jours sans solde` : ""}`
 
 	return (
 		<li

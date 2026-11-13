@@ -24,6 +24,7 @@ import { RequireTeamView } from "./components/auth/RequireTeamView"
 import { TeamPage } from "./pages/TeamPage"
 import { SitesPage } from "./pages/SitesPage"
 import { SitePage } from "./pages/SitePage"
+import { NotificationsPage } from "./pages/NotificationsPage"
 
 export default function App() {
 	return (
@@ -51,6 +52,7 @@ export default function App() {
 								<Route path="/leaves" element={<LeavesPage />} />
 								<Route path="/leaves/new" element={<Navigate to="/leaves?nouvelle=1" replace />} />
 								<Route path="/calendar" element={<CalendarPage />} />
+								<Route path="/notifications" element={<NotificationsPage />} />
 
 								<Route element={<RequireApprover />}>
 									<Route path="/approvals" element={<ApprovalsPage />} />

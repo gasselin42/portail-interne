@@ -1,12 +1,20 @@
 import { DaySource, type CalendarAbsence, type EffectiveDay } from "../api/calendar"
 import { LeaveStatus } from "../api/leaves"
-import { CalendarHourRange, type CalendarHourRangeId } from "../api/preferences"
+import { CalendarDensity, CalendarHourRange, type CalendarDensityId, type CalendarHourRangeId } from "../api/preferences"
 import { formatTime } from "./date"
 
-export const HOUR_HEIGHT = 48 // pixels par heure
+export const HOUR_HEIGHTS: Record<CalendarDensityId, number> = {
+	[CalendarDensity.Normal]: 48,
+	[CalendarDensity.Compact]: 32,
+	[CalendarDensity.Airy]: 72,
+} // pixels par heure
 
-export function timeToPx(time: string, startHour: number): number {
-	return toMinutes(time) * (HOUR_HEIGHT / 60) - startHour * HOUR_HEIGHT
+export function timeToPx(time: string, startHour: number, density: CalendarDensityId): number {
+	return minutesToPx(toMinutes(time), startHour, density)
+}
+
+export function minutesToPx(minutes: number, startHour: number, density: CalendarDensityId): number {
+	return minutes * HOUR_HEIGHTS[density] / 60 - startHour * HOUR_HEIGHTS[density]
 }
 
 function toMinutes(time: string): number {
@@ -28,7 +36,7 @@ export function dayNote(day: EffectiveDay): string | null {
 	return null
 }
 
-export function hourRange(days: EffectiveDay[], range: CalendarHourRangeId): { start: number, end: number } {
+export function hourRange(days: EffectiveDay[], range: CalendarHourRangeId, slices: { from: number, to: number }[]): { start: number, end: number } {
 	if (range === CalendarHourRange.FullDay)
 		return { start: 0, end: 24 }
 
@@ -52,6 +60,10 @@ export function hourRange(days: EffectiveDay[], range: CalendarHourRangeId): { s
 			add(absence.plannedEnd)
 		}
 	}
+
+	for (const slice of slices) {
+		minutes.push(slice.from, slice.to)
+	}
 	
 	if (minutes.length === 0)
 		return { start: 7, end: 19}
@@ -71,6 +83,46 @@ export function absenceTitle(absence: CalendarAbsence): string {
 
 	if (absence.reason)
 		result += ` · ${absence.reason}`
+
+	return result
+}
+
+/** Range les éléments qui se chevauchent côte à côte : sous-colonne et nombre de sous-colonnes du groupe. */
+export function layoutOverlaps<T extends { from: number; to: number }>(items: T[]): (T & { column: number; columns: number })[] {
+	const sorted = [...items].sort((a, b) => a.from - b.from || b.to - a.to) // En cas d'égalité des from, = 0, donc on passe au 2e critère
+	const result: (T & { column: number; columns: number })[] = []
+
+	// Un "groupe", c'est une suite de meetings reliés par des chevauchements
+	// Exemple : Des meetings de 9h à 10h, de 9h30 à 11h et de 10h30 à 12h forment un seul groupe de 9h à 12h,
+	//			 ne prenant que 2 colonnes, comme le 1er et le 3e meeting ne se chevauchent pas
+	let group: (T & { column: number; columns: number })[] = []
+	let columnEnds: number[] = [] // fin du dernier élément de chaque sous-colonne
+	let groupEnd = -1
+
+	function closeGroup() {
+		for (const item of group) item.columns = columnEnds.length
+		result.push(...group)
+		group = []
+		columnEnds = []
+	}
+
+	for (const item of sorted) {
+		// Commence après tout le groupe : le groupe est terminé
+		if (item.from >= groupEnd) closeGroup()
+
+		// Première sous-colonne libérée à temps, sinon une nouvelle
+		let column = columnEnds.findIndex((end) => end <= item.from)
+		if (column === -1) {
+			column = columnEnds.length
+			columnEnds.push(item.to)
+		} else {
+			columnEnds[column] = item.to
+		}
+
+		group.push({ ...item, column, columns: 0 })
+		groupEnd = Math.max(groupEnd, item.to)
+	}
+	closeGroup()
 
 	return result
 }
