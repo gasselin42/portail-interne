@@ -79,6 +79,44 @@ namespace PortailInterne.Api.Migrations
                     b.ToTable("Absences");
                 });
 
+            modelBuilder.Entity("PortailInterne.Api.Models.EmergencyContact", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Relationship")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId", "SortOrder")
+                        .IsUnique();
+
+                    b.ToTable("EmergencyContacts", t =>
+                        {
+                            t.HasCheckConstraint("CK_EmergencyContact_SortOrder", "SortOrder IN (1, 2)");
+                        });
+                });
+
             modelBuilder.Entity("PortailInterne.Api.Models.Employee", b =>
                 {
                     b.Property<int>("Id")
@@ -176,6 +214,60 @@ namespace PortailInterne.Api.Migrations
                     b.HasKey("EmployeeId");
 
                     b.ToTable("EmployeePreferences");
+                });
+
+            modelBuilder.Entity("PortailInterne.Api.Models.EmployeePrivateInfo", b =>
+                {
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AddressLine1")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AddressLine2")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("BirthDay")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("BirthMonth")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Country")
+                        .HasMaxLength(2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PersonalEmail")
+                        .HasMaxLength(254)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PersonalMobilePhone")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PostalCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Region")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("ShowBirthday")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("EmployeeId");
+
+                    b.ToTable("EmployeePrivateInfos");
                 });
 
             modelBuilder.Entity("PortailInterne.Api.Models.Holiday", b =>
@@ -689,6 +781,17 @@ namespace PortailInterne.Api.Migrations
                     b.Navigation("ReviewedBy");
                 });
 
+            modelBuilder.Entity("PortailInterne.Api.Models.EmergencyContact", b =>
+                {
+                    b.HasOne("PortailInterne.Api.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
             modelBuilder.Entity("PortailInterne.Api.Models.Employee", b =>
                 {
                     b.HasOne("PortailInterne.Api.Models.Site", "Site")
@@ -705,6 +808,17 @@ namespace PortailInterne.Api.Migrations
                     b.HasOne("PortailInterne.Api.Models.Employee", "Employee")
                         .WithOne()
                         .HasForeignKey("PortailInterne.Api.Models.EmployeePreferences", "EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("PortailInterne.Api.Models.EmployeePrivateInfo", b =>
+                {
+                    b.HasOne("PortailInterne.Api.Models.Employee", "Employee")
+                        .WithOne()
+                        .HasForeignKey("PortailInterne.Api.Models.EmployeePrivateInfo", "EmployeeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

@@ -23,9 +23,9 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [x] 1b. Validation commune des numéros (un seul service) : `libphonenumber-csharp`, numéro valide pour son pays, enregistré en E.164 ; message clair sinon
   - [x] Migration des numéros existants vers E.164 (pays du site de l’employé) ; un numéro impossible à convertir est listé dans la sortie de la migration et laissé vide plutôt qu’enregistré faux
 - [x] 2. `Employee.PhoneExtension?` ; `PhoneNumber` renommé `WorkPhone?` dans la migration, **données conservées** (les numéros existants deviennent des téléphones pro)
-- [ ] 3. Modèles `EmployeePrivateInfo` (1 ligne par employé, au besoin) et `EmergencyContact` (0 à 2 par employé) + migration
-  - [ ] Adresse dans `EmployeePrivateInfo` : code postal validé selon le pays (Canada : `A1A 1A1`, enregistré en majuscules avec l’espace ; autres pays : texte libre)
-  - [ ] Contact d’urgence : nom, lien et téléphone obligatoires ; `SortOrder` 1 ou 2, unique par employé
+- [x] 3. Modèles `EmployeePrivateInfo` (1 ligne par employé, au besoin) et `EmergencyContact` (0 à 2 par employé) + migration
+  - [x] Adresse dans `EmployeePrivateInfo` : code postal validé selon le pays (Canada : `A1A 1A1`, lettres interdites refusées ; États-Unis : `12345` ou `12345-6789` ; France : `12345` ; autres pays : texte libre en majuscules)
+  - [x] Contact d’urgence : nom, lien et téléphone obligatoires ; `SortOrder` 1 ou 2, unique par employé
 - [ ] 3b. `Employee.PreferredName?`, `OfficeLocation?` (100 caractères max), `HireDate` + migration
   - [ ] Clé de recherche du prénom d’usage (même approche que `TextKey`) ; la recherche porte sur le prénom **et** le prénom d’usage ; le tri suit le nom affiché
   - [ ] `HireDate` obligatoire à la création (peut être dans le futur, embauche prévue) ; employés existants : date de création du compte, à corriger par l’Admin

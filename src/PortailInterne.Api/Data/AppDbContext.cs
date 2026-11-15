@@ -20,6 +20,8 @@ public class AppDbContext : DbContext
 	public DbSet<Meeting> Meetings => Set<Meeting>();
 	public DbSet<MeetingParticipant> MeetingParticipants => Set<MeetingParticipant>();
 	public DbSet<Notification> Notifications => Set<Notification>();
+	public DbSet<EmployeePrivateInfo> EmployeePrivateInfos => Set<EmployeePrivateInfo>();
+	public DbSet<EmergencyContact> EmergencyContacts => Set<EmergencyContact>();
 
 	public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
 	{
@@ -148,6 +150,43 @@ public class AppDbContext : DbContext
 				.WithOne()
 				.HasForeignKey<EmployeePreferences>(p => p.EmployeeId)
 				.OnDelete(DeleteBehavior.Cascade);
+		});
+
+		// --- EmployeePrivateInfo ---
+		modelBuilder.Entity<EmployeePrivateInfo>(entity =>
+		{
+			entity.HasKey(p => p.EmployeeId);
+			
+			entity.HasOne(p => p.Employee)
+				.WithOne()
+				.HasForeignKey<EmployeePrivateInfo>(p => p.EmployeeId)
+				.OnDelete(DeleteBehavior.Cascade);
+
+			entity.Property((i) => i.PersonalEmail).HasMaxLength(254);
+			entity.Property((i) => i.PersonalMobilePhone).HasMaxLength(20);
+			entity.Property((i) => i.AddressLine1).HasMaxLength(100);
+			entity.Property((i) => i.AddressLine2).HasMaxLength(100);
+			entity.Property((i) => i.City).HasMaxLength(100);
+			entity.Property((i) => i.Region).HasMaxLength(100);
+			entity.Property((i) => i.Country).HasMaxLength(2);
+			entity.Property((i) => i.PostalCode).HasMaxLength(10);
+		});
+
+		// --- EmergencyContact ---
+		modelBuilder.Entity<EmergencyContact>(entity =>
+		{
+			entity.HasIndex(c => new { c.EmployeeId, c.SortOrder }).IsUnique();
+
+			entity.HasOne(c => c.Employee)
+				.WithMany()
+				.HasForeignKey(c => c.EmployeeId)
+				.OnDelete(DeleteBehavior.Cascade);
+
+			entity.ToTable(t => t.HasCheckConstraint("CK_EmergencyContact_SortOrder", "SortOrder IN (1, 2)"));
+
+			entity.Property((c) => c.Name).HasMaxLength(100);
+			entity.Property((c) => c.Relationship).HasMaxLength(50);
+			entity.Property((c) => c.PhoneNumber).HasMaxLength(20);
 		});
 
 		// --- Site ---
