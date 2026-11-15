@@ -22,7 +22,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [x] 1. `Site.MainPhoneNumber?` et `Site.CountryCode` (ISO 3166, ex. `CA`, `FR` ; pays par défaut des numéros du site) + migration ; Montréal = `CA` ; modifiables dans l’écran Sites (Admin global)
 - [x] 1b. Validation commune des numéros (un seul service) : `libphonenumber-csharp`, numéro valide pour son pays, enregistré en E.164 ; message clair sinon
   - [x] Migration des numéros existants vers E.164 (pays du site de l’employé) ; un numéro impossible à convertir est listé dans la sortie de la migration et laissé vide plutôt qu’enregistré faux
-- [ ] 2. `Employee.PhoneExtension?` ; `PhoneNumber` renommé `WorkPhone?` dans la migration, **données conservées** (les numéros existants deviennent des téléphones pro)
+- [x] 2. `Employee.PhoneExtension?` ; `PhoneNumber` renommé `WorkPhone?` dans la migration, **données conservées** (les numéros existants deviennent des téléphones pro)
 - [ ] 3. Modèles `EmployeePrivateInfo` (1 ligne par employé, au besoin) et `EmergencyContact` (0 à 2 par employé) + migration
   - [ ] Adresse dans `EmployeePrivateInfo` : code postal validé selon le pays (Canada : `A1A 1A1`, enregistré en majuscules avec l’espace ; autres pays : texte libre)
   - [ ] Contact d’urgence : nom, lien et téléphone obligatoires ; `SortOrder` 1 ou 2, unique par employé

@@ -9,8 +9,8 @@ export type EmployeeListItem = {
 	siteName: string
 	jobTitle: string
 	departement: DepartementId
-	workPhone: string
-	phoneExtension: string
+	workPhone: string | null
+	phoneExtension: string | null
 	photoUrl: string | null
 	annualLeaveDays: number
 }

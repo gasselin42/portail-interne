@@ -78,7 +78,8 @@ export function CreateEmployeePage() {
 				setDepartement(employee.departement)
 				setRole(employee.role as RoleId)
 				setJobTitle(employee.jobTitle)
-				setWorkPhone(employee.workPhone)
+				setWorkPhone(employee.workPhone ?? "")
+				setPhoneExtension(employee.phoneExtension ?? "")
 				setLeaveDays(employee.annualLeaveDays)
 				setSiteId(employee.siteId)
 				setOriginalSiteId(employee.siteId)
@@ -141,6 +142,7 @@ export function CreateEmployeePage() {
 						role,
 						jobTitle,
 						workPhone,
+						phoneExtension,
 						managerId: manager?.id,
 						leaveDays,
 						siteId: siteId!
@@ -160,6 +162,7 @@ export function CreateEmployeePage() {
 					role: role,
 					jobTitle,
 					workPhone,
+					phoneExtension,
 					managerId: manager?.id,
 					leaveDays,
 					siteId: siteId!
@@ -511,7 +514,7 @@ export function CreateEmployeePage() {
 								</label>
 								<input
 									id="phoneExtension"
-									type="string"
+									type="text"
 									inputMode="numeric"
 									maxLength={6}
 									value={phoneExtension}
