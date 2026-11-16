@@ -30,8 +30,8 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [x] Clé de recherche du prénom affiché (`DisplayFirstNameKey` : prénom d’usage, sinon prénom) ; la recherche porte sur le prénom **et** le prénom d’usage ; le tri suit le nom affiché
   - [x] Employés existants : `HireDate` = jour de création du compte dans le fuseau du site (au démarrage), à corriger par l’Admin ; « obligatoire à la création » se fait à l’étape 7
 - [x] 3c. `EmployeeLanguage` + migration ; codes validés contre la liste fixe (`LanguageLabels.Normalize`) ; filtre `?language=` de l’annuaire (l’URL web gardera `?langue=`)
-- [ ] 3d. Anniversaire dans `EmployeePrivateInfo` : mois + jour validés ensemble (29 février permis), `ShowBirthday` faux par défaut
-  - [ ] Endpoint « anniversaires de la semaine » : employés actifs du site de la personne connectée, `ShowBirthday` vrai seulement, semaine calculée dans le fuseau du site ; 29 février affiché le 28 les années non bissextiles
+- [x] 3d. Anniversaire dans `EmployeePrivateInfo` : mois + jour validés ensemble (29 février permis), `ShowBirthday` faux par défaut
+  - [x] Endpoint « anniversaires de la semaine » (`GET /api/employees/birthdays`, lundi → dimanche) : employés actifs du site de la personne connectée, `ShowBirthday` vrai seulement, semaine calculée dans le fuseau du site ; 29 février affiché le 28 les années non bissextiles
 - [ ] 4. Annuaire, fiche publique et `/me` : numéro du site + poste, téléphone pro, nom affiché, langues, local, date d’embauche ; **aucun** champ personnel dans ces DTO
 - [ ] 5. Endpoint **coordonnées personnelles** d’un employé (lecture)
   - [ ] L’employé lui-même, un Admin de son site, l’Admin global : tout

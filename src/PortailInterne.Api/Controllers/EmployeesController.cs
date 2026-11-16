@@ -16,11 +16,13 @@ public class EmployeesController : ControllerBase
 {
     private readonly AppDbContext _db;
 	private readonly AccessScope _scope;
+	private readonly SiteClock _clock;
 
-    public EmployeesController(AppDbContext db, AccessScope scope)
+    public EmployeesController(AppDbContext db, AccessScope scope, SiteClock clock)
     {
         _db = db;
 		_scope = scope;
+		_clock = clock;
     }
 
     [HttpGet]
@@ -150,6 +152,43 @@ public class EmployeesController : ControllerBase
 
         return Ok(new EmployeeLookupResponse { Items = items, HasMore = hasMore });
     }
+
+	[HttpGet("birthdays")]
+	public async Task<ActionResult<List<BirthdayResponse>>> GetBirthdays()
+	{
+		DateOnly today = await _clock.TodayForAsync(_scope.CallerEmployeeId);
+		DateOnly monday = today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
+		int siteId = await _scope.CallerSiteIdAsync();
+
+		var birthdays = await _db.EmployeePrivateInfos
+			.AsNoTracking()
+			.Include(e => e.Employee)
+			.Where(e => e.ShowBirthday && e.BirthMonth != null && e.BirthDay != null
+				&& e.Employee.IsActive && e.Employee.SiteId == siteId)
+			.ToListAsync();
+
+		var week = Enumerable.Range(0, 7).Select(i => monday.AddDays(i)).ToList();
+		
+		return birthdays
+			.Select(b => new
+			{
+				Info = b,
+				Date = week.FirstOrDefault(d => BirthdayRules.OccursOn(b.BirthMonth!.Value, b.BirthDay!.Value, d)),
+			})
+			.Where(x => x.Date != default)
+			.OrderBy(x => x.Date)
+			.ThenBy(x => x.Info.Employee.LastNameKey)
+			.ThenBy(x => x.Info.Employee.DisplayFirstNameKey)
+			.Select(x => new BirthdayResponse
+			{
+				EmployeeId = x.Info.EmployeeId,
+				FirstName = x.Info.Employee.PreferredName ?? x.Info.Employee.FirstName,
+				LastName = x.Info.Employee.LastName,
+				PhotoUrl = x.Info.Employee.PhotoFileName == null ? null : PhotoStorage.UrlFor(x.Info.Employee.PhotoFileName),
+				Date = x.Date,
+			})
+			.ToList();
+	}
 
     private async Task<HashSet<int>> GetTeamIdsAsync(int rootId)
     {
