@@ -45,14 +45,16 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.Email).IsUnique();
 
             entity.Property(e => e.FirstName).HasMaxLength(100);
+            entity.Property(e => e.PreferredName).HasMaxLength(100);
             entity.Property(e => e.LastName).HasMaxLength(100);
-			entity.HasIndex(e => new { e.LastNameKey, e.FirstNameKey });
+			entity.HasIndex(e => new { e.LastNameKey, e.DisplayFirstNameKey });
             entity.Property(e => e.Email).HasMaxLength(256);
             entity.Property(e => e.JobTitle).HasMaxLength(150);
             entity.Property(e => e.WorkPhone).HasMaxLength(20);
             entity.Property(e => e.PhoneExtension).HasMaxLength(6);
 			entity.Property(e => e.AnnualLeaveDays).HasDefaultValue(20);
 			entity.Property(e => e.SiteId).HasDefaultValue(1);
+			entity.Property(e => e.OfficeLocation).HasMaxLength(100);
 
             // Relation 1-1 : un employé a 0 ou 1 compte
             entity.HasOne(e => e.UserAccount) // <Employee> a un UserAccount
@@ -313,6 +315,8 @@ public class AppDbContext : DbContext
 			var employee = entry.Entity;
 
 			employee.FirstNameKey = TextKey.From(employee.FirstName);
+			var preferredKey = TextKey.From(employee.PreferredName);
+			employee.DisplayFirstNameKey = preferredKey == "" ? employee.FirstNameKey : preferredKey;
 			employee.LastNameKey = TextKey.From(employee.LastName);
 			employee.JobTitleKey = TextKey.From(employee.JobTitle);
 		}

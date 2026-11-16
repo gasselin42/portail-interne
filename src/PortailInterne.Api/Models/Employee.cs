@@ -28,6 +28,7 @@ public class Employee
 
     [Required(ErrorMessage = "Le prénom est obligatoire.")]
     public string FirstName { get; set; } = string.Empty;
+	public string? PreferredName { get; set; }
 
     [Required(ErrorMessage = "Le nom de famille est obligatoire.")]
     public string LastName { get; set; } = string.Empty;
@@ -38,6 +39,7 @@ public class Employee
     public string JobTitle { get; set; } = string.Empty;
 
     public Departement Departement { get; set; }
+	public string? OfficeLocation { get; set; }
 
     public string? WorkPhone { get; set; }
 	public string? PhoneExtension { get; set; }
@@ -50,9 +52,9 @@ public class Employee
 
 	[Required]
 	public int SiteId { get; set; }
-
 	public Site Site { get; set; } = null!; // navigation
 
+	public DateOnly HireDate { get; set; }
     public DateTime CreatedAt { get; set; }
 
     public string? PhotoFileName { get; set; }
@@ -63,6 +65,7 @@ public class Employee
 	/// Calculées automatiquement à l'enregistrement :
 	/// ne jamais les modifier à la main.
 	public string FirstNameKey { get; set; } = string.Empty;
+	public string DisplayFirstNameKey { get; set; } = string.Empty;
 	public string LastNameKey { get; set; } = string.Empty;
 	public string JobTitleKey { get; set; } = string.Empty;
 }

@@ -134,6 +134,10 @@ namespace PortailInterne.Api.Migrations
                     b.Property<int>("Departement")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("DisplayFirstNameKey")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -146,6 +150,9 @@ namespace PortailInterne.Api.Migrations
 
                     b.Property<string>("FirstNameKey")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("HireDate")
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsActive")
@@ -172,11 +179,19 @@ namespace PortailInterne.Api.Migrations
                     b.Property<int?>("ManagerId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("OfficeLocation")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("PhoneExtension")
                         .HasMaxLength(6)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("PhotoFileName")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PreferredName")
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("SiteId")
@@ -195,7 +210,7 @@ namespace PortailInterne.Api.Migrations
 
                     b.HasIndex("SiteId");
 
-                    b.HasIndex("LastNameKey", "FirstNameKey");
+                    b.HasIndex("LastNameKey", "DisplayFirstNameKey");
 
                     b.ToTable("Employees");
                 });

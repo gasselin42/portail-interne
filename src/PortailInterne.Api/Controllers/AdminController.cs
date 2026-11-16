@@ -300,7 +300,7 @@ public class AdminController : ControllerBase
 
 		var accounts = await query
 			.OrderBy(u => u.Employee.LastNameKey)
-			.ThenBy(u => u.Employee.FirstNameKey)
+			.ThenBy(u => u.Employee.DisplayFirstNameKey)
 			.ThenBy(u => u.Id)
 			.Select(u => new AccountListItemResponse
 			{

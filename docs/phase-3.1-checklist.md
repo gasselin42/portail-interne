@@ -26,9 +26,9 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [x] 3. Modèles `EmployeePrivateInfo` (1 ligne par employé, au besoin) et `EmergencyContact` (0 à 2 par employé) + migration
   - [x] Adresse dans `EmployeePrivateInfo` : code postal validé selon le pays (Canada : `A1A 1A1`, lettres interdites refusées ; États-Unis : `12345` ou `12345-6789` ; France : `12345` ; autres pays : texte libre en majuscules)
   - [x] Contact d’urgence : nom, lien et téléphone obligatoires ; `SortOrder` 1 ou 2, unique par employé
-- [ ] 3b. `Employee.PreferredName?`, `OfficeLocation?` (100 caractères max), `HireDate` + migration
-  - [ ] Clé de recherche du prénom d’usage (même approche que `TextKey`) ; la recherche porte sur le prénom **et** le prénom d’usage ; le tri suit le nom affiché
-  - [ ] `HireDate` obligatoire à la création (peut être dans le futur, embauche prévue) ; employés existants : date de création du compte, à corriger par l’Admin
+- [x] 3b. `Employee.PreferredName?`, `OfficeLocation?` (100 caractères max), `HireDate` + migration
+  - [x] Clé de recherche du prénom affiché (`DisplayFirstNameKey` : prénom d’usage, sinon prénom) ; la recherche porte sur le prénom **et** le prénom d’usage ; le tri suit le nom affiché
+  - [x] Employés existants : `HireDate` = jour de création du compte dans le fuseau du site (au démarrage), à corriger par l’Admin ; « obligatoire à la création » se fait à l’étape 7
 - [ ] 3c. `EmployeeLanguage` + migration ; codes validés contre la liste fixe ; filtre `?langue=` de l’annuaire
 - [ ] 3d. Anniversaire dans `EmployeePrivateInfo` : mois + jour validés ensemble (29 février permis), `ShowBirthday` faux par défaut
   - [ ] Endpoint « anniversaires de la semaine » : employés actifs du site de la personne connectée, `ShowBirthday` vrai seulement, semaine calculée dans le fuseau du site ; 29 février affiché le 28 les années non bissextiles
@@ -38,7 +38,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [ ] Son manager direct : contacts d’urgence seulement (ni adresse, ni cellulaire, ni email perso)
   - [ ] Tout autre : 404
 - [ ] 6. Endpoint de modification (remplace l’ensemble : coordonnées + contacts) : l’employé ou un Admin de son site
-- [ ] 7. Création d’employé : poste, téléphone pro, local, date d’embauche dans le formulaire ; coordonnées personnelles optionnelles
+- [ ] 7. Création d’employé : poste, téléphone pro, local, date d’embauche (obligatoire, peut être dans le futur) dans le formulaire ; coordonnées personnelles optionnelles
   - [ ] Qui modifie quoi : prénom d’usage, langues, coordonnées personnelles, anniversaire = l’employé ou un Admin du site ; local, date d’embauche = Admin du site
 - [ ] 8. Tests API : collègue → 404 ; manager → contacts d’urgence sans adresse ni cellulaire perso ; adresse partielle refusée ; annuaire sans aucun champ personnel ; 3e contact refusé
 

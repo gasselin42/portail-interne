@@ -18,12 +18,15 @@ public static class EmployeeSearch
 
             query = query.Where(e =>
                 e.FirstNameKey.Contains(key)
+				|| e.DisplayFirstNameKey.Contains(key)
                 || e.LastNameKey.Contains(key)
                 || e.JobTitleKey.Contains(key)
                 || e.Email.Contains(emailSearch)
                 || departements.Contains(e.Departement)
 				|| (e.FirstNameKey + " " + e.LastNameKey).Contains(key)
-				|| (e.LastNameKey + " " + e.FirstNameKey).Contains(key));
+				|| (e.LastNameKey + " " + e.FirstNameKey).Contains(key)
+				|| (e.DisplayFirstNameKey + " " + e.LastNameKey).Contains(key)
+				|| (e.LastNameKey + " " + e.DisplayFirstNameKey).Contains(key));
         }
 
         return query;

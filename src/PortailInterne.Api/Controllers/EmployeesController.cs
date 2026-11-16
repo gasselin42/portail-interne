@@ -37,7 +37,7 @@ public class EmployeesController : ControllerBase
 
         var employees = await query
             .OrderBy(e => e.LastNameKey)
-            .ThenBy(e => e.FirstNameKey)
+            .ThenBy(e => e.DisplayFirstNameKey)
 			.ThenBy(e => e.Id)
             .Select(e => new EmployeeListItemResponse
             {
@@ -124,7 +124,7 @@ public class EmployeesController : ControllerBase
 
         var items = await query
             .OrderBy(e => e.LastNameKey)
-            .ThenBy(e => e.FirstNameKey)
+            .ThenBy(e => e.DisplayFirstNameKey)
             .ThenBy(e => e.Id)
             .Take(limit + 1)
             .Select(e => new EmployeeLookupItem

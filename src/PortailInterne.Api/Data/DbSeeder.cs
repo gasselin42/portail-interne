@@ -128,5 +128,20 @@ public class DbSeeder
 
 		db.SaveChanges();
 	}
+
+	public static void BackfillHireDates(AppDbContext db)
+	{
+		var employees = db.Employees.Include(e => e.Site).Where(e => e.HireDate == default).ToList();
+		if (employees.Count == 0)
+			return;
+
+		foreach (var employee in employees)
+		{
+			var zone = TimeZoneInfo.FindSystemTimeZoneById(employee.Site.TimeZoneId);
+			employee.HireDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(employee.CreatedAt, zone));
+		}
+
+		db.SaveChanges();
+	}
 }
 
