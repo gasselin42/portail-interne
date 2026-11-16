@@ -27,19 +27,24 @@ public class MeResponse
 {
     public int EmployeeId { get; set; }
     public string FirstName { get; set; } = string.Empty;
+    public string? PreferredName { get; set; }
     public string LastName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string JobTitle { get; set; } = string.Empty;
     public string? WorkPhone { get; set; }
     public string? PhoneExtension { get; set; }
+	public string? SiteMainPhoneNumber { get; set; }
 	public int SiteId { get; set; }
 	public string SiteTimeZoneId { get; set; } = string.Empty;
     public Departement Departement { get; set; }
+	public string? OfficeLocation { get; set; }
     public Role Role { get; set; }
     public bool IsManager { get; set; }
 	public bool CanSeeTeam { get; set; }
     public bool MustChangePassword { get; set; }
     public bool IsActive { get; set; }
+	public DateOnly HireDate { get; set; }
+	public List<string> Languages { get; set; } = [];
 }
 
 public class ChangePasswordRequest

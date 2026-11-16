@@ -32,11 +32,11 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [x] 3c. `EmployeeLanguage` + migration ; codes validés contre la liste fixe (`LanguageLabels.Normalize`) ; filtre `?language=` de l’annuaire (l’URL web gardera `?langue=`)
 - [x] 3d. Anniversaire dans `EmployeePrivateInfo` : mois + jour validés ensemble (29 février permis), `ShowBirthday` faux par défaut
   - [x] Endpoint « anniversaires de la semaine » (`GET /api/employees/birthdays`, lundi → dimanche) : employés actifs du site de la personne connectée, `ShowBirthday` vrai seulement, semaine calculée dans le fuseau du site ; 29 février affiché le 28 les années non bissextiles
-- [ ] 4. Annuaire, fiche publique et `/me` : numéro du site + poste, téléphone pro, nom affiché, langues, local, date d’embauche ; **aucun** champ personnel dans ces DTO
-- [ ] 5. Endpoint **coordonnées personnelles** d’un employé (lecture)
-  - [ ] L’employé lui-même, un Admin de son site, l’Admin global : tout
-  - [ ] Son manager direct : contacts d’urgence seulement (ni adresse, ni cellulaire, ni email perso)
-  - [ ] Tout autre : 404
+- [x] 4. Annuaire, fiche publique et `/me` : numéro du site + poste, téléphone pro, nom affiché, langues, local, date d’embauche ; **aucun** champ personnel dans ces DTO
+- [x] 5. Endpoint **coordonnées personnelles** d’un employé (lecture) : `GET /api/employees/{id}/private`
+  - [x] L’employé lui-même, un Admin de son site, l’Admin global : tout
+  - [x] Son manager direct (employé actif) : contacts d’urgence seulement, `details` à null (ni adresse, ni cellulaire, ni email perso)
+  - [x] Tout autre : 404
 - [ ] 6. Endpoint de modification (remplace l’ensemble : coordonnées + contacts) : l’employé ou un Admin de son site
 - [ ] 7. Création d’employé : poste, téléphone pro, local, date d’embauche (obligatoire, peut être dans le futur) dans le formulaire ; coordonnées personnelles optionnelles
   - [ ] Qui modifie quoi : prénom d’usage, langues, coordonnées personnelles, anniversaire = l’employé ou un Admin du site ; local, date d’embauche = Admin du site

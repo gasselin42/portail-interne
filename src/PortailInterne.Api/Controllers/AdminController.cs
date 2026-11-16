@@ -141,6 +141,7 @@ public class AdminController : ControllerBase
 			.AsNoTracking()
 			.Include(e => e.UserAccount)
 			.Include(e => e.Site)
+			.Include(e => e.Languages)
 			.FirstOrDefaultAsync(e => e.Id == id);
 
         if (employee is null || employee.UserAccount is null || employee.UserAccount.Role is null)
@@ -158,13 +159,16 @@ public class AdminController : ControllerBase
         {
             Id = employee.Id,
             FirstName = employee.FirstName,
+			PreferredName = employee.PreferredName,
             LastName = employee.LastName,
             Email = employee.Email,
 			SiteName = employee.Site.Name,
             JobTitle = employee.JobTitle,
             Departement = employee.Departement,
-            WorkPhone = employee.WorkPhone ?? string.Empty,
-			PhoneExtension = employee.PhoneExtension ?? string.Empty,
+			OfficeLocation = employee.OfficeLocation,
+            WorkPhone = employee.WorkPhone,
+			PhoneExtension = employee.PhoneExtension,
+			SiteMainPhoneNumber = employee.Site.MainPhoneNumber,
             ManagerId = employee.ManagerId,
 			ManagerFirstName = manager?.FirstName,
 			ManagerLastName = manager?.LastName,
@@ -173,7 +177,9 @@ public class AdminController : ControllerBase
                 ? null
                 : PhotoStorage.UrlFor(employee.PhotoFileName),
 			AnnualLeaveDays = employee.AnnualLeaveDays,
-			SiteId = employee.SiteId
+			SiteId = employee.SiteId,
+			HireDate = employee.HireDate,
+			Languages = employee.Languages.Select(l => l.LanguageCode).Order().ToList()
         };
 
         return Ok(employeeDetails);

@@ -90,6 +90,8 @@ public class AuthController : ControllerBase
         var account = await _db.UserAccounts
             .Include(u => u.Employee)
 				.ThenInclude(e => e.Site)
+			.Include(u => u.Employee)
+				.ThenInclude(e => e.Languages)
             .FirstOrDefaultAsync(u => u.Id == userAccountId);
 
         if (account is null || !account.IsActive || account.Employee is null || !account.Employee.IsActive || account.Role is null)
@@ -102,19 +104,24 @@ public class AuthController : ControllerBase
         {
             EmployeeId = account.EmployeeId,
             FirstName = account.Employee.FirstName,
+			PreferredName = account.Employee.PreferredName,
             LastName = account.Employee.LastName,
             Email = account.Email,
             JobTitle = account.Employee.JobTitle,
             WorkPhone = account.Employee.WorkPhone,
 			PhoneExtension = account.Employee.PhoneExtension,
+			SiteMainPhoneNumber = account.Employee.Site.MainPhoneNumber,
             Departement = account.Employee.Departement,
+			OfficeLocation = account.Employee.OfficeLocation,
             Role = account.Role.Value,
             IsManager = isManager,
 			CanSeeTeam = canSeeTeam,
             MustChangePassword = account.MustChangePassword,
             IsActive = account.IsActive && account.Employee.IsActive,
 			SiteId = account.Employee.SiteId,
-			SiteTimeZoneId = account.Employee.Site.TimeZoneId
+			SiteTimeZoneId = account.Employee.Site.TimeZoneId,
+			HireDate = account.Employee.HireDate,
+			Languages = account.Employee.Languages.Select(l => l.LanguageCode).Order().ToList()
         });
     }
 

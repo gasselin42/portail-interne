@@ -53,14 +53,19 @@ public class EmployeesController : ControllerBase
             {
                 Id = e.Id,
                 FirstName = e.FirstName,
+				PreferredName = e.PreferredName,
                 LastName = e.LastName,
                 Email = e.Email,
 				SiteName = e.Site.Name,
                 JobTitle = e.JobTitle,
                 Departement = e.Departement,
-                WorkPhone = e.WorkPhone ?? string.Empty,
-				PhoneExtension = e.PhoneExtension ?? string.Empty,
+				OfficeLocation = e.OfficeLocation,
+                WorkPhone = e.WorkPhone,
+				PhoneExtension = e.PhoneExtension,
+				SiteMainPhoneNumber = e.Site.MainPhoneNumber,
                 PhotoUrl = e.PhotoFileName == null ? null : PhotoStorage.UrlFor(e.PhotoFileName),
+				HireDate = e.HireDate,
+				Languages = e.Languages.Select(l => l.LanguageCode).Order().ToList()
             })
             .ToListAsync();
 
@@ -70,7 +75,7 @@ public class EmployeesController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<EmployeeDetailResponse>> GetEmployeeById(int id)
     {
-        var employee = await _db.Employees.AsNoTracking().Include(e => e.Site).FirstOrDefaultAsync(e => e.Id == id);
+        var employee = await _db.Employees.AsNoTracking().Include(e => e.Site).Include(e => e.Languages).FirstOrDefaultAsync(e => e.Id == id);
 
         if (employee is null || !employee.IsActive)
             return NotFound();
@@ -79,18 +84,23 @@ public class EmployeesController : ControllerBase
         {
             Id = employee.Id,
             FirstName = employee.FirstName,
+			PreferredName = employee.PreferredName,
             LastName = employee.LastName,
             Email = employee.Email,
 			SiteName = employee.Site.Name,
             JobTitle = employee.JobTitle,
             Departement = employee.Departement,
-            WorkPhone = employee.WorkPhone ?? string.Empty,
-			PhoneExtension = employee.PhoneExtension ?? string.Empty,
+			OfficeLocation = employee.OfficeLocation,
+            WorkPhone = employee.WorkPhone,
+			PhoneExtension = employee.PhoneExtension,
+			SiteMainPhoneNumber = employee.Site.MainPhoneNumber,
             ManagerId = employee.ManagerId,
 			CanManage = await _scope.CanManageAsync(employee),
             PhotoUrl = employee.PhotoFileName == null
                 ? null
                 : PhotoStorage.UrlFor(employee.PhotoFileName),
+			HireDate = employee.HireDate,
+			Languages = employee.Languages.Select(l => l.LanguageCode).Order().ToList()
         };
 
         if (employee.ManagerId is not null)
@@ -141,6 +151,7 @@ public class EmployeesController : ControllerBase
             {
                 Id = e.Id,
                 FirstName = e.FirstName,
+				PreferredName = e.PreferredName,
                 LastName = e.LastName,
                 JobTitle = e.JobTitle,
                 Departement = e.Departement,
@@ -188,6 +199,58 @@ public class EmployeesController : ControllerBase
 				Date = x.Date,
 			})
 			.ToList();
+	}
+
+	[HttpGet("{id:int}/private")]
+	public async Task<ActionResult<PrivateInfoResponse>> GetPrivateInfos(int id)
+	{
+		var employee = await _db.Employees.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id);
+
+        if (employee is null)
+            return NotFound();
+
+		bool canSeeAll = employee.Id == _scope.CallerEmployeeId || await _scope.CanAdministerSiteAsync(employee.SiteId);
+		bool isDirectManager = employee.ManagerId == _scope.CallerEmployeeId;
+
+		if (!canSeeAll && (!employee.IsActive || !isDirectManager))
+			return NotFound();
+	
+		PrivateDetailsResponse? details = null;
+		if (canSeeAll)
+		{
+			details = await _db.EmployeePrivateInfos
+				.Where(p => p.EmployeeId == id)
+				.Select(p => new PrivateDetailsResponse
+				{
+					PersonalMobilePhone = p.PersonalMobilePhone,
+					PersonalEmail = p.PersonalEmail,
+					AddressLine1 = p.AddressLine1,
+					AddressLine2 = p.AddressLine2,
+					City = p.City,
+					Region = p.Region,
+					PostalCode = p.PostalCode,
+					Country = p.Country,
+					BirthMonth = p.BirthMonth,
+					BirthDay = p.BirthDay,
+					ShowBirthday = p.ShowBirthday
+				})
+				.FirstOrDefaultAsync()
+				?? new PrivateDetailsResponse();
+		}
+
+		var contacts = await _db.EmergencyContacts
+			.Where(c => c.EmployeeId == id)
+			.Select(c => new EmergencyContactResponse
+			{
+				Name = c.Name,
+				Relationship = c.Relationship,
+				PhoneNumber = c.PhoneNumber,
+				SortOrder = c.SortOrder
+			})
+			.OrderBy(c => c.SortOrder)
+			.ToListAsync();
+
+		return Ok(new PrivateInfoResponse { Details = details, EmergencyContacts = contacts });
 	}
 
     private async Task<HashSet<int>> GetTeamIdsAsync(int rootId)

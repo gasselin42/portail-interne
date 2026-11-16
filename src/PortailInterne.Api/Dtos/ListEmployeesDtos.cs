@@ -6,14 +6,19 @@ public class EmployeeListItemResponse
 {
     public int Id { get; set; }
     public string FirstName { get; set; } = string.Empty;
+    public string? PreferredName { get; set; }
     public string LastName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
 	public string SiteName { get; set; } = string.Empty;
     public string JobTitle { get; set; } = string.Empty;
     public Departement Departement { get; set; }
-    public string WorkPhone { get; set; } = string.Empty;
-	public string PhoneExtension { get; set; } = string.Empty;
+	public string? OfficeLocation { get; set; }
+    public string? WorkPhone { get; set; }
+	public string? PhoneExtension { get; set; }
+	public string? SiteMainPhoneNumber { get; set; }
     public string? PhotoUrl { get; set; }
+	public DateOnly HireDate { get; set; }
+	public List<string> Languages { get; set; } = [];
 }
 
 public class EmployeeDetailResponse : EmployeeListItemResponse
@@ -35,6 +40,7 @@ public class EmployeeLookupItem
 {
     public int Id { get; set; }
     public string FirstName { get; set; } = string.Empty;
+    public string? PreferredName { get; set; }
     public string LastName { get; set; } = string.Empty;
     public string JobTitle { get; set; } = string.Empty;
     public Departement Departement { get; set; }
