@@ -38,7 +38,7 @@ public class SitesController : ControllerBase
 
 		var siteCode = request.CountryCode.ToUpperInvariant();
 
-		if (!PhoneNumberUtil.GetInstance().GetSupportedRegions().Any((s) => s == siteCode))
+		if (!PhoneNumberRules.IsKnownCountry(siteCode))
 			return BadRequest(new { message = "Pays inconnu. Utilise un code à deux lettres, par exemple « CA » ou « FR »." });
 
 		var phoneNumber = PhoneNumberRules.Normalize(request.MainPhoneNumber, siteCode);
@@ -80,7 +80,7 @@ public class SitesController : ControllerBase
 		
 		var siteCode = request.CountryCode.ToUpperInvariant();
 
-		if (!PhoneNumberUtil.GetInstance().GetSupportedRegions().Any((s) => s == siteCode))
+		if (!PhoneNumberRules.IsKnownCountry(siteCode))
 			return BadRequest(new { message = "Pays inconnu. Utilise un code à deux lettres, par exemple « CA » ou « FR »." });
 
 		var phoneNumber = PhoneNumberRules.Normalize(request.MainPhoneNumber, siteCode);

@@ -26,4 +26,9 @@ public static class PhoneNumberRules
 
 		return (phoneUtil.Format(number, PhoneNumberFormat.E164), null);
 	}
+
+	public static bool IsKnownCountry(string code)
+	{
+		return PhoneNumberUtil.GetInstance().GetSupportedRegions().Any((s) => s == code);
+	}
 }
