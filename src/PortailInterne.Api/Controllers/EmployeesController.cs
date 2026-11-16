@@ -24,7 +24,7 @@ public class EmployeesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<EmployeeListItemResponse>>> List([FromQuery] string? search, [FromQuery] int? siteId)
+    public async Task<ActionResult<List<EmployeeListItemResponse>>> List([FromQuery] string? search, [FromQuery] int? siteId, [FromQuery] string? language)
     {
         var query = _db.Employees
             .AsNoTracking()
@@ -34,6 +34,14 @@ public class EmployeesController : ControllerBase
 
 		if (siteId != null)
 			query = query.Where(e => e.SiteId == siteId);
+
+		if (!string.IsNullOrWhiteSpace(language))
+		{
+			(List<string> codes, string? error) = LanguageLabels.Normalize([language]);
+			if (error is not null)
+				return BadRequest(new { message = error });
+			query = query.Where(e => e.Languages.Any(l => l.LanguageCode == codes[0]));
+		}
 
         var employees = await query
             .OrderBy(e => e.LastNameKey)

@@ -54,6 +54,8 @@ public class Employee
 	public int SiteId { get; set; }
 	public Site Site { get; set; } = null!; // navigation
 
+	public List<EmployeeLanguage> Languages { get; set; } = [];
+
 	public DateOnly HireDate { get; set; }
     public DateTime CreatedAt { get; set; }
 

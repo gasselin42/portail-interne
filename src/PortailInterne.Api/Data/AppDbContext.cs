@@ -22,6 +22,7 @@ public class AppDbContext : DbContext
 	public DbSet<Notification> Notifications => Set<Notification>();
 	public DbSet<EmployeePrivateInfo> EmployeePrivateInfos => Set<EmployeePrivateInfo>();
 	public DbSet<EmergencyContact> EmergencyContacts => Set<EmergencyContact>();
+	public DbSet<EmployeeLanguage> EmployeeLanguages => Set<EmployeeLanguage>();
 
 	public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
 	{
@@ -189,6 +190,18 @@ public class AppDbContext : DbContext
 			entity.Property((c) => c.Name).HasMaxLength(100);
 			entity.Property((c) => c.Relationship).HasMaxLength(50);
 			entity.Property((c) => c.PhoneNumber).HasMaxLength(20);
+		});
+
+		// --- EmployeeLanguage ---
+		modelBuilder.Entity<EmployeeLanguage>(entity =>
+		{
+			entity.HasKey(l => new { l.EmployeeId, l.LanguageCode });
+			entity.Property((l) => l.LanguageCode).HasMaxLength(2);
+
+			entity.HasOne(l => l.Employee)
+                .WithMany(e => e.Languages)
+                .HasForeignKey(l => l.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
 		});
 
 		// --- Site ---

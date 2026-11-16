@@ -215,6 +215,20 @@ namespace PortailInterne.Api.Migrations
                     b.ToTable("Employees");
                 });
 
+            modelBuilder.Entity("PortailInterne.Api.Models.EmployeeLanguage", b =>
+                {
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LanguageCode")
+                        .HasMaxLength(2)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("EmployeeId", "LanguageCode");
+
+                    b.ToTable("EmployeeLanguages");
+                });
+
             modelBuilder.Entity("PortailInterne.Api.Models.EmployeePreferences", b =>
                 {
                     b.Property<int>("EmployeeId")
@@ -818,6 +832,17 @@ namespace PortailInterne.Api.Migrations
                     b.Navigation("Site");
                 });
 
+            modelBuilder.Entity("PortailInterne.Api.Models.EmployeeLanguage", b =>
+                {
+                    b.HasOne("PortailInterne.Api.Models.Employee", "Employee")
+                        .WithMany("Languages")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
             modelBuilder.Entity("PortailInterne.Api.Models.EmployeePreferences", b =>
                 {
                     b.HasOne("PortailInterne.Api.Models.Employee", "Employee")
@@ -984,6 +1009,8 @@ namespace PortailInterne.Api.Migrations
 
             modelBuilder.Entity("PortailInterne.Api.Models.Employee", b =>
                 {
+                    b.Navigation("Languages");
+
                     b.Navigation("UserAccount");
                 });
 
