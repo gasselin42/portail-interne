@@ -32,12 +32,15 @@ export function CreateEmployeePage() {
 	const [lastName, setLastName] = useState<string>("")
 	const [email, setEmail] = useState<string>("")
 	const [departement, setDepartement] = useState<DepartementId | null>(null)
+	const [officeLocation, setOfficeLocation] = useState<string>("")
 	const [role, setRole] = useState<RoleId | null>(null)
 	const [jobTitle, setJobTitle] = useState<string>("")
 	const [leaveDays, setLeaveDays] = useState(20)
 	const [workPhone, setWorkPhone] = useState<string>("")
 	const [phoneExtension, setPhoneExtension] = useState<string>("")
 	const [manager, setManager] = useState<EmployeeOption | null>(null)
+	const [hireDate, setHireDate] = useState<string>("")
+
 	const [photo, setPhoto] = useState<File | null>(null)
 	const [photoPreview, setPhotoPreview] = useState<string | null>(null)
 	const [existingPhotoUrl, setExistingPhotoUrl] = useState<string | null>(null)
@@ -76,6 +79,7 @@ export function CreateEmployeePage() {
 				setLastName(employee.lastName)
 				setEmail(employee.email)
 				setDepartement(employee.departement)
+				setOfficeLocation(employee.officeLocation ?? "")
 				setRole(employee.role as RoleId)
 				setJobTitle(employee.jobTitle)
 				setWorkPhone(employee.workPhone ?? "")
@@ -83,6 +87,7 @@ export function CreateEmployeePage() {
 				setLeaveDays(employee.annualLeaveDays)
 				setSiteId(employee.siteId)
 				setOriginalSiteId(employee.siteId)
+				setHireDate(employee.hireDate)
 				setManager(
 					employee.managerId !== null
 						? {
@@ -139,13 +144,15 @@ export function CreateEmployeePage() {
 						firstName,
 						lastName,
 						departement,
+						officeLocation,
 						role,
 						jobTitle,
 						workPhone,
 						phoneExtension,
 						managerId: manager?.id,
 						leaveDays,
-						siteId: siteId!
+						siteId: siteId!,
+						hireDate
 					},
 					photo,
 				)
@@ -159,13 +166,15 @@ export function CreateEmployeePage() {
 					lastName,
 					email,
 					departement: departement,
+					officeLocation,
 					role: role,
 					jobTitle,
 					workPhone,
 					phoneExtension,
 					managerId: manager?.id,
 					leaveDays,
-					siteId: siteId!
+					siteId: siteId!,
+					hireDate
 				},
 				photo,
 			)
@@ -476,7 +485,9 @@ export function CreateEmployeePage() {
 							/>
 						</div>
 						<div>
-							<label htmlFor="annualLeaveDays" className={labelClass}>Congés par année</label>
+							<label htmlFor="annualLeaveDays" className={labelClass}>
+								Congés par année
+							</label>
 							<input
 								id="annualLeaveDays"
 								type="number"
@@ -489,12 +500,41 @@ export function CreateEmployeePage() {
 					</div>
 
 					<div className="grid gap-5 sm:grid-cols-2">
+						<div>
+							<label htmlFor="officeLocation" className={labelClass}>
+								Local
+							</label>
+							<input
+								id="officeLocation"
+								type="text"
+								value={officeLocation}
+								onChange={(e) => setOfficeLocation(e.target.value)}
+								className={inputClass}
+							/>
+						</div>
+						<div>
+							<label htmlFor="hireDate" className={labelClass}>
+								Date d'embauche
+								<span className="ml-0.5 text-red-600" aria-hidden="true">
+									*
+								</span>
+							</label>
+							<input
+								id="hireDate"
+								type="date"
+								required
+								min="1950-01-01"
+								value={hireDate}
+								onChange={(e) => setHireDate(e.target.value)}
+								className={inputClass}
+							/>
+						</div>
+					</div>
+
+					<div className="grid gap-5 sm:grid-cols-2">
 						<div className="grid grid-cols-[1fr_6rem] gap-3">
 							<div>
-								<label
-									htmlFor="workPhone"
-									className={labelClass}
-								>
+								<label htmlFor="workPhone" className={labelClass}>
 									Téléphone professionnel
 								</label>
 								<input
@@ -506,10 +546,7 @@ export function CreateEmployeePage() {
 								/>
 							</div>
 							<div>
-								<label
-									htmlFor="phoneExtension"
-									className={labelClass}
-								>
+								<label htmlFor="phoneExtension" className={labelClass}>
 									Poste
 								</label>
 								<input

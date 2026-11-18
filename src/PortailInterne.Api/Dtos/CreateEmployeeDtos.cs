@@ -16,6 +16,9 @@ public class CreateEmployeeRequest
 
     [Required]
     public Departement? Departement { get; set; }
+	
+	[MaxLength(100, ErrorMessage = "L'emplacement du bureau doit avoir 100 caractères au maximum.")]
+	public string? OfficeLocation { get; set; }
 
     [Required]
     public Role? Role { get; set; }
@@ -33,6 +36,11 @@ public class CreateEmployeeRequest
 
 	[Required(ErrorMessage = "Le site est obligatoire.")]
 	public int? SiteId { get; set; }
+
+	[Required(ErrorMessage = "La date d'embauche est obligatoire.")]
+	public DateOnly? HireDate { get; set; }
+
+	public UpdateProfileRequest? Profile { get; set; }
 }
 
 public class UpdateEmployeeRequest
@@ -46,6 +54,9 @@ public class UpdateEmployeeRequest
     [Required]
     public Departement? Departement { get; set; }
 
+	[MaxLength(100, ErrorMessage = "L'emplacement du bureau doit avoir 100 caractères au maximum.")]
+	public string? OfficeLocation { get; set; }
+
     [Required]
     public Role? Role { get; set; }
 
@@ -62,6 +73,9 @@ public class UpdateEmployeeRequest
 
 	[Required(ErrorMessage = "Le site est obligatoire.")]
 	public int? SiteId { get; set; }
+
+	[Required(ErrorMessage = "La date d'embauche est obligatoire.")]
+	public DateOnly? HireDate { get; set; }
 }
 
 public class CreateEmployeeResponse

@@ -38,8 +38,8 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [x] Son manager direct (employé actif) : contacts d’urgence seulement, `details` à null (ni adresse, ni cellulaire, ni email perso)
   - [x] Tout autre : 404
 - [x] 6. Endpoint de modification (remplace l’ensemble : prénom d’usage, langues, coordonnées + contacts) : l’employé ou un Admin de son site — `PUT /api/employees/{id}/profile`
-- [ ] 7. Création d’employé : poste, téléphone pro, local, date d’embauche (obligatoire, peut être dans le futur) dans le formulaire ; coordonnées personnelles optionnelles
-  - [ ] Qui modifie quoi : prénom d’usage, langues, coordonnées personnelles, anniversaire = l’employé ou un Admin du site ; local, date d’embauche = Admin du site
+- [x] 7. Création d’employé : poste, téléphone pro, local, date d’embauche (obligatoire, peut être dans le futur) dans le formulaire ; coordonnées personnelles optionnelles
+  - [x] Qui modifie quoi : prénom d’usage, langues, coordonnées personnelles, anniversaire = l’employé ou un Admin du site ; local, date d’embauche = Admin du site
 - [ ] 8. Tests API : collègue → 404 ; manager → contacts d’urgence sans adresse ni cellulaire perso ; adresse partielle refusée ; annuaire sans aucun champ personnel ; 3e contact refusé
 
 ## Frontend (React)
@@ -51,6 +51,8 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [ ] Valeur envoyée à l’API en E.164 ; message d’erreur sous le champ si le numéro est incomplet
   - [ ] Utilisé partout : téléphone pro, cellulaire perso, contacts d’urgence, numéro principal du site
 - [ ] 9. Annuaire et fiche : « 514 555-1234, poste 2045 » (lien `tel:` avec le poste) ; « Poste 2045 » seul si le site n’a pas de numéro
+  - [ ] Téléphone pro (`WorkPhone`, ligne directe ou cellulaire pro) affiché à part avec son propre lien `tel:`, s’il existe
+  - [ ] Numéro du site + poste affiché seulement si l’employé a un poste
 - [ ] 10. Page **Mon profil** (menu du compte) : ma fiche en lecture ; en modification, mon prénom d’usage, mes langues, mes coordonnées personnelles, mon adresse, mon anniversaire (case « Afficher à mes collègues ») et mes contacts d’urgence
 - [ ] 11. Formulaire employé / fiche (Admin du site) : poste, téléphone pro, section « Coordonnées personnelles » repliée par défaut
 - [ ] 12. Fiche vue par le manager : bloc « Contacts d’urgence » ; rien de personnel pour les collègues

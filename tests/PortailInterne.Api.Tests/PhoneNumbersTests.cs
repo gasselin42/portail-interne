@@ -197,6 +197,7 @@ public class PhoneNumbersTests
 			{ new StringContent(((int)Role.Employee).ToString()), "role" },
 			{ new StringContent("20"), "annualLeaveDays" },
 			{ new StringContent(siteId.ToString()), "siteId" },
+			{ new StringContent("2024-03-03"), "hireDate" },
 		};
 		if (workPhone is not null)
 			form.Add(new StringContent(workPhone), "workPhone");

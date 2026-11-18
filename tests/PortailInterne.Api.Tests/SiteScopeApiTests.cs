@@ -356,6 +356,7 @@ public class SiteScopeApiTests
 			{ new StringContent(((int)role).ToString()), "role" },
 			{ new StringContent("20"), "annualLeaveDays" },
 			{ new StringContent(siteId.ToString()), "siteId" },
+			{ new StringContent("2024-03-03"), "hireDate" },
 		};
 		if (managerId is not null)
 			form.Add(new StringContent(managerId.Value.ToString()), "managerId");

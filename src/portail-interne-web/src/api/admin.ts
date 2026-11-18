@@ -6,6 +6,7 @@ export type CreateEmployeeRequest = {
 	lastName: string
 	email: string
 	departement: DepartementId
+	officeLocation?: string
 	role: RoleId
 	jobTitle?: string
 	workPhone?: string
@@ -13,12 +14,14 @@ export type CreateEmployeeRequest = {
 	managerId?: number
 	leaveDays: number
 	siteId: number
+	hireDate: string
 }
 
 export type UpdateEmployeeRequest = {
 	firstName: string
 	lastName: string
 	departement: DepartementId
+	officeLocation?: string
 	role: RoleId
 	jobTitle?: string
 	workPhone?: string
@@ -26,6 +29,7 @@ export type UpdateEmployeeRequest = {
 	managerId?: number
 	leaveDays: number
 	siteId: number
+	hireDate: string
 }
 
 export type CreateEmployeeResponse = {
@@ -84,6 +88,8 @@ export async function createEmployee(
 	form.append("role", String(body.role))
 	form.append("annualLeaveDays", String(body.leaveDays))
 	form.append("siteId", String(body.siteId))
+	form.append("hireDate", body.hireDate)
+	if (body.officeLocation) form.append("officeLocation", body.officeLocation)
 	if (body.jobTitle) form.append("jobTitle", body.jobTitle)
 	if (body.workPhone) form.append("workPhone", body.workPhone)
 	if (body.phoneExtension) form.append("phoneExtension", body.phoneExtension)
@@ -114,6 +120,8 @@ export async function updateEmployee(
 	form.append("role", String(body.role))
 	form.append("annualLeaveDays", String(body.leaveDays))
 	form.append("siteId", String(body.siteId))
+	form.append("hireDate", body.hireDate)
+	if (body.officeLocation) form.append("officeLocation", body.officeLocation)
 	if (body.jobTitle) form.append("jobTitle", body.jobTitle)
 	if (body.workPhone) form.append("workPhone", body.workPhone)
 	if (body.phoneExtension) form.append("phoneExtension", body.phoneExtension)

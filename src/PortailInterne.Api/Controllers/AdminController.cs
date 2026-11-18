@@ -14,20 +14,14 @@ namespace PortailInterne.Api.Controllers;
 [ApiController]
 [Authorize(Roles = Roles.Admins)]
 [Route("api/admin")]
-public class AdminController : ControllerBase
+public class AdminController(AppDbContext db, PasswordService passwords, PhotoStorage photos, AccessScope scope, SiteClock clock, ProfileService profile) : ControllerBase
 {
-	private readonly AppDbContext _db;
-	private readonly PasswordService _passwords;
-	private readonly PhotoStorage _photos;
-	private readonly AccessScope _scope;
-
-	public AdminController(AppDbContext db, PasswordService passwords, PhotoStorage photos, AccessScope scope)
-	{
-		_db = db;
-		_passwords = passwords;
-		_photos = photos;
-		_scope = scope;
-	}
+	private readonly AppDbContext _db = db;
+	private readonly PasswordService _passwords = passwords;
+	private readonly PhotoStorage _photos = photos;
+	private readonly AccessScope _scope = scope;
+	private readonly SiteClock _clock = clock;
+	private readonly ProfileService _profile = profile;
 
 	[HttpGet("ping")]
 	public ActionResult Ping()
@@ -71,6 +65,10 @@ public class AdminController : ControllerBase
 		if (!string.IsNullOrWhiteSpace(request.PhoneExtension) && !Regex.IsMatch(request.PhoneExtension.Trim(), "^[0-9]{1,6}$"))
 			return BadRequest(new { message = "Le poste doit contenir de 1 à 6 chiffres."});
 
+		var today = await _clock.TodayForSiteAsync(siteId);
+		if (request.HireDate is not null && (request.HireDate.Value.Year < 1950 || today.AddYears(1) <= request.HireDate))
+			return BadRequest(new { message = "Date d'embauche invalide." });
+
 		string email = request.Email.Trim().ToLowerInvariant();
 
         if (await _db.UserAccounts.AnyAsync(u => u.Email == email)
@@ -86,14 +84,17 @@ public class AdminController : ControllerBase
 			LastName = request.LastName.Trim(),
 			Email = email,
 			Departement = request.Departement!.Value,
+			OfficeLocation = string.IsNullOrWhiteSpace(request.OfficeLocation) ? null : request.OfficeLocation.Trim(),
 			JobTitle = request.JobTitle?.Trim() ?? string.Empty,
             WorkPhone = phoneNumber.Number,
 			PhoneExtension = string.IsNullOrWhiteSpace(request.PhoneExtension) ? null : request.PhoneExtension.Trim(),
 			ManagerId = request.ManagerId,
 			AnnualLeaveDays = request.AnnualLeaveDays!.Value,
 			SiteId = siteId,
+			Site = site,
 			IsActive = true,
 			CreatedAt = DateTime.UtcNow,
+			HireDate = request.HireDate!.Value,
 			UserAccount = new UserAccount
 			{
 				Email = email,
@@ -104,6 +105,13 @@ public class AdminController : ControllerBase
 				CreatedAt = DateTime.UtcNow
 			}
 		};
+
+		if (request.Profile is not null)
+		{
+			var applyError = await _profile.ApplyAsync(employee, request.Profile);
+			if (applyError is not null)
+				return BadRequest(new { message = applyError });
+		}
 
 		if (photo is not null && photo.Length > 0)
 			employee.PhotoFileName = await _photos.SaveAsync(photo);
@@ -239,6 +247,10 @@ public class AdminController : ControllerBase
 		if (!string.IsNullOrWhiteSpace(request.PhoneExtension) && !Regex.IsMatch(request.PhoneExtension.Trim(), "^[0-9]{1,6}$"))
 			return BadRequest(new { message = "Le poste doit contenir de 1 à 6 chiffres."});
 
+		var today = await _clock.TodayForSiteAsync(siteId);
+		if (request.HireDate is not null && (request.HireDate.Value.Year < 1950 || today.AddYears(1) <= request.HireDate))
+			return BadRequest(new { message = "Date d'embauche invalide." });
+
 		var ancienNom = employee.PhotoFileName;
 		if (photo is not null && photo.Length > 0)
 		{
@@ -252,12 +264,14 @@ public class AdminController : ControllerBase
 		employee.LastName = request.LastName.Trim();
 		employee.JobTitle = request.JobTitle?.Trim() ?? string.Empty;
 		employee.Departement = request.Departement!.Value;
+		employee.OfficeLocation = string.IsNullOrWhiteSpace(request.OfficeLocation) ? null : request.OfficeLocation.Trim();
 		employee.WorkPhone = phoneNumber.Number;
 		employee.PhoneExtension = string.IsNullOrWhiteSpace(request.PhoneExtension) ? null : request.PhoneExtension.Trim();
 		employee.ManagerId = request.ManagerId;
 		employee.UserAccount.Role = request.Role;
 		employee.AnnualLeaveDays = request.AnnualLeaveDays!.Value;
 		employee.SiteId = siteId;
+		employee.HireDate = request.HireDate!.Value;
 
 		var photoChanged = ancienNom != employee.PhotoFileName;
 

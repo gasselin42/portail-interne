@@ -4,15 +4,20 @@ import { apiFetch, readApiError } from "./client"
 export type EmployeeListItem = {
 	id: number
 	firstName: string
+	preferredName: string | null
 	lastName: string
 	email: string
 	siteName: string
+	siteMainPhoneNumber: string | null
 	jobTitle: string
 	departement: DepartementId
+	officeLocation: string | null
 	workPhone: string | null
 	phoneExtension: string | null
 	photoUrl: string | null
 	annualLeaveDays: number
+	languages: string[]
+	hireDate: string
 }
 
 export type EmployeeDetail = EmployeeListItem & {
@@ -36,6 +41,7 @@ export type EmployeeOption = {
 
 /** Un résultat de recherche : une option, avec de quoi la reconnaître. */
 export type EmployeeLookupItem = EmployeeOption & {
+	preferredName: string | null
 	jobTitle: string
 	departement: DepartementId
 }

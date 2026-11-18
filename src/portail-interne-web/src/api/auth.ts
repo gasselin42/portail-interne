@@ -12,12 +12,15 @@ export type LoginResponse = {
 export type Me = {
 	employeeId: number
 	firstName: string
+	preferredName: string | null
 	lastName: string
 	email: string
 	jobTitle: string
 	workPhone: string | null
+	siteMainPhoneNumber: string | null
 	phoneExtension: string | null
 	departement: DepartementId
+	officeLocation: string | null
 	role: RoleId
 	isManager: boolean
 	canSeeTeam: boolean
@@ -25,6 +28,8 @@ export type Me = {
 	isActive: boolean
 	siteId: number
 	siteTimeZoneId: string
+	languages: string[]
+	hireDate: string
 }
 
 function tokenIsExpired(token: string): boolean {

@@ -21,6 +21,7 @@ builder.Services.AddSingleton<IAppClock, AppClock>();
 builder.Services.AddSingleton<PhotoStorage>();
 
 builder.Services.AddScoped<SiteClock>();
+builder.Services.AddScoped<ProfileService>();
 builder.Services.AddScoped<MustChangePasswordFilter>();
 
 builder.Services.AddHttpContextAccessor();
