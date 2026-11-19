@@ -44,12 +44,12 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 
 ## Frontend (React)
 
-- [ ] 8b. Composant **`PhoneInput`** (dans `components/`, comme `PasswordInput`) : menu du pays (par défaut celui du site) + champ formaté pendant la saisie avec `AsYouType`
-  - [ ] Seuls les chiffres sont tapés ; espaces et traits d’union insérés automatiquement selon le pays
-  - [ ] Le curseur reste au bon endroit quand on corrige un chiffre au milieu ou qu’on efface
-  - [ ] Coller `+33 6 12 34 56 78` choisit la France tout seul
-  - [ ] Valeur envoyée à l’API en E.164 ; message d’erreur sous le champ si le numéro est incomplet
-  - [ ] Utilisé partout : téléphone pro, cellulaire perso, contacts d’urgence, numéro principal du site
+- [x] 8b. Composant **`PhoneInput`** (dans `components/`, comme `PasswordInput`) : menu du pays (par défaut celui du site) + champ formaté pendant la saisie avec `AsYouType`
+  - [x] Seuls les chiffres sont tapés ; espaces et traits d’union insérés automatiquement selon le pays
+  - [x] Le curseur reste au bon endroit quand on corrige un chiffre au milieu ou qu’on efface
+  - [x] Coller `+33 6 12 34 56 78` choisit la France tout seul
+  - [x] Valeur envoyée à l’API en E.164 ; message d’erreur sous le champ si le numéro est incomplet
+  - [ ] Utilisé partout : téléphone pro, cellulaire perso, contacts d’urgence, numéro principal du site (fait : téléphone pro ; le reste avec les étapes 10, 11 et 13)
 - [ ] 9. Annuaire et fiche : « (514) 555-1234, poste 2045 » (lien `tel:` avec le poste) ; « Poste 2045 » seul si le site n’a pas de numéro
   - [ ] Téléphone pro (`WorkPhone`, ligne directe ou cellulaire pro) affiché à part avec son propre lien `tel:`, s’il existe
   - [ ] Numéro du site + poste affiché seulement si l’employé a un poste
