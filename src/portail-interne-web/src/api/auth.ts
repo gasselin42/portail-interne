@@ -28,6 +28,7 @@ export type Me = {
 	isActive: boolean
 	siteId: number
 	siteTimeZoneId: string
+	siteCountryCode: string
 	languages: string[]
 	hireDate: string
 }

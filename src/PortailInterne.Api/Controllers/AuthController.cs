@@ -111,6 +111,7 @@ public class AuthController : ControllerBase
             WorkPhone = account.Employee.WorkPhone,
 			PhoneExtension = account.Employee.PhoneExtension,
 			SiteMainPhoneNumber = account.Employee.Site.MainPhoneNumber,
+			SiteCountryCode = account.Employee.Site.CountryCode,
             Departement = account.Employee.Departement,
 			OfficeLocation = account.Employee.OfficeLocation,
             Role = account.Role.Value,

@@ -24,6 +24,8 @@ import { useAsync } from "../hooks/useAsync"
 import { listSites } from "../api/sites"
 import { useSession } from "../session/useSession"
 import { isGlobalAdmin } from "../session/permission"
+import { PhoneInput } from "../components/common/PhoneInput"
+import type { CountryCode } from "libphonenumber-js"
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -69,6 +71,7 @@ export function CreateEmployeePage() {
 	const photoInputRef = useRef<HTMLInputElement>(null)
 
 	const sites = useAsync((signal) => listSites(signal), [])
+	const workPhoneCountry = (sites.data?.find((s) => s.id === siteId)?.countryCode ?? me?.siteCountryCode ?? "CA") as CountryCode
 
 	useEffect(() => {
 		if (!enEdition || employeId === null) return
@@ -531,19 +534,13 @@ export function CreateEmployeePage() {
 						</div>
 					</div>
 
-					<div className="grid gap-5 sm:grid-cols-2">
+					<div>
 						<div className="grid grid-cols-[1fr_6rem] gap-3">
 							<div>
 								<label htmlFor="workPhone" className={labelClass}>
 									Téléphone professionnel
 								</label>
-								<input
-									id="workPhone"
-									type="tel"
-									value={workPhone}
-									onChange={(e) => setWorkPhone(e.target.value)}
-									className={inputClass}
-								/>
+								<PhoneInput id="workPhone" key={`${workPhoneCountry}-${originalSiteId ?? "nouveau"}`}value={workPhone} defaultCountry={workPhoneCountry} onChange={setWorkPhone} />
 							</div>
 							<div>
 								<label htmlFor="phoneExtension" className={labelClass}>
@@ -560,6 +557,9 @@ export function CreateEmployeePage() {
 								/>
 							</div>
 						</div>
+					</div>
+
+					<div>
 						<div>
 							<label htmlFor="manager" className={labelClass}>
 								Manager

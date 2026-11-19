@@ -40,7 +40,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [x] 6. Endpoint de modification (remplace l’ensemble : prénom d’usage, langues, coordonnées + contacts) : l’employé ou un Admin de son site — `PUT /api/employees/{id}/profile`
 - [x] 7. Création d’employé : poste, téléphone pro, local, date d’embauche (obligatoire, peut être dans le futur) dans le formulaire ; coordonnées personnelles optionnelles
   - [x] Qui modifie quoi : prénom d’usage, langues, coordonnées personnelles, anniversaire = l’employé ou un Admin du site ; local, date d’embauche = Admin du site
-- [ ] 8. Tests API : collègue → 404 ; manager → contacts d’urgence sans adresse ni cellulaire perso ; adresse partielle refusée ; annuaire sans aucun champ personnel ; 3e contact refusé
+- [x] 8. Tests API : collègue → 404 ; manager → contacts d’urgence sans adresse ni cellulaire perso ; adresse partielle refusée ; annuaire sans aucun champ personnel ; 3e contact refusé
 
 ## Frontend (React)
 
@@ -50,7 +50,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
   - [ ] Coller `+33 6 12 34 56 78` choisit la France tout seul
   - [ ] Valeur envoyée à l’API en E.164 ; message d’erreur sous le champ si le numéro est incomplet
   - [ ] Utilisé partout : téléphone pro, cellulaire perso, contacts d’urgence, numéro principal du site
-- [ ] 9. Annuaire et fiche : « 514 555-1234, poste 2045 » (lien `tel:` avec le poste) ; « Poste 2045 » seul si le site n’a pas de numéro
+- [ ] 9. Annuaire et fiche : « (514) 555-1234, poste 2045 » (lien `tel:` avec le poste) ; « Poste 2045 » seul si le site n’a pas de numéro
   - [ ] Téléphone pro (`WorkPhone`, ligne directe ou cellulaire pro) affiché à part avec son propre lien `tel:`, s’il existe
   - [ ] Numéro du site + poste affiché seulement si l’employé a un poste
 - [ ] 10. Page **Mon profil** (menu du compte) : ma fiche en lecture ; en modification, mon prénom d’usage, mes langues, mes coordonnées personnelles, mon adresse, mon anniversaire (case « Afficher à mes collègues ») et mes contacts d’urgence
@@ -70,7 +70,7 @@ Coche au fur et à mesure. Le code n’est fourni que sur demande.
 - [ ] Une adresse sans code postal est refusée avec un message clair
 - [ ] Changer le numéro principal du site met à jour l’affichage de tous ses employés
 - [ ] Les numéros saisis avant la migration apparaissent comme téléphones pro
-- [ ] Taper `5145551234` affiche `514 555-1234` au fil de la saisie ; avec la France, `0612345678` affiche `06 12 34 56 78`
+- [ ] Taper `5145551234` affiche `(514) 555-1234` au fil de la saisie ; avec la France, `0612345678` affiche `06 12 34 56 78`
 - [ ] Corriger le 3e chiffre d’un numéro complet : le curseur ne saute pas à la fin
 - [ ] Un numéro de Paris vu par un employé de Montréal s’affiche `+33 6 12 34 56 78`
 - [ ] Jane met « Alex » comme prénom d’usage : annuaire, calendrier, file d’approbation et avatar affichent « Alex » ; chercher « Alexandra » la trouve

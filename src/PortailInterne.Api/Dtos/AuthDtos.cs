@@ -36,6 +36,7 @@ public class MeResponse
 	public string? SiteMainPhoneNumber { get; set; }
 	public int SiteId { get; set; }
 	public string SiteTimeZoneId { get; set; } = string.Empty;
+	public string SiteCountryCode { get; set; } = string.Empty;
     public Departement Departement { get; set; }
 	public string? OfficeLocation { get; set; }
     public Role Role { get; set; }

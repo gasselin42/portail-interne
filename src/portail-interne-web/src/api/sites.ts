@@ -12,6 +12,8 @@ export type Site = {
 	id: number
 	name: string
 	timeZoneId: string
+	countryCode: string
+	mainPhoneNumber: string | null
 	teamVisibility: TeamVisibilityId
 }
 
